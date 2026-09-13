@@ -22,6 +22,7 @@ import (
 	"github.com/crs2007/callmqtt/internal/mqtt"
 	"github.com/crs2007/callmqtt/internal/network"
 	"github.com/crs2007/callmqtt/internal/simulate"
+	"github.com/crs2007/callmqtt/internal/supervisor"
 )
 
 // version is overridden at build time with -ldflags "-X main.version=v0.1.0".
@@ -91,61 +92,64 @@ func run() error {
 		log.Warn("mqtt password is written directly in the config file; prefer ${ENV_VAR}")
 	}
 
-	detectors, err := buildDetectors(cfg, f)
-	if err != nil {
-		return err
-	}
-
 	// Signals are handled before anything connects, so an interrupt during a
 	// slow broker connection still shuts down cleanly.
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
 	if f.once {
+		detectors, err := buildDetectors(cfg, f)
+		if err != nil {
+			return err
+		}
 		return runOnce(ctx, cfg, log, detectors)
 	}
 
-	return runAgent(ctx, cfg, log, detectors)
+	return runAgent(ctx, cfg, log, f)
 }
 
-func runAgent(ctx context.Context, cfg *config.Config, log *slog.Logger, detectors []model.Detector) error {
-	client, err := mqtt.New(ctx, mqtt.Options{Config: cfg, Logger: log, Version: version})
-	if err != nil {
-		return err
-	}
-
-	eng, err := engine.New(engine.Options{
-		Config:    cfg,
-		Logger:    log,
-		Detectors: detectors,
-		Checker:   network.LocalChecker{},
-		Publisher: client,
+// runAgent runs the supervisor — engine plus MQTT client, rebuildable live —
+// and, in a tray build, the tray UI on top of it. detectors and the publisher
+// are rebuilt by the supervisor on every config reload, so the closures here
+// are the only place that needs to know how to build them.
+func runAgent(ctx context.Context, cfg *config.Config, log *slog.Logger, f flags) error {
+	sup := supervisor.New(supervisor.Options{
+		Logger:  log,
+		Version: version,
+		Checker: network.LocalChecker{},
+		NewDetectors: func(cfg *config.Config) ([]model.Detector, error) {
+			return buildDetectors(cfg, f)
+		},
+		NewPublisher: func(ctx context.Context, cfg *config.Config, log *slog.Logger, version string) (supervisor.Publisher, error) {
+			return mqtt.New(ctx, mqtt.Options{Config: cfg, Logger: log, Version: version})
+		},
 	})
-	if err != nil {
+
+	if err := sup.Start(ctx, cfg); err != nil {
 		return err
 	}
 
 	log.Info("callmqtt started",
 		"version", version, "device_id", cfg.App.DeviceID,
-		"broker", fmt.Sprintf("%s:%d", cfg.MQTT.Host, cfg.MQTT.Port),
-		"detectors", detectorNames(detectors))
+		"broker", fmt.Sprintf("%s:%d", cfg.MQTT.Host, cfg.MQTT.Port))
 
-	runErr := eng.Run(ctx)
+	uiErr := runUI(ctx, sup, log, f.configPath, cfg.Logging.File)
 
-	// Shutdown gets its own context: the one above is already cancelled, and
-	// publishing "offline" on the way out is what releases the light
-	// immediately instead of waiting for the heartbeat to lapse.
+	// Shutdown gets its own context: ctx may already be cancelled (SIGINT, or
+	// the tray's Quit), and publishing "offline" on the way out is what
+	// releases the light immediately instead of waiting for the heartbeat to
+	// lapse.
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	if err := client.Close(shutdownCtx); err != nil {
+	if err := sup.Close(shutdownCtx); err != nil {
 		log.Warn("shutdown", "error", err)
 	}
 	log.Info("callmqtt stopped")
 
-	if errors.Is(runErr, context.Canceled) {
+	if errors.Is(uiErr, context.Canceled) {
 		return nil
 	}
-	return runErr
+	return uiErr
 }
 
 // runOnce evaluates once and prints what it found, without touching the
@@ -237,14 +241,6 @@ func buildDetectors(_ *config.Config, f flags) ([]model.Detector, error) {
 	// refuse rather than silently reporting that nobody is ever in a call:
 	// an agent that is confidently wrong is worse than one that says so.
 	return nil, errors.New("no detectors are available yet in this build; run with -simulate")
-}
-
-func detectorNames(detectors []model.Detector) []string {
-	names := make([]string, len(detectors))
-	for i, d := range detectors {
-		names[i] = d.App()
-	}
-	return names
 }
 
 // newLogger writes human-readable output to stderr and, when configured, JSON
