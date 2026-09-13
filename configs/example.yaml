@@ -1,0 +1,61 @@
+# CallMQTT configuration.
+#
+# Copy to %APPDATA%\callmqtt\config.yaml (Windows) and edit.
+# Check it with:  callmqtt --validate-config
+
+app:
+  # "auto" derives the id from this machine's hostname. It appears in the MQTT
+  # topics and in the Home Assistant entity id.
+  device_id: auto
+
+mqtt:
+  host: 192.168.1.10
+  port: 1883
+  username: callmqtt
+  # Prefer an environment variable over a literal secret. CallMQTT warns if
+  # this is written directly into the file.
+  password: "${CALLMQTT_MQTT_PASSWORD}"
+  discovery:
+    # Creates the Home Assistant binary_sensor automatically. With this on you
+    # never write a line of Home Assistant YAML.
+    enabled: true
+    prefix: homeassistant
+
+# Presence is published ONLY while connected to one of these networks.
+# Matching any single field is enough, so one rule covers both Wi-Fi and
+# Ethernet at the same site. An empty list publishes nothing at all.
+allowed_networks:
+  - name: Home
+    cidrs:
+      - "192.168.1.0/24"
+  - name: Office
+    cidrs:
+      - "10.20.0.0/16"
+
+detectors:
+  teams:
+    enabled: true
+  zoom:
+    enabled: true
+  slack:
+    enabled: true
+
+detection:
+  # A signal must reach active_threshold to count as a call. Raise it if you
+  # get false positives; a light that lies is worse than one that is late.
+  active_threshold: 0.70
+  inactive_threshold: 0.30
+  # Deliberately asymmetric: quick to light up, slow to go dark, so muting or
+  # toggling your camera never makes the light blink mid-call.
+  enter_debounce_seconds: 2
+  exit_debounce_seconds: 8
+
+poll:
+  detect_seconds: 2
+  network_seconds: 10
+  # State is re-asserted this often. Home Assistant gives up on the entity
+  # after 1.5x this, which is what turns the light off if this machine dies.
+  heartbeat_seconds: 60
+
+logging:
+  level: info

@@ -27,6 +27,7 @@ type Info struct {
 	SSID      string
 	BSSID     string
 	LocalIP   netip.Addr
+	Prefix    netip.Prefix // the subnet the interface is configured with
 	Gateway   netip.Addr
 }
 
