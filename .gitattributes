@@ -1,0 +1,13 @@
+# Normalize line endings: LF in the repo, native in the working copy.
+* text=auto eol=lf
+
+# Windows-native files keep CRLF.
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+*.ps1  text eol=crlf
+
+# Probe captures are fixtures — never touch them.
+testdata/** -text
+
+*.png binary
+*.ico binary
