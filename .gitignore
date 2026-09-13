@@ -1,0 +1,41 @@
+# Binaries
+*.exe
+*.dll
+*.so
+*.dylib
+/callmqtt
+/probe
+/dist/
+/bin/
+
+# Go
+*.test
+*.out
+/vendor/
+go.work
+go.work.sum
+
+# Local config & secrets — NEVER commit
+config.yaml
+config.local.yaml
+.env
+*.pem
+*.key
+
+# Logs & runtime
+*.log
+/logs/
+
+# macOS / Windows cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+
+# Claude Code — keep agents, ignore local state
+.claude/settings.local.json
