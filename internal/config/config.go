@@ -6,6 +6,7 @@
 package config
 
 import (
+	_ "embed"
 	"errors"
 	"fmt"
 	"net/netip"
@@ -17,6 +18,13 @@ import (
 
 	"gopkg.in/yaml.v3"
 )
+
+// Example is the annotated starter configuration written by `callmqtt init`.
+// It is embedded so the binary is self-sufficient: a user who downloaded only
+// the exe can still produce a working config.
+//
+//go:embed example.yaml
+var Example []byte
 
 // Config is the whole of CallMQTT's configuration.
 type Config struct {
@@ -241,6 +249,11 @@ func (c *Config) applyDerivedDefaults() {
 func (c *Config) resolveTopic(topic string) string {
 	return strings.ReplaceAll(topic, "{device_id}", c.App.DeviceID)
 }
+
+// AutoDeviceID reports the identifier this machine would use when device_id
+// is "auto". Exposed so `callmqtt init` can tell the user which machine the
+// topics and Home Assistant entity will belong to.
+func AutoDeviceID() string { return autoDeviceID() }
 
 // autoDeviceID derives a topic-safe identifier from the hostname.
 func autoDeviceID() string {

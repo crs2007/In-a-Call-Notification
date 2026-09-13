@@ -181,6 +181,7 @@ func (e *Engine) evaluate(ctx context.Context, now time.Time) {
 	}
 
 	payload := mqtt.Payload{
+		Device:     e.cfg.App.DeviceID,
 		State:      string(state),
 		Confidence: resolved.Confidence,
 		Network:    e.netRule,

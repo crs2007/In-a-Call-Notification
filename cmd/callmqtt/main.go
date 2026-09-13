@@ -53,6 +53,7 @@ func run() error {
 	flag.BoolVar(&f.once, "once", false, "run one detection cycle, print the result, and exit")
 	flag.BoolVar(&f.simulate, "simulate", false, "fake a call every 30s, to test a Home Assistant automation without joining one")
 	flag.BoolVar(&f.showVersion, "version", false, "print the version and exit")
+	flag.Usage = usage
 	flag.Parse()
 
 	if f.showVersion {
@@ -60,8 +61,15 @@ func run() error {
 		return nil
 	}
 
+	if flag.Arg(0) == "init" {
+		return initConfig(f.configPath)
+	}
+
 	cfg, err := config.Load(f.configPath)
 	if err != nil {
+		if os.IsNotExist(errors.Unwrap(err)) {
+			return fmt.Errorf("no config at %s\n\nRun `callmqtt init` to create a starter config, then edit it", f.configPath)
+		}
 		return err
 	}
 
@@ -169,6 +177,50 @@ func runOnce(ctx context.Context, cfg *config.Config, log *slog.Logger, detector
 	if len(s.Reasons) > 0 {
 		fmt.Printf("reasons:    %v\n", s.Reasons)
 	}
+	return nil
+}
+
+func usage() {
+	fmt.Fprintf(os.Stderr, `callmqtt %s - publish desktop call presence to MQTT
+
+Usage:
+  callmqtt [flags]        run the agent
+  callmqtt init           write a starter config and print where it went
+
+Flags:
+`, version)
+	flag.PrintDefaults()
+}
+
+// initConfig writes the annotated example config to path, and tells the user
+// the two things they now have to decide: where their broker is, and which
+// networks they are willing to publish from.
+func initConfig(path string) error {
+	if _, err := os.Stat(path); err == nil {
+		return fmt.Errorf("%s already exists; edit it, or delete it first", path)
+	}
+
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return fmt.Errorf("create config directory: %w", err)
+	}
+	if err := os.WriteFile(path, config.Example, 0o600); err != nil {
+		return fmt.Errorf("write config: %w", err)
+	}
+
+	fmt.Printf(`Wrote %s
+
+This machine will appear as device id %q, so its topics are:
+  desktop-presence/%s/call
+  desktop-presence/%s/availability
+
+Before starting, edit that file and set:
+  mqtt.host          your broker's address
+  mqtt.username      if your broker requires one
+  allowed_networks   the subnets you are willing to publish from
+
+The password is read from the CALLMQTT_MQTT_PASSWORD environment variable.
+Then check your work with:  callmqtt --validate-config
+`, path, config.AutoDeviceID(), config.AutoDeviceID(), config.AutoDeviceID())
 	return nil
 }
 

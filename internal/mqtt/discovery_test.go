@@ -97,6 +97,7 @@ func TestExpireAfterOutlastsHeartbeat(t *testing.T) {
 // meeting name may appear in it.
 func TestStatePayloadCarriesNoMeetingDetail(t *testing.T) {
 	body, err := json.Marshal(Payload{
+		Device:     "sharon-pc",
 		State:      "active",
 		App:        "teams",
 		Apps:       []string{"teams", "zoom"},
@@ -108,7 +109,7 @@ func TestStatePayloadCarriesNoMeetingDetail(t *testing.T) {
 		t.Fatalf("marshal: %v", err)
 	}
 
-	want := `{"state":"active","app":"teams","apps":["teams","zoom"],"confidence":0.85,"network":"Home","timestamp":"2026-09-13T11:45:30Z"}`
+	want := `{"device":"sharon-pc","state":"active","app":"teams","apps":["teams","zoom"],"confidence":0.85,"network":"Home","timestamp":"2026-09-13T11:45:30Z"}`
 	if string(body) != want {
 		t.Errorf("state payload changed.\n got: %s\nwant: %s", body, want)
 	}
@@ -120,7 +121,7 @@ func TestStatePayloadCarriesNoMeetingDetail(t *testing.T) {
 		t.Fatalf("unmarshal: %v", err)
 	}
 	allowed := map[string]bool{
-		"state": true, "app": true, "apps": true,
+		"device": true, "state": true, "app": true, "apps": true,
 		"confidence": true, "network": true, "timestamp": true,
 	}
 	for name := range fields {
@@ -133,6 +134,7 @@ func TestStatePayloadCarriesNoMeetingDetail(t *testing.T) {
 // An inactive payload omits the app entirely rather than naming the last one.
 func TestInactivePayloadOmitsApp(t *testing.T) {
 	body, err := json.Marshal(Payload{
+		Device:    "sharon-pc",
 		State:     "inactive",
 		Timestamp: time.Date(2026, 9, 13, 12, 32, 10, 0, time.UTC),
 	})

@@ -42,6 +42,11 @@ const (
 // window title, no meeting name, no participant ever belongs in this struct:
 // it is the one thing in the project that leaves the machine.
 type Payload struct {
+	// Device names the machine this came from. Home Assistant already knows
+	// it from the topic, but including it makes a wildcard subscription
+	// self-describing, which matters as soon as there is more than one
+	// machine in a room.
+	Device     string    `json:"device"`
 	State      string    `json:"state"`
 	App        string    `json:"app,omitempty"`
 	Apps       []string  `json:"apps,omitempty"`
