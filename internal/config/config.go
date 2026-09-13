@@ -90,12 +90,14 @@ func (d Detection) ExitDebounce() time.Duration {
 
 // NetworkRule describes one network on which publishing is permitted.
 // The fields are alternatives: matching any one of them matches the rule.
+// omitempty keeps the file tidy when the tray rewrites the allow-list: a rule
+// matched purely by subnet should not sprout three empty lists.
 type NetworkRule struct {
 	Name     string   `yaml:"name"`
-	SSIDs    []string `yaml:"ssids"`
-	BSSIDs   []string `yaml:"bssids"`
-	CIDRs    []string `yaml:"cidrs"`
-	Gateways []string `yaml:"gateways"`
+	SSIDs    []string `yaml:"ssids,omitempty"`
+	BSSIDs   []string `yaml:"bssids,omitempty"`
+	CIDRs    []string `yaml:"cidrs,omitempty"`
+	Gateways []string `yaml:"gateways,omitempty"`
 }
 
 // MQTT holds broker connection settings.
