@@ -165,6 +165,32 @@ func TestJoinAndLeaveACall(t *testing.T) {
 	}
 }
 
+// SetPaused must take the bulb off even mid-call, and — critically — a
+// detector that keeps insisting "active" while paused must never reach the
+// broker: a pause the user can see doesn't work is worse than no pause.
+func TestPauseForcesInactiveEvenMidCall(t *testing.T) {
+	h := newHarness(t)
+
+	h.detector.state, h.detector.confidence = model.StateActive, 0.9
+	h.runUntil(30 * time.Second) // settles active
+
+	h.engine.SetPaused(true)
+	if !h.engine.Paused() {
+		t.Fatal("Paused() = false after SetPaused(true)")
+	}
+	h.runUntil(50 * time.Second) // exit debounce is 8s, well within this
+
+	if got := h.publisher.states(); got[len(got)-1] != "inactive" {
+		t.Fatalf("last publish = %q, want inactive while paused", got[len(got)-1])
+	}
+
+	h.engine.SetPaused(false)
+	h.runUntil(70 * time.Second)
+	if got := h.publisher.states(); got[len(got)-1] != "active" {
+		t.Fatalf("last publish after unpause = %q, want active (detector still reports one)", got[len(got)-1])
+	}
+}
+
 // S3, S7 and S8 are the false-positive guards, and they are release-blocking.
 // A detector that never reports active must produce no active publish at all.
 func TestNeverPublishesActiveWithoutADetection(t *testing.T) {

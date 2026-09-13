@@ -11,6 +11,7 @@ package engine
 import (
 	"context"
 	"log/slog"
+	"sync/atomic"
 	"time"
 
 	"github.com/crs2007/callmqtt/internal/config"
@@ -38,6 +39,7 @@ type Status struct {
 	NetworkRule string
 	Allowed     bool
 	LastChange  time.Time
+	Paused      bool
 }
 
 // Engine ties detection, network policy and publishing together.
@@ -62,6 +64,7 @@ type Engine struct {
 	lastPublish time.Time
 	published   bool
 	status      Status
+	paused      atomic.Bool
 }
 
 // Options collects the engine's dependencies. Everything platform-specific
@@ -114,16 +117,30 @@ func (e *Engine) Run(ctx context.Context) error {
 // Status returns the most recent snapshot.
 func (e *Engine) Status() Status { return e.status }
 
+// SetPaused turns detection on or off without stopping the engine.
+//
+// Paused mode still runs the state machine and the publish/network gating —
+// only the detectors are skipped, and the resolved state is forced to
+// inactive. That reuses the same debounced, gated path a real "nobody is on
+// a call" reading takes, rather than adding a second way to reach the bulb.
+func (e *Engine) SetPaused(paused bool) { e.paused.Store(paused) }
+
+// Paused reports whether detection is currently paused.
+func (e *Engine) Paused() bool { return e.paused.Load() }
+
 // Evaluate runs one poll cycle at the given time. Run supplies the real clock;
 // tests supply their own.
 func (e *Engine) Evaluate(ctx context.Context, now time.Time) { e.evaluate(ctx, now) }
 
 func (e *Engine) evaluate(ctx context.Context, now time.Time) {
-	results := make([]model.DetectionResult, 0, len(e.detectors))
-	for _, d := range e.detectors {
-		results = append(results, d.Detect(ctx))
+	resolved := detection.Resolved{State: model.StateInactive}
+	if !e.paused.Load() {
+		results := make([]model.DetectionResult, 0, len(e.detectors))
+		for _, d := range e.detectors {
+			results = append(results, d.Detect(ctx))
+		}
+		resolved = detection.Resolve(results)
 	}
-	resolved := detection.Resolve(results)
 
 	e.refreshNetwork(ctx, now)
 
@@ -139,6 +156,7 @@ func (e *Engine) evaluate(ctx context.Context, now time.Time) {
 		NetworkRule: e.netRule,
 		Allowed:     e.netAllowed,
 		LastChange:  e.status.LastChange,
+		Paused:      e.paused.Load(),
 	}
 	if changed {
 		e.status.LastChange = now

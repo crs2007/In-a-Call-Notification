@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/url"
+	"sync/atomic"
 	"time"
 
 	"github.com/eclipse/paho.golang/autopaho"
@@ -65,10 +66,11 @@ type Options struct {
 // Client is a connection to the broker that re-registers itself on every
 // reconnect.
 type Client struct {
-	cm      *autopaho.ConnectionManager
-	cfg     *config.Config
-	log     *slog.Logger
-	version string
+	cm        *autopaho.ConnectionManager
+	cfg       *config.Config
+	log       *slog.Logger
+	version   string
+	connected atomic.Bool
 }
 
 // New dials the broker and starts autopaho's reconnect loop. It returns as
@@ -143,6 +145,7 @@ func New(ctx context.Context, opts Options) (*Client, error) {
 // autopaho requires this callback not to block, so the work runs detached.
 func (c *Client) onConnectionUp(cm *autopaho.ConnectionManager, _ *paho.Connack) {
 	c.log.Info("mqtt connected", "broker", c.cfg.MQTT.Host, "client_id", c.cfg.MQTT.ClientID)
+	c.connected.Store(true)
 
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -162,8 +165,15 @@ func (c *Client) onConnectionUp(cm *autopaho.ConnectionManager, _ *paho.Connack)
 // would strand the entity.
 func (c *Client) onConnectionDown() bool {
 	c.log.Warn("mqtt connection lost, reconnecting")
+	c.connected.Store(false)
 	return true
 }
+
+// Connected reports whether the broker connection is currently up. It is the
+// tray's "Broker: connected" line — best-effort, and never a substitute for
+// the Will/expire_after guards, which don't depend on this process noticing
+// its own disconnect.
+func (c *Client) Connected() bool { return c.connected.Load() }
 
 // AwaitConnection blocks until the broker is connected or ctx expires.
 func (c *Client) AwaitConnection(ctx context.Context) error {
