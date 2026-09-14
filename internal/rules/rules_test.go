@@ -256,6 +256,32 @@ func TestTeamsOpenNoCall_IsInactive(t *testing.T) {
 	}
 }
 
+// Regression for a confirmed live false positive (2026-09-14): new Teams
+// always keeps a small utility window titled exactly "Meet | Microsoft
+// Teams" open, even when completely idle with no call in progress and 0
+// apps using the microphone (`go run ./cmd/probe --count 1` on a real
+// machine showed only pid=63580 proc=ms-teams.exe title="Meet | Microsoft
+// Teams", no "Meeting with ..." window, and no mic entries).
+// testdata/probe/teams-open-no-call.txt never exercised this because it was
+// captured on the Chat tab, so this is synthesized inline rather than
+// requiring a new capture. Must never cross the active threshold.
+func TestTeamsIdleMeetWindowOnly_IsInactive(t *testing.T) {
+	cfg := liveConfig(t)
+	obs := Observation{
+		Windows: []WindowObservation{
+			{Proc: "ms-teams.exe", Title: "Meet | Microsoft Teams"},
+		},
+		// No mic entries: confirmed 0 apps using the microphone.
+	}
+	got := find(t, cfg.Evaluate(obs, testThreshold, time.Now()), "teams")
+	if got.State != model.StateInactive {
+		t.Errorf("teams state = %v, confidence = %v, want inactive", got.State, got.Confidence)
+	}
+	if got.Confidence >= testThreshold {
+		t.Errorf("teams confidence = %v crossed the active threshold on the bare idle \"Meet\" window alone", got.Confidence)
+	}
+}
+
 // S1/S2: a real Zoom call, on. Every snapshot must resolve to active.
 func TestZoomInCall_IsActive(t *testing.T) {
 	cfg := liveConfig(t)

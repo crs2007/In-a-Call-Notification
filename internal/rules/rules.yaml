@@ -21,20 +21,38 @@ rules:
   # captures. New Teams exposes no distinguishable mute-state signal in the
   # window title, so this rule - and therefore mute/unmute - causes no score
   # change and no state change, by construction rather than by luck.
+  #
+  # Confirmed false positive (live testing, 2026-09-14): new Teams always
+  # keeps a small utility window titled exactly "Meet | Microsoft Teams"
+  # open, even when completely idle with no call in progress and 0 apps
+  # using the microphone (`go run ./cmd/probe --count 1` showed only
+  # pid=63580 proc=ms-teams.exe title="Meet | Microsoft Teams", no
+  # "Meeting with ..." window). testdata/probe/teams-open-no-call.txt never
+  # exercised this because it happened to be captured on the Chat tab, so
+  # the bare "Meet" window slipped past the old broader include regex
+  # below and alone crossed the 0.70 active threshold (process 0.20 +
+  # window 0.55 = 0.75). The bare "Meet" window is Teams' persistent
+  # Meet-now/calendar landing window, not evidence of a call, so it must
+  # NOT be in window_include_regex on its own. Only the real meeting
+  # title, "Meeting with <name> | Microsoft Teams" (present alongside the
+  # bare "Meet" window throughout testdata/probe/teams-in-call.txt), is
+  # matched now.
   - app: teams
     process_names:
       - ms-teams.exe
-    # Captured meeting windows (teams-in-call.txt):
-    #   title="Meet | Microsoft Teams"
+    # Captured meeting window (teams-in-call.txt):
     #   title="Meeting with Sharon Rimer | Microsoft Teams"
+    # Deliberately excludes the bare "Meet | Microsoft Teams" utility
+    # window - see the false-positive note above and the
+    # teams-idle-meet-window-only regression test in rules_test.go.
     window_include_regex:
-      - '^(Meet|Meeting with .+) \| Microsoft Teams$'
+      - '^Meeting with .+ \| Microsoft Teams$'
     # Captured chat window, mic idle (teams-open-no-call.txt):
     #   title="Chat | Copilot Israel - Live | Microsoft Teams"
     # The include pattern above would not match this anyway (it starts with
-    # "Chat |", not "Meet |" or "Meeting with"), but the exclude is kept as
-    # an explicit, tested veto: a future, differently-worded meeting title
-    # must never be allowed to slip past a chat window by accident.
+    # "Chat |", not "Meeting with"), but the exclude is kept as an explicit,
+    # tested veto: a future, differently-worded meeting title must never be
+    # allowed to slip past a chat window by accident.
     window_exclude_regex:
       - '^Chat \|.*\| Microsoft Teams$'
     # Captured mic-in-use entry during a call (teams-in-call.txt):
@@ -45,9 +63,12 @@ rules:
       process: 0.20
       window: 0.55
       mic: 0.25
-      # process + window = 0.75, already active on the meeting window alone
-      # (it is a distinctive, product-specific string); process + window +
-      # mic = 1.00 for the common case of a real, audible call.
+      # process + window = 0.75, already active on the real meeting window
+      # alone (it is a distinctive, product-specific string); process +
+      # window + mic = 1.00 for the common case of a real, audible call.
+      # The bare "Meet | Microsoft Teams" utility window no longer matches
+      # window_include_regex at all, so on its own it scores process-only
+      # (0.20), well below the 0.70 active threshold.
 
   # Zoom (Zoom.exe).
   - app: zoom

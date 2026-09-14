@@ -129,16 +129,64 @@ via the release-ci subagent.
 - `git status --short` after the subagent's run showed only the two new
   files — nothing else touched, no leftover `dist/`.
 
-## ⬜ T38 — Confirm real detection against a live call, then flip README's status
-Depends on T35 being live-tested, not just unit-tested.
-```
-In the CallMQTT repo (E:\GitHub\In-a-Call-Notification), the real detectors (internal/rules +
-internal/detectors, wired into cmd/callmqtt/main.go's buildDetectors) pass all unit tests
-against recorded fixtures but have not been confirmed against an actual live Teams or Zoom
-call. Walk me through running `go run ./cmd/callmqtt --once` before, during, and after a real
-call and checking the printed state/confidence/reasons make sense at each point. If it holds up,
-update README.md to drop the "🚧 Status: early development... Not yet usable" line.
-```
+## ✅ T38 — Confirm real detection against a live call, then flip README's status
+No single commit — a live-testing session plus a follow-on rule fix.
+
+Ran `go run ./cmd/callmqtt --once` before, during, and after a real Microsoft
+Teams call. The "before" reading immediately surfaced a genuine bug the unit
+tests had missed: Teams' small, always-present "Meet" utility window (title
+`Meet | Microsoft Teams`) matched the same `window_include_regex` as a real
+meeting window, scoring `process (0.20) + window (0.55) = 0.75` — above the
+0.70 active threshold — while Teams was completely idle. `testdata/probe/teams-open-no-call.txt`
+never caught this because it happened to be captured while Teams was on its
+Chat tab, not showing the bare "Meet" window.
+
+Commit: `<fill in after commit>`. Fixed by the `detector-rules` subagent:
+narrowed `internal/rules/rules.yaml`'s Teams `window_include_regex` from
+`'^(Meet|Meeting with .+) \| Microsoft Teams$'` to
+`'^Meeting with .+ \| Microsoft Teams$'` (bare "Meet" no longer matches at
+all; weights unchanged), documented the finding inline, and added
+`TestTeamsIdleMeetWindowOnly_IsInactive` in `internal/rules/rules_test.go` as
+a synthetic regression.
+
+**Premise correction:** the task assumed a single live pass would either
+"hold up" or not. In practice the first live check found a real false
+positive; T38 also covers verifying the fix, not just the original
+detectors — the live-test loop was: idle (found bug, 0.75 confidence) → fix
+applied → idle again (0.20) → in-call (1.00, all three signals) → after call
+(back to 0.20). Only Microsoft Teams was live-tested; Zoom and Slack remain
+fixture-verified only, so README now calls that out explicitly rather than
+claiming the whole app is confirmed.
+
+**Validated:**
+- `go build ./...`, `GOOS=darwin go build ./...`, `go test ./...` all clean
+  after the fix (re-run directly, not just inside the subagent).
+- `internal/rules` and `internal/detectors` test suites pass, including the
+  pre-existing acceptance-bar scenarios (`TestTeamsInCall_IsActive`,
+  `TestTeamsMuteUnmute_NoStateChange`, `TestTeamsOpenNoCall_IsInactive`,
+  `TestZoomInCall_IsActive`, `TestZoomOpenNoCall_IsInactive`,
+  `TestSlackHuddle_DetectsIntermittently`,
+  `TestMusicPlaying_IsInactiveForEveryApp`) plus the new regression.
+- Live `go run ./cmd/callmqtt --once`, cross-checked against
+  `go run ./cmd/probe --count 1`, at four points on a real machine with a
+  real Teams call:
+  - idle, before fix: confidence 0.75, reasons `[process present, meeting
+    window title matched]` — wrongly above threshold.
+  - idle, after fix: confidence 0.20, reasons `[process present]`.
+  - during the call: confidence 1.00, reasons `[process present, meeting
+    window title matched, microphone in use]`; probe confirmed both
+    `Meet | Microsoft Teams` and `Meeting with Sharon Rimer | Microsoft
+    Teams` windows plus `MSTeams_8wekyb3d8bbwe` holding the microphone.
+  - after the call ended: confidence back to 0.20, `Meeting with ...` window
+    and mic entry both gone.
+- README.md's "🚧 early development... Not yet usable" line removed; replaced
+  with a note scoping the claim to Teams being live-confirmed and Zoom/Slack
+  remaining fixture-only.
+
+**Follow-up spotted:** the same "always-present secondary window" hazard that
+caused this Teams bug may exist for Zoom/Slack too and hasn't been
+live-checked — worth a live pass on those before trusting their detection the
+same way.
 
 ## ⬜ (unscoped) — macOS platform support
 No owning subagent exists yet (`win-platform` only covers `platform/windows/`).

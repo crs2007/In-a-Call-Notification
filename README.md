@@ -4,8 +4,9 @@ Detect when you're in a Zoom, Microsoft Teams or Slack call — and publish that
 state to your local MQTT broker, so Home Assistant can turn on a "do not
 disturb" light for exactly as long as the call lasts.
 
-> 🚧 **Status: early development.** See [docs/](docs/) for the design research
-> and the execution plan. Not yet usable.
+Microsoft Teams detection has been confirmed against a real live call (see
+[docs/TASKS.md](docs/TASKS.md), T38); Zoom and Slack are covered by recorded
+fixtures but not yet live-confirmed the same way.
 
 ## Why
 
