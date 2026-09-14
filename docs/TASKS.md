@@ -78,7 +78,7 @@ line once confirmed.
 ---
 
 ## ✅ T36 — GitHub Actions CI
-Commit: `<pending>`. Added `.github/workflows/ci.yml` with two jobs:
+Commit: `068d532`. Added `.github/workflows/ci.yml` with two jobs:
 `test-windows` (gate — `go vet`, build with and without the `tray` tag,
 `go test -race`, plus a `windows/arm64` build-only cross-compile) and
 `cross-compile-darwin` on `ubuntu-latest` (`GOOS=darwin GOARCH=arm64 go
