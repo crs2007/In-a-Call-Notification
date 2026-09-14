@@ -1,0 +1,61 @@
+version: 2
+
+project_name: callmqtt
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: callmqtt
+    main: ./cmd/callmqtt
+    binary: callmqtt
+    goos:
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    # The tray build (gogpu/systray, pure Go / purego — no cgo) is the
+    # real user-facing binary; see cmd/callmqtt/ui_tray.go vs
+    # ui_headless.go. CI already builds the headless (!tray) variant on
+    # every push purely to keep it compiling, but nobody is meant to run
+    # it day to day.
+    tags:
+      - tray
+    flags:
+      - -trimpath
+    # -H=windowsgui suppresses the console window a tray app would
+    # otherwise flash on every launch; -s -w strips debug info for a
+    # smaller shipped exe. version is threaded into the same var
+    # cmd/callmqtt/main.go declares as `var version = "dev"`.
+    ldflags:
+      - -s -w -H=windowsgui -X main.version={{.Version}}
+    env:
+      - CGO_ENABLED=0
+
+archives:
+  - id: callmqtt
+    formats: [zip]
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}
+    files:
+      - README.md
+      - LICENSE
+      - src: internal/config/example.yaml
+        dst: configs/example.yaml
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+
+release:
+  github:
+    owner: crs2007
+    name: In-a-Call-Notification
