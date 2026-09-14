@@ -103,15 +103,31 @@ amd64/arm64 matrix. Asked the user directly; they chose to follow
   standard way Go projects get `-race` working on Windows CI.
 - YAML syntax validated (`yaml.safe_load`).
 
-## ⬜ T37 — Packaging with GoReleaser
-Depends on T36.
-```
-In the CallMQTT repo (E:\GitHub\In-a-Call-Notification), add a .goreleaser.yaml to produce
-tagged Windows release binaries (amd64/arm64) with the version ldflag main.go already expects
-(`-ldflags "-X main.version=..."`). Wire a release.yml GitHub Actions workflow that runs
-GoReleaser on a version tag push. Keep scope to Windows only for now, matching the current
-platform support. Use the release-ci subagent for this.
-```
+## ✅ T37 — Packaging with GoReleaser
+Commit: `3a178ee`. Added `.goreleaser.yaml` and `.github/workflows/release.yml`
+via the release-ci subagent.
+- Builds `./cmd/callmqtt` with the `tray` build tag (the real user-facing
+  binary — `gogpu/systray` is pure Go via `purego`, so `CGO_ENABLED=0` works
+  for both `windows/amd64` and `windows/arm64`; the headless `!tray` build is
+  only a CI compile-check, not something meant to ship).
+- Ldflags: `-s -w -H=windowsgui -X main.version={{.Version}}` — wires the
+  version var `cmd/callmqtt/main.go` already expects and suppresses the
+  console flash a `-H=windowsgui` tray app would otherwise show.
+  `internal/config/example.yaml` is bundled into the zip as
+  `configs/example.yaml` alongside README.md and LICENSE, plus a
+  `checksums.txt`.
+- `release.yml` triggers on `v*` tags, runs on `windows-latest`, and calls
+  `goreleaser/goreleaser-action@v6` with `release --clean`.
+**Validated:**
+- `goreleaser check` passed; `goreleaser release --snapshot --clean
+  --skip=publish` actually built both windows/amd64 and windows/arm64
+  binaries, produced correctly-shaped zip archives, and the built
+  `callmqtt.exe -version` printed the expected snapshot version string —
+  confirms the ldflag wiring is correct, not just that the YAML parses.
+- `go build ./...`, `GOOS=darwin go build ./...`, `go test ./...` all clean
+  (re-run directly, not just inside the subagent).
+- `git status --short` after the subagent's run showed only the two new
+  files — nothing else touched, no leftover `dist/`.
 
 ## ⬜ T38 — Confirm real detection against a live call, then flip README's status
 Depends on T35 being live-tested, not just unit-tested.
