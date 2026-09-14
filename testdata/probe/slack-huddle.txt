@@ -1,4 +1,4 @@
-=== 2026-09-14T12:46:36+03:00 ===
+=== 2026-09-14T12:42:50+03:00 ===
 [windows] 35 visible
   pid=33304  proc=ApplicationFrameHost.exe     title="Media Player"
   pid=33304  proc=ApplicationFrameHost.exe     title="Settings"
@@ -13,10 +13,12 @@
   pid=29992  proc=Microsoft.Media.Player.exe   title="Media Player"
   pid=17808  proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
   pid=35332  proc=ScreenSketch.exe             title="Snip & Sketch"
+  pid=94356  proc=Slack.exe                    title="Sharon Rimer (DM) - SQL Server Community - Slack"
+  pid=94356  proc=Slack.exe                    title="Sharon Rimer - SQL Server Community - Slack"
   pid=29584  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
   pid=29244  proc=Spotify.exe                  title="Spotify Premium"
   pid=45068  proc=SystemSettings.exe           title="Settings"
-  pid=89820  proc=Telegram.exe                 title="(4) \u200eדילים שווים😍 – (337)"
+  pid=89820  proc=Telegram.exe                 title="(3) \u200eדילים שווים😍 – (335)"
   pid=17904  proc=TextInputHost.exe            title="Microsoft Text Input Application"
   pid=19224  proc=WhatsApp.Root.exe            title="WhatsApp"
   pid=85432  proc=brave.exe                    title="Redirecting… | Slack - Brave"
@@ -32,14 +34,12 @@
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="web"
-  pid=23704  proc=ms-teams.exe                 title="Meet | Microsoft Teams"
-  pid=23704  proc=ms-teams.exe                 title="Meeting with Sharon Rimer | Microsoft Teams"
   pid=44116  proc=notepad++.exe                title="*new 27 - Notepad++"
 [microphone] 1 in use
-  MSTeams_8wekyb3d8bbwe
+  com.tinyspeck.slackdesktop_8yrtsj140pw4g
 [webcam] 0 in use
 
-=== 2026-09-14T12:46:38+03:00 ===
+=== 2026-09-14T12:42:52+03:00 ===
 [windows] 35 visible
   pid=33304  proc=ApplicationFrameHost.exe     title="Media Player"
   pid=33304  proc=ApplicationFrameHost.exe     title="Settings"
@@ -54,10 +54,12 @@
   pid=29992  proc=Microsoft.Media.Player.exe   title="Media Player"
   pid=17808  proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
   pid=35332  proc=ScreenSketch.exe             title="Snip & Sketch"
+  pid=94356  proc=Slack.exe                    title="Sharon Rimer (DM) - SQL Server Community - Slack [Main] 🏠🔊"
+  pid=94356  proc=Slack.exe                    title="Sharon Rimer - SQL Server Community - Slack"
   pid=29584  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
   pid=29244  proc=Spotify.exe                  title="Spotify Premium"
   pid=45068  proc=SystemSettings.exe           title="Settings"
-  pid=89820  proc=Telegram.exe                 title="(4) \u200eדילים שווים😍 – (337)"
+  pid=89820  proc=Telegram.exe                 title="(3) \u200eדילים שווים😍 – (335)"
   pid=17904  proc=TextInputHost.exe            title="Microsoft Text Input Application"
   pid=19224  proc=WhatsApp.Root.exe            title="WhatsApp"
   pid=85432  proc=brave.exe                    title="Redirecting… | Slack - Brave"
@@ -73,14 +75,12 @@
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="web"
-  pid=23704  proc=ms-teams.exe                 title="Meet | Microsoft Teams"
-  pid=23704  proc=ms-teams.exe                 title="Meeting with Sharon Rimer | Microsoft Teams"
   pid=44116  proc=notepad++.exe                title="*new 27 - Notepad++"
 [microphone] 1 in use
-  MSTeams_8wekyb3d8bbwe
+  com.tinyspeck.slackdesktop_8yrtsj140pw4g
 [webcam] 0 in use
 
-=== 2026-09-14T12:46:40+03:00 ===
+=== 2026-09-14T12:42:54+03:00 ===
 [windows] 35 visible
   pid=33304  proc=ApplicationFrameHost.exe     title="Media Player"
   pid=33304  proc=ApplicationFrameHost.exe     title="Settings"
@@ -95,10 +95,12 @@
   pid=29992  proc=Microsoft.Media.Player.exe   title="Media Player"
   pid=17808  proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
   pid=35332  proc=ScreenSketch.exe             title="Snip & Sketch"
+  pid=94356  proc=Slack.exe                    title="Sharon Rimer (DM) - SQL Server Community - Slack [Main] 🏠"
+  pid=94356  proc=Slack.exe                    title="Sharon Rimer - SQL Server Community - Slack"
   pid=29584  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
   pid=29244  proc=Spotify.exe                  title="Spotify Premium"
   pid=45068  proc=SystemSettings.exe           title="Settings"
-  pid=89820  proc=Telegram.exe                 title="(4) \u200eדילים שווים😍 – (337)"
+  pid=89820  proc=Telegram.exe                 title="(3) \u200eדילים שווים😍 – (335)"
   pid=17904  proc=TextInputHost.exe            title="Microsoft Text Input Application"
   pid=19224  proc=WhatsApp.Root.exe            title="WhatsApp"
   pid=85432  proc=brave.exe                    title="Redirecting… | Slack - Brave"
@@ -114,14 +116,12 @@
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="web"
-  pid=23704  proc=ms-teams.exe                 title="Meet | Microsoft Teams"
-  pid=23704  proc=ms-teams.exe                 title="Meeting with Sharon Rimer | Microsoft Teams"
   pid=44116  proc=notepad++.exe                title="*new 27 - Notepad++"
 [microphone] 1 in use
-  MSTeams_8wekyb3d8bbwe
+  com.tinyspeck.slackdesktop_8yrtsj140pw4g
 [webcam] 0 in use
 
-=== 2026-09-14T12:46:42+03:00 ===
+=== 2026-09-14T12:42:56+03:00 ===
 [windows] 35 visible
   pid=33304  proc=ApplicationFrameHost.exe     title="Media Player"
   pid=33304  proc=ApplicationFrameHost.exe     title="Settings"
@@ -136,10 +136,12 @@
   pid=29992  proc=Microsoft.Media.Player.exe   title="Media Player"
   pid=17808  proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
   pid=35332  proc=ScreenSketch.exe             title="Snip & Sketch"
+  pid=94356  proc=Slack.exe                    title="Sharon Rimer (DM) - SQL Server Community - Slack [Main] 🏠"
+  pid=94356  proc=Slack.exe                    title="Sharon Rimer - SQL Server Community - Slack"
   pid=29584  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
   pid=29244  proc=Spotify.exe                  title="Spotify Premium"
   pid=45068  proc=SystemSettings.exe           title="Settings"
-  pid=89820  proc=Telegram.exe                 title="(4) \u200eדילים שווים😍 – (337)"
+  pid=89820  proc=Telegram.exe                 title="(3) \u200eדילים שווים😍 – (335)"
   pid=17904  proc=TextInputHost.exe            title="Microsoft Text Input Application"
   pid=19224  proc=WhatsApp.Root.exe            title="WhatsApp"
   pid=85432  proc=brave.exe                    title="Redirecting… | Slack - Brave"
@@ -155,14 +157,12 @@
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="web"
-  pid=23704  proc=ms-teams.exe                 title="Meet | Microsoft Teams"
-  pid=23704  proc=ms-teams.exe                 title="Meeting with Sharon Rimer | Microsoft Teams"
   pid=44116  proc=notepad++.exe                title="*new 27 - Notepad++"
 [microphone] 1 in use
-  MSTeams_8wekyb3d8bbwe
+  com.tinyspeck.slackdesktop_8yrtsj140pw4g
 [webcam] 0 in use
 
-=== 2026-09-14T12:46:44+03:00 ===
+=== 2026-09-14T12:42:58+03:00 ===
 [windows] 35 visible
   pid=33304  proc=ApplicationFrameHost.exe     title="Media Player"
   pid=33304  proc=ApplicationFrameHost.exe     title="Settings"
@@ -177,10 +177,12 @@
   pid=29992  proc=Microsoft.Media.Player.exe   title="Media Player"
   pid=17808  proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
   pid=35332  proc=ScreenSketch.exe             title="Snip & Sketch"
+  pid=94356  proc=Slack.exe                    title="Sharon Rimer (DM) - SQL Server Community - Slack [Main] 🏠"
+  pid=94356  proc=Slack.exe                    title="Sharon Rimer - SQL Server Community - Slack"
   pid=29584  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
   pid=29244  proc=Spotify.exe                  title="Spotify Premium"
   pid=45068  proc=SystemSettings.exe           title="Settings"
-  pid=89820  proc=Telegram.exe                 title="(4) \u200eדילים שווים😍 – (337)"
+  pid=89820  proc=Telegram.exe                 title="(3) \u200eדילים שווים😍 – (335)"
   pid=17904  proc=TextInputHost.exe            title="Microsoft Text Input Application"
   pid=19224  proc=WhatsApp.Root.exe            title="WhatsApp"
   pid=85432  proc=brave.exe                    title="Redirecting… | Slack - Brave"
@@ -196,14 +198,12 @@
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="web"
-  pid=23704  proc=ms-teams.exe                 title="Meet | Microsoft Teams"
-  pid=23704  proc=ms-teams.exe                 title="Meeting with Sharon Rimer | Microsoft Teams"
   pid=44116  proc=notepad++.exe                title="*new 27 - Notepad++"
 [microphone] 1 in use
-  MSTeams_8wekyb3d8bbwe
+  com.tinyspeck.slackdesktop_8yrtsj140pw4g
 [webcam] 0 in use
 
-=== 2026-09-14T12:46:46+03:00 ===
+=== 2026-09-14T12:43:00+03:00 ===
 [windows] 35 visible
   pid=33304  proc=ApplicationFrameHost.exe     title="Media Player"
   pid=33304  proc=ApplicationFrameHost.exe     title="Settings"
@@ -218,10 +218,12 @@
   pid=29992  proc=Microsoft.Media.Player.exe   title="Media Player"
   pid=17808  proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
   pid=35332  proc=ScreenSketch.exe             title="Snip & Sketch"
+  pid=94356  proc=Slack.exe                    title="Sharon Rimer (DM) - SQL Server Community - Slack [Main] 🏠"
+  pid=94356  proc=Slack.exe                    title="Sharon Rimer - SQL Server Community - Slack"
   pid=29584  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
   pid=29244  proc=Spotify.exe                  title="Spotify Premium"
   pid=45068  proc=SystemSettings.exe           title="Settings"
-  pid=89820  proc=Telegram.exe                 title="(4) \u200eדילים שווים😍 – (337)"
+  pid=89820  proc=Telegram.exe                 title="(3) \u200eדילים שווים😍 – (335)"
   pid=17904  proc=TextInputHost.exe            title="Microsoft Text Input Application"
   pid=19224  proc=WhatsApp.Root.exe            title="WhatsApp"
   pid=85432  proc=brave.exe                    title="Redirecting… | Slack - Brave"
@@ -237,14 +239,12 @@
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="web"
-  pid=23704  proc=ms-teams.exe                 title="Meet | Microsoft Teams"
-  pid=23704  proc=ms-teams.exe                 title="Meeting with Sharon Rimer | Microsoft Teams"
   pid=44116  proc=notepad++.exe                title="*new 27 - Notepad++"
 [microphone] 1 in use
-  MSTeams_8wekyb3d8bbwe
+  com.tinyspeck.slackdesktop_8yrtsj140pw4g
 [webcam] 0 in use
 
-=== 2026-09-14T12:46:48+03:00 ===
+=== 2026-09-14T12:43:02+03:00 ===
 [windows] 35 visible
   pid=33304  proc=ApplicationFrameHost.exe     title="Media Player"
   pid=33304  proc=ApplicationFrameHost.exe     title="Settings"
@@ -259,10 +259,12 @@
   pid=29992  proc=Microsoft.Media.Player.exe   title="Media Player"
   pid=17808  proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
   pid=35332  proc=ScreenSketch.exe             title="Snip & Sketch"
+  pid=94356  proc=Slack.exe                    title="Sharon Rimer (DM) - SQL Server Community - Slack [Main] 🏠"
+  pid=94356  proc=Slack.exe                    title="Sharon Rimer - SQL Server Community - Slack"
   pid=29584  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
   pid=29244  proc=Spotify.exe                  title="Spotify Premium"
   pid=45068  proc=SystemSettings.exe           title="Settings"
-  pid=89820  proc=Telegram.exe                 title="(4) \u200eדילים שווים😍 – (337)"
+  pid=89820  proc=Telegram.exe                 title="(3) \u200eדילים שווים😍 – (335)"
   pid=17904  proc=TextInputHost.exe            title="Microsoft Text Input Application"
   pid=19224  proc=WhatsApp.Root.exe            title="WhatsApp"
   pid=85432  proc=brave.exe                    title="Redirecting… | Slack - Brave"
@@ -278,14 +280,12 @@
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="web"
-  pid=23704  proc=ms-teams.exe                 title="Meet | Microsoft Teams"
-  pid=23704  proc=ms-teams.exe                 title="Meeting with Sharon Rimer | Microsoft Teams"
   pid=44116  proc=notepad++.exe                title="*new 27 - Notepad++"
 [microphone] 1 in use
-  MSTeams_8wekyb3d8bbwe
+  com.tinyspeck.slackdesktop_8yrtsj140pw4g
 [webcam] 0 in use
 
-=== 2026-09-14T12:46:50+03:00 ===
+=== 2026-09-14T12:43:04+03:00 ===
 [windows] 35 visible
   pid=33304  proc=ApplicationFrameHost.exe     title="Media Player"
   pid=33304  proc=ApplicationFrameHost.exe     title="Settings"
@@ -300,10 +300,12 @@
   pid=29992  proc=Microsoft.Media.Player.exe   title="Media Player"
   pid=17808  proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
   pid=35332  proc=ScreenSketch.exe             title="Snip & Sketch"
+  pid=94356  proc=Slack.exe                    title="Sharon Rimer (DM) - SQL Server Community - Slack [Main] 🏠"
+  pid=94356  proc=Slack.exe                    title="Sharon Rimer - SQL Server Community - Slack"
   pid=29584  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
   pid=29244  proc=Spotify.exe                  title="Spotify Premium"
   pid=45068  proc=SystemSettings.exe           title="Settings"
-  pid=89820  proc=Telegram.exe                 title="(4) \u200eדילים שווים😍 – (337)"
+  pid=89820  proc=Telegram.exe                 title="(3) \u200eדילים שווים😍 – (335)"
   pid=17904  proc=TextInputHost.exe            title="Microsoft Text Input Application"
   pid=19224  proc=WhatsApp.Root.exe            title="WhatsApp"
   pid=85432  proc=brave.exe                    title="Redirecting… | Slack - Brave"
@@ -319,14 +321,12 @@
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="web"
-  pid=23704  proc=ms-teams.exe                 title="Meet | Microsoft Teams"
-  pid=23704  proc=ms-teams.exe                 title="Meeting with Sharon Rimer | Microsoft Teams"
   pid=44116  proc=notepad++.exe                title="*new 27 - Notepad++"
 [microphone] 1 in use
-  MSTeams_8wekyb3d8bbwe
+  com.tinyspeck.slackdesktop_8yrtsj140pw4g
 [webcam] 0 in use
 
-=== 2026-09-14T12:46:52+03:00 ===
+=== 2026-09-14T12:43:06+03:00 ===
 [windows] 35 visible
   pid=33304  proc=ApplicationFrameHost.exe     title="Media Player"
   pid=33304  proc=ApplicationFrameHost.exe     title="Settings"
@@ -341,10 +341,12 @@
   pid=29992  proc=Microsoft.Media.Player.exe   title="Media Player"
   pid=17808  proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
   pid=35332  proc=ScreenSketch.exe             title="Snip & Sketch"
+  pid=94356  proc=Slack.exe                    title="Sharon Rimer (DM) - SQL Server Community - Slack [Main] 🏠"
+  pid=94356  proc=Slack.exe                    title="Sharon Rimer - SQL Server Community - Slack"
   pid=29584  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
   pid=29244  proc=Spotify.exe                  title="Spotify Premium"
   pid=45068  proc=SystemSettings.exe           title="Settings"
-  pid=89820  proc=Telegram.exe                 title="(4) \u200eדילים שווים😍 – (337)"
+  pid=89820  proc=Telegram.exe                 title="(3) \u200eדילים שווים😍 – (335)"
   pid=17904  proc=TextInputHost.exe            title="Microsoft Text Input Application"
   pid=19224  proc=WhatsApp.Root.exe            title="WhatsApp"
   pid=85432  proc=brave.exe                    title="Redirecting… | Slack - Brave"
@@ -360,14 +362,12 @@
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="web"
-  pid=23704  proc=ms-teams.exe                 title="Meet | Microsoft Teams"
-  pid=23704  proc=ms-teams.exe                 title="Meeting with Sharon Rimer | Microsoft Teams"
   pid=44116  proc=notepad++.exe                title="*new 27 - Notepad++"
 [microphone] 1 in use
-  MSTeams_8wekyb3d8bbwe
+  com.tinyspeck.slackdesktop_8yrtsj140pw4g
 [webcam] 0 in use
 
-=== 2026-09-14T12:46:54+03:00 ===
+=== 2026-09-14T12:43:09+03:00 ===
 [windows] 35 visible
   pid=33304  proc=ApplicationFrameHost.exe     title="Media Player"
   pid=33304  proc=ApplicationFrameHost.exe     title="Settings"
@@ -382,10 +382,12 @@
   pid=29992  proc=Microsoft.Media.Player.exe   title="Media Player"
   pid=17808  proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
   pid=35332  proc=ScreenSketch.exe             title="Snip & Sketch"
+  pid=94356  proc=Slack.exe                    title="Sharon Rimer (DM) - SQL Server Community - Slack [Main] 🏠"
+  pid=94356  proc=Slack.exe                    title="Sharon Rimer - SQL Server Community - Slack"
   pid=29584  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
   pid=29244  proc=Spotify.exe                  title="Spotify Premium"
   pid=45068  proc=SystemSettings.exe           title="Settings"
-  pid=89820  proc=Telegram.exe                 title="(4) \u200eדילים שווים😍 – (337)"
+  pid=89820  proc=Telegram.exe                 title="(3) \u200eדילים שווים😍 – (335)"
   pid=17904  proc=TextInputHost.exe            title="Microsoft Text Input Application"
   pid=19224  proc=WhatsApp.Root.exe            title="WhatsApp"
   pid=85432  proc=brave.exe                    title="Redirecting… | Slack - Brave"
@@ -401,10 +403,8 @@
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="web"
-  pid=23704  proc=ms-teams.exe                 title="Meet | Microsoft Teams"
-  pid=23704  proc=ms-teams.exe                 title="Meeting with Sharon Rimer | Microsoft Teams"
   pid=44116  proc=notepad++.exe                title="*new 27 - Notepad++"
 [microphone] 1 in use
-  MSTeams_8wekyb3d8bbwe
+  com.tinyspeck.slackdesktop_8yrtsj140pw4g
 [webcam] 0 in use
 

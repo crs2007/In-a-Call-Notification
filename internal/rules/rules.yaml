@@ -1,0 +1,107 @@
+# CallMQTT detection rules.
+#
+# Every pattern below was taken from a real capture in testdata/probe/*.txt -
+# see the fixture-driven tests in rules_test.go for the exact line each one
+# came from. Do not add a pattern here without a fixture backing it; if a
+# scenario needs a new pattern, capture it first.
+#
+# Weights are tuned toward under-triggering: a wrong "active" (red light while
+# the user is just chatting, listening to music, or has an app open but idle)
+# is worse than a missed call. Process presence alone never crosses the active
+# threshold (default 0.70, see config.Detection.ActiveThreshold); the
+# microphone alone never does either, because music players and personal
+# phone calls also hold it.
+
+rules:
+  # Microsoft Teams (the MSIX/"new Teams" client, process ms-teams.exe).
+  #
+  # Known hazard (see testdata/probe/teams-in-call.txt vs
+  # teams-in-call-muted.txt): muting/unmuting does not change the window
+  # title at all, and the microphone stays reported as "in use" in both
+  # captures. New Teams exposes no distinguishable mute-state signal in the
+  # window title, so this rule - and therefore mute/unmute - causes no score
+  # change and no state change, by construction rather than by luck.
+  - app: teams
+    process_names:
+      - ms-teams.exe
+    # Captured meeting windows (teams-in-call.txt):
+    #   title="Meet | Microsoft Teams"
+    #   title="Meeting with Sharon Rimer | Microsoft Teams"
+    window_include_regex:
+      - '^(Meet|Meeting with .+) \| Microsoft Teams$'
+    # Captured chat window, mic idle (teams-open-no-call.txt):
+    #   title="Chat | Copilot Israel - Live | Microsoft Teams"
+    # The include pattern above would not match this anyway (it starts with
+    # "Chat |", not "Meet |" or "Meeting with"), but the exclude is kept as
+    # an explicit, tested veto: a future, differently-worded meeting title
+    # must never be allowed to slip past a chat window by accident.
+    window_exclude_regex:
+      - '^Chat \|.*\| Microsoft Teams$'
+    # Captured mic-in-use entry during a call (teams-in-call.txt):
+    #   MSTeams_8wekyb3d8bbwe
+    mic_process_regex:
+      - '(?i)^MSTeams'
+    weights:
+      process: 0.20
+      window: 0.55
+      mic: 0.25
+      # process + window = 0.75, already active on the meeting window alone
+      # (it is a distinctive, product-specific string); process + window +
+      # mic = 1.00 for the common case of a real, audible call.
+
+  # Zoom (Zoom.exe).
+  - app: zoom
+    process_names:
+      - Zoom.exe
+    # Captured only while actually in a meeting (zoom-in-call.txt):
+    #   title="Zoom Meeting"
+    #   title="ZPToolBarParentWnd"
+    # Both windows disappear once the meeting ends (zoom-open-no-call.txt
+    # shows neither, only the always-present main window below).
+    window_include_regex:
+      - '^(Zoom Meeting|ZPToolBarParentWnd)$'
+    # Captured with Zoom open all day but never joined (zoom-open-no-call.txt):
+    #   title="Zoom Workplace"
+    # This is Zoom's always-present main window; it is excluded explicitly so
+    # that S3 (Zoom open all day, never joined) can never contribute a window
+    # match even if a future Zoom build reuses the string elsewhere.
+    window_exclude_regex:
+      - '^Zoom Workplace$'
+    # Captured mic-in-use entry during a call (zoom-in-call.txt):
+    #   C:\Users\Sharon\AppData\Roaming\Zoom\bin\Zoom.exe
+    mic_process_regex:
+      - '(?i)zoom\.exe$'
+    weights:
+      process: 0.20
+      window: 0.55
+      mic: 0.25
+
+  # Slack huddles (Slack.exe).
+  #
+  # Known gap (see testdata/probe/slack-huddle.txt): the huddle speaker
+  # marker only appeared on one capture out of many taken during the same
+  # huddle -
+  #   title="Sharon Rimer (DM) - SQL Server Community - Slack [Main] \U0001F50A"
+  # - versus the far more common
+  #   title="Sharon Rimer (DM) - SQL Server Community - Slack [Main] \U0001F3E0"
+  # (house icon, no speaker) seen in every other sample of the same huddle.
+  # Because the marker is intermittent, window match alone is deliberately
+  # kept below the active threshold here (process + window = 0.60): a huddle
+  # is only called active once the marker coincides with the microphone
+  # being held by Slack, which was true throughout the whole capture. This
+  # trades a slower/occasional miss for never firing on the marker alone.
+  - app: slack
+    process_names:
+      - Slack.exe
+    window_include_regex:
+      - '\x{1F50A}'
+    # Captured mic-in-use entry during the huddle (slack-huddle.txt):
+    #   com.tinyspeck.slackdesktop_8yrtsj140pw4g
+    mic_process_regex:
+      - '(?i)^com\.tinyspeck\.slackdesktop'
+    weights:
+      process: 0.20
+      window: 0.40
+      mic: 0.25
+      # process + window = 0.60 (deliberately inactive on the marker alone);
+      # process + window + mic = 0.85 (active).

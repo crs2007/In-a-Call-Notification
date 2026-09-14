@@ -1,4 +1,4 @@
-=== 2026-09-14T12:46:36+03:00 ===
+=== 2026-09-14T12:24:53+03:00 ===
 [windows] 35 visible
   pid=33304  proc=ApplicationFrameHost.exe     title="Media Player"
   pid=33304  proc=ApplicationFrameHost.exe     title="Settings"
@@ -14,12 +14,12 @@
   pid=17808  proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
   pid=35332  proc=ScreenSketch.exe             title="Snip & Sketch"
   pid=29584  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
-  pid=29244  proc=Spotify.exe                  title="Spotify Premium"
+  pid=29244  proc=Spotify.exe                  title="⛔️ 3 ימים אדומים לסנפ 500 על קו השיא של יוני — הסטאפ המושלם לפני הפיפיאיי? ומה עם אפל?"
   pid=45068  proc=SystemSettings.exe           title="Settings"
-  pid=89820  proc=Telegram.exe                 title="(4) \u200eדילים שווים😍 – (337)"
+  pid=89820  proc=Telegram.exe                 title="(3) \u200eדילים שווים😍 – (309)"
   pid=17904  proc=TextInputHost.exe            title="Microsoft Text Input Application"
   pid=19224  proc=WhatsApp.Root.exe            title="WhatsApp"
-  pid=85432  proc=brave.exe                    title="Redirecting… | Slack - Brave"
+  pid=40084  proc=brave.exe                    title="Compliance Audit — Handwritten Kitchen - Brave"
   pid=41628  proc=chrome.exe                   title="\u202aAnashost/HA-Animated-cards: Take your Home Assistant dashboard to the next level with dynamic, customizable animated cards that bring your smart home dashboard to life. - Google Chrome\u202c"
   pid=41628  proc=chrome.exe                   title="\u202aGoogle Gemini - Call Notification Vibe Coding Plan - Google Gemini\u202c"
   pid=41628  proc=chrome.exe                   title="\u202aGoogle Gemini - Israeli Legal and Accessibility Prompt - Google Gemini\u202c"
@@ -32,14 +32,13 @@
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="web"
-  pid=23704  proc=ms-teams.exe                 title="Meet | Microsoft Teams"
-  pid=23704  proc=ms-teams.exe                 title="Meeting with Sharon Rimer | Microsoft Teams"
+  pid=16456  proc=ms-teams.exe                 title="Chat | Copilot Israel - Live | Microsoft Teams"
+  pid=29572  proc=msedgewebview2.exe           title="(1) WhatsApp"
   pid=44116  proc=notepad++.exe                title="*new 27 - Notepad++"
-[microphone] 1 in use
-  MSTeams_8wekyb3d8bbwe
+[microphone] 0 in use
 [webcam] 0 in use
 
-=== 2026-09-14T12:46:38+03:00 ===
+=== 2026-09-14T12:24:55+03:00 ===
 [windows] 35 visible
   pid=33304  proc=ApplicationFrameHost.exe     title="Media Player"
   pid=33304  proc=ApplicationFrameHost.exe     title="Settings"
@@ -55,12 +54,12 @@
   pid=17808  proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
   pid=35332  proc=ScreenSketch.exe             title="Snip & Sketch"
   pid=29584  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
-  pid=29244  proc=Spotify.exe                  title="Spotify Premium"
+  pid=29244  proc=Spotify.exe                  title="⛔️ 3 ימים אדומים לסנפ 500 על קו השיא של יוני — הסטאפ המושלם לפני הפיפיאיי? ומה עם אפל?"
   pid=45068  proc=SystemSettings.exe           title="Settings"
-  pid=89820  proc=Telegram.exe                 title="(4) \u200eדילים שווים😍 – (337)"
+  pid=89820  proc=Telegram.exe                 title="(3) \u200eדילים שווים😍 – (309)"
   pid=17904  proc=TextInputHost.exe            title="Microsoft Text Input Application"
   pid=19224  proc=WhatsApp.Root.exe            title="WhatsApp"
-  pid=85432  proc=brave.exe                    title="Redirecting… | Slack - Brave"
+  pid=40084  proc=brave.exe                    title="Compliance Audit — Handwritten Kitchen - Brave"
   pid=41628  proc=chrome.exe                   title="\u202aAnashost/HA-Animated-cards: Take your Home Assistant dashboard to the next level with dynamic, customizable animated cards that bring your smart home dashboard to life. - Google Chrome\u202c"
   pid=41628  proc=chrome.exe                   title="\u202aGoogle Gemini - Call Notification Vibe Coding Plan - Google Gemini\u202c"
   pid=41628  proc=chrome.exe                   title="\u202aGoogle Gemini - Israeli Legal and Accessibility Prompt - Google Gemini\u202c"
@@ -73,14 +72,13 @@
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="web"
-  pid=23704  proc=ms-teams.exe                 title="Meet | Microsoft Teams"
-  pid=23704  proc=ms-teams.exe                 title="Meeting with Sharon Rimer | Microsoft Teams"
+  pid=16456  proc=ms-teams.exe                 title="Chat | Copilot Israel - Live | Microsoft Teams"
+  pid=29572  proc=msedgewebview2.exe           title="(1) WhatsApp"
   pid=44116  proc=notepad++.exe                title="*new 27 - Notepad++"
-[microphone] 1 in use
-  MSTeams_8wekyb3d8bbwe
+[microphone] 0 in use
 [webcam] 0 in use
 
-=== 2026-09-14T12:46:40+03:00 ===
+=== 2026-09-14T12:24:57+03:00 ===
 [windows] 35 visible
   pid=33304  proc=ApplicationFrameHost.exe     title="Media Player"
   pid=33304  proc=ApplicationFrameHost.exe     title="Settings"
@@ -96,12 +94,12 @@
   pid=17808  proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
   pid=35332  proc=ScreenSketch.exe             title="Snip & Sketch"
   pid=29584  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
-  pid=29244  proc=Spotify.exe                  title="Spotify Premium"
+  pid=29244  proc=Spotify.exe                  title="⛔️ 3 ימים אדומים לסנפ 500 על קו השיא של יוני — הסטאפ המושלם לפני הפיפיאיי? ומה עם אפל?"
   pid=45068  proc=SystemSettings.exe           title="Settings"
-  pid=89820  proc=Telegram.exe                 title="(4) \u200eדילים שווים😍 – (337)"
+  pid=89820  proc=Telegram.exe                 title="(3) \u200eדילים שווים😍 – (309)"
   pid=17904  proc=TextInputHost.exe            title="Microsoft Text Input Application"
   pid=19224  proc=WhatsApp.Root.exe            title="WhatsApp"
-  pid=85432  proc=brave.exe                    title="Redirecting… | Slack - Brave"
+  pid=40084  proc=brave.exe                    title="Compliance Audit — Handwritten Kitchen - Brave"
   pid=41628  proc=chrome.exe                   title="\u202aAnashost/HA-Animated-cards: Take your Home Assistant dashboard to the next level with dynamic, customizable animated cards that bring your smart home dashboard to life. - Google Chrome\u202c"
   pid=41628  proc=chrome.exe                   title="\u202aGoogle Gemini - Call Notification Vibe Coding Plan - Google Gemini\u202c"
   pid=41628  proc=chrome.exe                   title="\u202aGoogle Gemini - Israeli Legal and Accessibility Prompt - Google Gemini\u202c"
@@ -114,14 +112,13 @@
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="web"
-  pid=23704  proc=ms-teams.exe                 title="Meet | Microsoft Teams"
-  pid=23704  proc=ms-teams.exe                 title="Meeting with Sharon Rimer | Microsoft Teams"
+  pid=16456  proc=ms-teams.exe                 title="Chat | Copilot Israel - Live | Microsoft Teams"
+  pid=29572  proc=msedgewebview2.exe           title="(1) WhatsApp"
   pid=44116  proc=notepad++.exe                title="*new 27 - Notepad++"
-[microphone] 1 in use
-  MSTeams_8wekyb3d8bbwe
+[microphone] 0 in use
 [webcam] 0 in use
 
-=== 2026-09-14T12:46:42+03:00 ===
+=== 2026-09-14T12:24:59+03:00 ===
 [windows] 35 visible
   pid=33304  proc=ApplicationFrameHost.exe     title="Media Player"
   pid=33304  proc=ApplicationFrameHost.exe     title="Settings"
@@ -137,12 +134,12 @@
   pid=17808  proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
   pid=35332  proc=ScreenSketch.exe             title="Snip & Sketch"
   pid=29584  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
-  pid=29244  proc=Spotify.exe                  title="Spotify Premium"
+  pid=29244  proc=Spotify.exe                  title="⛔️ 3 ימים אדומים לסנפ 500 על קו השיא של יוני — הסטאפ המושלם לפני הפיפיאיי? ומה עם אפל?"
   pid=45068  proc=SystemSettings.exe           title="Settings"
-  pid=89820  proc=Telegram.exe                 title="(4) \u200eדילים שווים😍 – (337)"
+  pid=89820  proc=Telegram.exe                 title="(3) \u200eדילים שווים😍 – (309)"
   pid=17904  proc=TextInputHost.exe            title="Microsoft Text Input Application"
   pid=19224  proc=WhatsApp.Root.exe            title="WhatsApp"
-  pid=85432  proc=brave.exe                    title="Redirecting… | Slack - Brave"
+  pid=40084  proc=brave.exe                    title="Compliance Audit — Handwritten Kitchen - Brave"
   pid=41628  proc=chrome.exe                   title="\u202aAnashost/HA-Animated-cards: Take your Home Assistant dashboard to the next level with dynamic, customizable animated cards that bring your smart home dashboard to life. - Google Chrome\u202c"
   pid=41628  proc=chrome.exe                   title="\u202aGoogle Gemini - Call Notification Vibe Coding Plan - Google Gemini\u202c"
   pid=41628  proc=chrome.exe                   title="\u202aGoogle Gemini - Israeli Legal and Accessibility Prompt - Google Gemini\u202c"
@@ -155,14 +152,13 @@
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="web"
-  pid=23704  proc=ms-teams.exe                 title="Meet | Microsoft Teams"
-  pid=23704  proc=ms-teams.exe                 title="Meeting with Sharon Rimer | Microsoft Teams"
+  pid=16456  proc=ms-teams.exe                 title="Chat | Copilot Israel - Live | Microsoft Teams"
+  pid=29572  proc=msedgewebview2.exe           title="(1) WhatsApp"
   pid=44116  proc=notepad++.exe                title="*new 27 - Notepad++"
-[microphone] 1 in use
-  MSTeams_8wekyb3d8bbwe
+[microphone] 0 in use
 [webcam] 0 in use
 
-=== 2026-09-14T12:46:44+03:00 ===
+=== 2026-09-14T12:25:01+03:00 ===
 [windows] 35 visible
   pid=33304  proc=ApplicationFrameHost.exe     title="Media Player"
   pid=33304  proc=ApplicationFrameHost.exe     title="Settings"
@@ -178,12 +174,12 @@
   pid=17808  proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
   pid=35332  proc=ScreenSketch.exe             title="Snip & Sketch"
   pid=29584  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
-  pid=29244  proc=Spotify.exe                  title="Spotify Premium"
+  pid=29244  proc=Spotify.exe                  title="⛔️ 3 ימים אדומים לסנפ 500 על קו השיא של יוני — הסטאפ המושלם לפני הפיפיאיי? ומה עם אפל?"
   pid=45068  proc=SystemSettings.exe           title="Settings"
-  pid=89820  proc=Telegram.exe                 title="(4) \u200eדילים שווים😍 – (337)"
+  pid=89820  proc=Telegram.exe                 title="(3) \u200eדילים שווים😍 – (309)"
   pid=17904  proc=TextInputHost.exe            title="Microsoft Text Input Application"
   pid=19224  proc=WhatsApp.Root.exe            title="WhatsApp"
-  pid=85432  proc=brave.exe                    title="Redirecting… | Slack - Brave"
+  pid=40084  proc=brave.exe                    title="Compliance Audit — Handwritten Kitchen - Brave"
   pid=41628  proc=chrome.exe                   title="\u202aAnashost/HA-Animated-cards: Take your Home Assistant dashboard to the next level with dynamic, customizable animated cards that bring your smart home dashboard to life. - Google Chrome\u202c"
   pid=41628  proc=chrome.exe                   title="\u202aGoogle Gemini - Call Notification Vibe Coding Plan - Google Gemini\u202c"
   pid=41628  proc=chrome.exe                   title="\u202aGoogle Gemini - Israeli Legal and Accessibility Prompt - Google Gemini\u202c"
@@ -196,14 +192,13 @@
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="web"
-  pid=23704  proc=ms-teams.exe                 title="Meet | Microsoft Teams"
-  pid=23704  proc=ms-teams.exe                 title="Meeting with Sharon Rimer | Microsoft Teams"
+  pid=16456  proc=ms-teams.exe                 title="Chat | Copilot Israel - Live | Microsoft Teams"
+  pid=29572  proc=msedgewebview2.exe           title="(1) WhatsApp"
   pid=44116  proc=notepad++.exe                title="*new 27 - Notepad++"
-[microphone] 1 in use
-  MSTeams_8wekyb3d8bbwe
+[microphone] 0 in use
 [webcam] 0 in use
 
-=== 2026-09-14T12:46:46+03:00 ===
+=== 2026-09-14T12:25:03+03:00 ===
 [windows] 35 visible
   pid=33304  proc=ApplicationFrameHost.exe     title="Media Player"
   pid=33304  proc=ApplicationFrameHost.exe     title="Settings"
@@ -219,12 +214,12 @@
   pid=17808  proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
   pid=35332  proc=ScreenSketch.exe             title="Snip & Sketch"
   pid=29584  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
-  pid=29244  proc=Spotify.exe                  title="Spotify Premium"
+  pid=29244  proc=Spotify.exe                  title="⛔️ 3 ימים אדומים לסנפ 500 על קו השיא של יוני — הסטאפ המושלם לפני הפיפיאיי? ומה עם אפל?"
   pid=45068  proc=SystemSettings.exe           title="Settings"
-  pid=89820  proc=Telegram.exe                 title="(4) \u200eדילים שווים😍 – (337)"
+  pid=89820  proc=Telegram.exe                 title="(3) \u200eדילים שווים😍 – (309)"
   pid=17904  proc=TextInputHost.exe            title="Microsoft Text Input Application"
   pid=19224  proc=WhatsApp.Root.exe            title="WhatsApp"
-  pid=85432  proc=brave.exe                    title="Redirecting… | Slack - Brave"
+  pid=40084  proc=brave.exe                    title="Compliance Audit — Handwritten Kitchen - Brave"
   pid=41628  proc=chrome.exe                   title="\u202aAnashost/HA-Animated-cards: Take your Home Assistant dashboard to the next level with dynamic, customizable animated cards that bring your smart home dashboard to life. - Google Chrome\u202c"
   pid=41628  proc=chrome.exe                   title="\u202aGoogle Gemini - Call Notification Vibe Coding Plan - Google Gemini\u202c"
   pid=41628  proc=chrome.exe                   title="\u202aGoogle Gemini - Israeli Legal and Accessibility Prompt - Google Gemini\u202c"
@@ -237,14 +232,13 @@
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="web"
-  pid=23704  proc=ms-teams.exe                 title="Meet | Microsoft Teams"
-  pid=23704  proc=ms-teams.exe                 title="Meeting with Sharon Rimer | Microsoft Teams"
+  pid=16456  proc=ms-teams.exe                 title="Chat | Copilot Israel - Live | Microsoft Teams"
+  pid=29572  proc=msedgewebview2.exe           title="(1) WhatsApp"
   pid=44116  proc=notepad++.exe                title="*new 27 - Notepad++"
-[microphone] 1 in use
-  MSTeams_8wekyb3d8bbwe
+[microphone] 0 in use
 [webcam] 0 in use
 
-=== 2026-09-14T12:46:48+03:00 ===
+=== 2026-09-14T12:25:06+03:00 ===
 [windows] 35 visible
   pid=33304  proc=ApplicationFrameHost.exe     title="Media Player"
   pid=33304  proc=ApplicationFrameHost.exe     title="Settings"
@@ -260,12 +254,12 @@
   pid=17808  proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
   pid=35332  proc=ScreenSketch.exe             title="Snip & Sketch"
   pid=29584  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
-  pid=29244  proc=Spotify.exe                  title="Spotify Premium"
+  pid=29244  proc=Spotify.exe                  title="⛔️ 3 ימים אדומים לסנפ 500 על קו השיא של יוני — הסטאפ המושלם לפני הפיפיאיי? ומה עם אפל?"
   pid=45068  proc=SystemSettings.exe           title="Settings"
-  pid=89820  proc=Telegram.exe                 title="(4) \u200eדילים שווים😍 – (337)"
+  pid=89820  proc=Telegram.exe                 title="(3) \u200eדילים שווים😍 – (309)"
   pid=17904  proc=TextInputHost.exe            title="Microsoft Text Input Application"
   pid=19224  proc=WhatsApp.Root.exe            title="WhatsApp"
-  pid=85432  proc=brave.exe                    title="Redirecting… | Slack - Brave"
+  pid=40084  proc=brave.exe                    title="Compliance Audit — Handwritten Kitchen - Brave"
   pid=41628  proc=chrome.exe                   title="\u202aAnashost/HA-Animated-cards: Take your Home Assistant dashboard to the next level with dynamic, customizable animated cards that bring your smart home dashboard to life. - Google Chrome\u202c"
   pid=41628  proc=chrome.exe                   title="\u202aGoogle Gemini - Call Notification Vibe Coding Plan - Google Gemini\u202c"
   pid=41628  proc=chrome.exe                   title="\u202aGoogle Gemini - Israeli Legal and Accessibility Prompt - Google Gemini\u202c"
@@ -278,14 +272,13 @@
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="web"
-  pid=23704  proc=ms-teams.exe                 title="Meet | Microsoft Teams"
-  pid=23704  proc=ms-teams.exe                 title="Meeting with Sharon Rimer | Microsoft Teams"
+  pid=16456  proc=ms-teams.exe                 title="Chat | Copilot Israel - Live | Microsoft Teams"
+  pid=29572  proc=msedgewebview2.exe           title="(1) WhatsApp"
   pid=44116  proc=notepad++.exe                title="*new 27 - Notepad++"
-[microphone] 1 in use
-  MSTeams_8wekyb3d8bbwe
+[microphone] 0 in use
 [webcam] 0 in use
 
-=== 2026-09-14T12:46:50+03:00 ===
+=== 2026-09-14T12:25:08+03:00 ===
 [windows] 35 visible
   pid=33304  proc=ApplicationFrameHost.exe     title="Media Player"
   pid=33304  proc=ApplicationFrameHost.exe     title="Settings"
@@ -301,12 +294,12 @@
   pid=17808  proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
   pid=35332  proc=ScreenSketch.exe             title="Snip & Sketch"
   pid=29584  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
-  pid=29244  proc=Spotify.exe                  title="Spotify Premium"
+  pid=29244  proc=Spotify.exe                  title="⛔️ 3 ימים אדומים לסנפ 500 על קו השיא של יוני — הסטאפ המושלם לפני הפיפיאיי? ומה עם אפל?"
   pid=45068  proc=SystemSettings.exe           title="Settings"
-  pid=89820  proc=Telegram.exe                 title="(4) \u200eדילים שווים😍 – (337)"
+  pid=89820  proc=Telegram.exe                 title="(3) \u200eדילים שווים😍 – (309)"
   pid=17904  proc=TextInputHost.exe            title="Microsoft Text Input Application"
   pid=19224  proc=WhatsApp.Root.exe            title="WhatsApp"
-  pid=85432  proc=brave.exe                    title="Redirecting… | Slack - Brave"
+  pid=40084  proc=brave.exe                    title="Compliance Audit — Handwritten Kitchen - Brave"
   pid=41628  proc=chrome.exe                   title="\u202aAnashost/HA-Animated-cards: Take your Home Assistant dashboard to the next level with dynamic, customizable animated cards that bring your smart home dashboard to life. - Google Chrome\u202c"
   pid=41628  proc=chrome.exe                   title="\u202aGoogle Gemini - Call Notification Vibe Coding Plan - Google Gemini\u202c"
   pid=41628  proc=chrome.exe                   title="\u202aGoogle Gemini - Israeli Legal and Accessibility Prompt - Google Gemini\u202c"
@@ -319,14 +312,13 @@
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="web"
-  pid=23704  proc=ms-teams.exe                 title="Meet | Microsoft Teams"
-  pid=23704  proc=ms-teams.exe                 title="Meeting with Sharon Rimer | Microsoft Teams"
+  pid=16456  proc=ms-teams.exe                 title="Chat | Copilot Israel - Live | Microsoft Teams"
+  pid=29572  proc=msedgewebview2.exe           title="(1) WhatsApp"
   pid=44116  proc=notepad++.exe                title="*new 27 - Notepad++"
-[microphone] 1 in use
-  MSTeams_8wekyb3d8bbwe
+[microphone] 0 in use
 [webcam] 0 in use
 
-=== 2026-09-14T12:46:52+03:00 ===
+=== 2026-09-14T12:25:10+03:00 ===
 [windows] 35 visible
   pid=33304  proc=ApplicationFrameHost.exe     title="Media Player"
   pid=33304  proc=ApplicationFrameHost.exe     title="Settings"
@@ -342,12 +334,12 @@
   pid=17808  proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
   pid=35332  proc=ScreenSketch.exe             title="Snip & Sketch"
   pid=29584  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
-  pid=29244  proc=Spotify.exe                  title="Spotify Premium"
+  pid=29244  proc=Spotify.exe                  title="⛔️ 3 ימים אדומים לסנפ 500 על קו השיא של יוני — הסטאפ המושלם לפני הפיפיאיי? ומה עם אפל?"
   pid=45068  proc=SystemSettings.exe           title="Settings"
-  pid=89820  proc=Telegram.exe                 title="(4) \u200eדילים שווים😍 – (337)"
+  pid=89820  proc=Telegram.exe                 title="(3) \u200eדילים שווים😍 – (309)"
   pid=17904  proc=TextInputHost.exe            title="Microsoft Text Input Application"
   pid=19224  proc=WhatsApp.Root.exe            title="WhatsApp"
-  pid=85432  proc=brave.exe                    title="Redirecting… | Slack - Brave"
+  pid=40084  proc=brave.exe                    title="Compliance Audit — Handwritten Kitchen - Brave"
   pid=41628  proc=chrome.exe                   title="\u202aAnashost/HA-Animated-cards: Take your Home Assistant dashboard to the next level with dynamic, customizable animated cards that bring your smart home dashboard to life. - Google Chrome\u202c"
   pid=41628  proc=chrome.exe                   title="\u202aGoogle Gemini - Call Notification Vibe Coding Plan - Google Gemini\u202c"
   pid=41628  proc=chrome.exe                   title="\u202aGoogle Gemini - Israeli Legal and Accessibility Prompt - Google Gemini\u202c"
@@ -360,14 +352,13 @@
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="web"
-  pid=23704  proc=ms-teams.exe                 title="Meet | Microsoft Teams"
-  pid=23704  proc=ms-teams.exe                 title="Meeting with Sharon Rimer | Microsoft Teams"
+  pid=16456  proc=ms-teams.exe                 title="Chat | Copilot Israel - Live | Microsoft Teams"
+  pid=29572  proc=msedgewebview2.exe           title="(1) WhatsApp"
   pid=44116  proc=notepad++.exe                title="*new 27 - Notepad++"
-[microphone] 1 in use
-  MSTeams_8wekyb3d8bbwe
+[microphone] 0 in use
 [webcam] 0 in use
 
-=== 2026-09-14T12:46:54+03:00 ===
+=== 2026-09-14T12:25:12+03:00 ===
 [windows] 35 visible
   pid=33304  proc=ApplicationFrameHost.exe     title="Media Player"
   pid=33304  proc=ApplicationFrameHost.exe     title="Settings"
@@ -383,12 +374,12 @@
   pid=17808  proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
   pid=35332  proc=ScreenSketch.exe             title="Snip & Sketch"
   pid=29584  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
-  pid=29244  proc=Spotify.exe                  title="Spotify Premium"
+  pid=29244  proc=Spotify.exe                  title="⛔️ 3 ימים אדומים לסנפ 500 על קו השיא של יוני — הסטאפ המושלם לפני הפיפיאיי? ומה עם אפל?"
   pid=45068  proc=SystemSettings.exe           title="Settings"
-  pid=89820  proc=Telegram.exe                 title="(4) \u200eדילים שווים😍 – (337)"
+  pid=89820  proc=Telegram.exe                 title="(3) \u200eדילים שווים😍 – (309)"
   pid=17904  proc=TextInputHost.exe            title="Microsoft Text Input Application"
   pid=19224  proc=WhatsApp.Root.exe            title="WhatsApp"
-  pid=85432  proc=brave.exe                    title="Redirecting… | Slack - Brave"
+  pid=40084  proc=brave.exe                    title="Compliance Audit — Handwritten Kitchen - Brave"
   pid=41628  proc=chrome.exe                   title="\u202aAnashost/HA-Animated-cards: Take your Home Assistant dashboard to the next level with dynamic, customizable animated cards that bring your smart home dashboard to life. - Google Chrome\u202c"
   pid=41628  proc=chrome.exe                   title="\u202aGoogle Gemini - Call Notification Vibe Coding Plan - Google Gemini\u202c"
   pid=41628  proc=chrome.exe                   title="\u202aGoogle Gemini - Israeli Legal and Accessibility Prompt - Google Gemini\u202c"
@@ -401,10 +392,9 @@
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="This PC"
   pid=7272   proc=explorer.exe                 title="web"
-  pid=23704  proc=ms-teams.exe                 title="Meet | Microsoft Teams"
-  pid=23704  proc=ms-teams.exe                 title="Meeting with Sharon Rimer | Microsoft Teams"
+  pid=16456  proc=ms-teams.exe                 title="Chat | Copilot Israel - Live | Microsoft Teams"
+  pid=29572  proc=msedgewebview2.exe           title="(1) WhatsApp"
   pid=44116  proc=notepad++.exe                title="*new 27 - Notepad++"
-[microphone] 1 in use
-  MSTeams_8wekyb3d8bbwe
+[microphone] 0 in use
 [webcam] 0 in use
 
