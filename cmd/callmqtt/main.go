@@ -66,6 +66,10 @@ func run() error {
 		return initConfig(f.configPath)
 	}
 
+	if flag.Arg(0) == "startup" {
+		return startupCommand(flag.Arg(1))
+	}
+
 	cfg, err := config.Load(f.configPath)
 	if err != nil {
 		if os.IsNotExist(errors.Unwrap(err)) {
@@ -188,12 +192,48 @@ func usage() {
 	fmt.Fprintf(os.Stderr, `callmqtt %s - publish desktop call presence to MQTT
 
 Usage:
-  callmqtt [flags]        run the agent
-  callmqtt init           write a starter config and print where it went
+  callmqtt [flags]              run the agent
+  callmqtt init                 write a starter config and print where it went
+  callmqtt startup enable       launch callmqtt at login
+  callmqtt startup disable      stop launching callmqtt at login
+  callmqtt startup status       report whether start-at-login is enabled
 
 Flags:
 `, version)
 	flag.PrintDefaults()
+}
+
+// startupCommand implements `callmqtt startup enable|disable|status`. It
+// talks to the same build-tag-selected adapter the tray uses, so the CLI and
+// the tray checkbox can never disagree about how autostart is wired up.
+func startupCommand(action string) error {
+	switch action {
+	case "enable":
+		if err := startup.Enable(); err != nil {
+			return fmt.Errorf("enable start at login: %w", err)
+		}
+		fmt.Println("start at login: enabled")
+		return nil
+	case "disable":
+		if err := startup.Disable(); err != nil {
+			return fmt.Errorf("disable start at login: %w", err)
+		}
+		fmt.Println("start at login: disabled")
+		return nil
+	case "status":
+		enabled, err := startup.IsEnabled()
+		if err != nil {
+			return fmt.Errorf("check start at login: %w", err)
+		}
+		if enabled {
+			fmt.Println("start at login: enabled")
+		} else {
+			fmt.Println("start at login: disabled")
+		}
+		return nil
+	default:
+		return fmt.Errorf("usage: callmqtt startup enable|disable|status")
+	}
 }
 
 // initConfig writes the annotated example config to path, and tells the user
