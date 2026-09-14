@@ -43,6 +43,7 @@ type flags struct {
 func main() {
 	if err := run(); err != nil {
 		fmt.Fprintln(os.Stderr, "callmqtt:", err)
+		reportError(err)
 		os.Exit(1)
 	}
 }

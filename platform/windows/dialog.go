@@ -45,6 +45,23 @@ func ShowBrokerDialog(current BrokerFields) (BrokerFields, bool, error) {
 	return d.result, d.confirmed, nil
 }
 
+// ShowError pops a blocking MessageBox with an OK button and an error icon.
+// It exists because the shipped binary is linked with -H=windowsgui: it has
+// no console, so anything written to stderr — a startup error, most
+// visibly "no config, run `callmqtt init`" on first launch — is otherwise
+// invisible and the process just exits with nothing on screen.
+func ShowError(title, message string) {
+	msg, err := windows.UTF16PtrFromString(message)
+	if err != nil {
+		return
+	}
+	titleP, err := windows.UTF16PtrFromString(title)
+	if err != nil {
+		return
+	}
+	procMessageBoxW.Call(0, uintptr(unsafe.Pointer(msg)), uintptr(unsafe.Pointer(titleP)), mbOK|mbIconError)
+}
+
 // --- Win32 plumbing ----------------------------------------------------
 
 var (
@@ -95,6 +112,7 @@ const (
 
 	mbOK          = 0x00000000
 	mbIconWarning = 0x00000030
+	mbIconError   = 0x00000010
 
 	idOK     = 1 // IDOK, so Enter (via IsDialogMessage) triggers this button
 	idCancel = 2 // IDCANCEL, so Escape triggers this button
