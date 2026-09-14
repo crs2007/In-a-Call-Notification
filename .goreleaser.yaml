@@ -58,4 +58,4 @@ changelog:
 release:
   github:
     owner: crs2007
-    name: In-a-Call-Notification
+    name: callmqtt
