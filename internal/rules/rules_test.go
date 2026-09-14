@@ -111,11 +111,28 @@ const testThreshold = 0.70
 
 func liveConfig(t *testing.T) *Config {
 	t.Helper()
-	cfg, err := LoadFile(filepath.Join("rules.yaml"))
+	cfg, err := Default()
 	if err != nil {
-		t.Fatalf("load rules.yaml: %v", err)
+		t.Fatalf("load default rules: %v", err)
 	}
 	return cfg
+}
+
+// TestDefault_MatchesShippedFile guards against the embed and the on-disk
+// file drifting apart, which //go:embed rules.yaml can't do by construction
+// but is worth asserting explicitly since both are read in this package.
+func TestDefault_MatchesShippedFile(t *testing.T) {
+	fromEmbed, err := Default()
+	if err != nil {
+		t.Fatalf("Default(): %v", err)
+	}
+	fromFile, err := LoadFile(filepath.Join("rules.yaml"))
+	if err != nil {
+		t.Fatalf("LoadFile(rules.yaml): %v", err)
+	}
+	if len(fromEmbed.Rules) != len(fromFile.Rules) {
+		t.Fatalf("got %d embedded rules, want %d (from file)", len(fromEmbed.Rules), len(fromFile.Rules))
+	}
 }
 
 // -----------------------------------------------------------------------

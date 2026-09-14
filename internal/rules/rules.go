@@ -18,6 +18,7 @@
 package rules
 
 import (
+	_ "embed"
 	"fmt"
 	"os"
 	"regexp"
@@ -28,6 +29,20 @@ import (
 
 	"github.com/crs2007/callmqtt/internal/model"
 )
+
+// defaultRulesYAML is CallMQTT's shipped rule set, tuned against the
+// fixtures in testdata/probe/*.txt. It is not user-configurable: unlike
+// config.yaml, a wrong pattern here needs a new capture and a test, not a
+// runtime edit, so it is compiled into the binary rather than read from a
+// path.
+//
+//go:embed rules.yaml
+var defaultRulesYAML []byte
+
+// Default parses and compiles CallMQTT's shipped rule set.
+func Default() (*Config, error) {
+	return Load(defaultRulesYAML)
+}
 
 // Weights controls how much each kind of evidence contributes to an app's
 // confidence score. The sum need not be 1; Evaluate clamps the total.

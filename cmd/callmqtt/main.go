@@ -17,10 +17,12 @@ import (
 	"time"
 
 	"github.com/crs2007/callmqtt/internal/config"
+	"github.com/crs2007/callmqtt/internal/detectors"
 	"github.com/crs2007/callmqtt/internal/engine"
 	"github.com/crs2007/callmqtt/internal/model"
 	"github.com/crs2007/callmqtt/internal/mqtt"
 	"github.com/crs2007/callmqtt/internal/network"
+	"github.com/crs2007/callmqtt/internal/rules"
 	"github.com/crs2007/callmqtt/internal/simulate"
 	"github.com/crs2007/callmqtt/internal/supervisor"
 )
@@ -273,14 +275,15 @@ type discardPublisher struct{}
 
 func (discardPublisher) PublishState(context.Context, mqtt.Payload) error { return nil }
 
-func buildDetectors(_ *config.Config, f flags) ([]model.Detector, error) {
+func buildDetectors(cfg *config.Config, f flags) ([]model.Detector, error) {
 	if f.simulate {
 		return []model.Detector{simulate.NewDetector()}, nil
 	}
-	// Real detectors arrive with the Windows platform adapters. Until then,
-	// refuse rather than silently reporting that nobody is ever in a call:
-	// an agent that is confidently wrong is worse than one that says so.
-	return nil, errors.New("no detectors are available yet in this build; run with -simulate")
+	rulesCfg, err := rules.Default()
+	if err != nil {
+		return nil, fmt.Errorf("load detection rules: %w", err)
+	}
+	return detectors.New(rulesCfg, cfg.Detection.ActiveThreshold, detectors.WindowsSnapshot(), time.Now), nil
 }
 
 // newLogger writes human-readable output to stderr and, when configured, JSON
