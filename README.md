@@ -19,6 +19,15 @@ you're merely listening to music, or that stays red after the call ended, makes
 the whole signal untrustworthy. The detection is tuned to under-trigger rather
 than over-trigger.
 
+## Installation
+
+Download the latest release from the
+[releases page](https://github.com/crs2007/In-a-Call-Notification/releases/latest).
+Releases ship as `callmqtt_<version>_windows_amd64.zip` or
+`callmqtt_<version>_windows_arm64.zip` — pick the one matching your CPU
+architecture, optionally verify it against the accompanying `checksums.txt`,
+extract it, and run `callmqtt.exe`.
+
 ## Privacy
 
 Everything runs locally. The agent publishes only the call state, the app name
