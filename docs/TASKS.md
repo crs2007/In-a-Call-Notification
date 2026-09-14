@@ -141,7 +141,7 @@ meeting window, scoring `process (0.20) + window (0.55) = 0.75` — above the
 never caught this because it happened to be captured while Teams was on its
 Chat tab, not showing the bare "Meet" window.
 
-Commit: `<fill in after commit>`. Fixed by the `detector-rules` subagent:
+Commit: `531f346`. Fixed by the `detector-rules` subagent:
 narrowed `internal/rules/rules.yaml`'s Teams `window_include_regex` from
 `'^(Meet|Meeting with .+) \| Microsoft Teams$'` to
 `'^Meeting with .+ \| Microsoft Teams$'` (bare "Meet" no longer matches at
