@@ -69,7 +69,7 @@ func TestDiscoveryPayloadIsStable(t *testing.T) {
   "origin": {
     "name": "callmqtt",
     "sw_version": "1.2.3",
-    "support_url": "https://github.com/crs2007/callmqtt"
+    "support_url": "https://github.com/crs2007/In-a-Call-Notification"
   }
 }`
 

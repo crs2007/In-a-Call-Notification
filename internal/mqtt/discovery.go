@@ -93,7 +93,7 @@ func BuildDiscovery(cfg *config.Config, version string) discoveryConfig {
 		Origin: origin{
 			Name:       "callmqtt",
 			SWVersion:  version,
-			SupportURL: "https://github.com/crs2007/callmqtt",
+			SupportURL: "https://github.com/crs2007/In-a-Call-Notification",
 		},
 	}
 }
