@@ -59,3 +59,7 @@ release:
   github:
     owner: crs2007
     name: callmqtt
+  # Tags with a semver prerelease suffix (-alpha.N, -beta.N, -rc.N) are
+  # marked as GitHub "pre-release" automatically, so alpha testers don't
+  # mistake a build for the stable "Latest" release.
+  prerelease: auto
