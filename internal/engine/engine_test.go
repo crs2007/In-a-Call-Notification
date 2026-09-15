@@ -32,12 +32,12 @@ func (f *fakeDetector) Detect(context.Context) model.DetectionResult {
 }
 
 type fakeChecker struct {
-	info network.Info
-	err  error
+	infos []network.Info
+	err   error
 }
 
-func (f *fakeChecker) Current(context.Context) (network.Info, error) {
-	return f.info, f.err
+func (f *fakeChecker) Current(context.Context) ([]network.Info, error) {
+	return f.infos, f.err
 }
 
 type fakePublisher struct {
@@ -105,7 +105,7 @@ mqtt:
 
 	h := &harness{
 		detector:  &fakeDetector{app: "teams", state: model.StateInactive},
-		checker:   &fakeChecker{info: homeNetwork()},
+		checker:   &fakeChecker{infos: []network.Info{homeNetwork()}},
 		publisher: &fakePublisher{},
 		start:     time.Date(2026, 9, 13, 10, 0, 0, 0, time.UTC),
 	}
@@ -259,7 +259,7 @@ func TestLeavingTheAllowedNetworkStopsPublishing(t *testing.T) {
 	}
 	before := len(h.publisher.sent)
 
-	h.checker.info = hotspot()
+	h.checker.infos = []network.Info{hotspot()}
 	h.runUntil(10 * time.Minute)
 
 	if len(h.publisher.sent) != before {
@@ -276,11 +276,11 @@ func TestRejoiningTheAllowedNetworkRepublishes(t *testing.T) {
 	h.detector.state = model.StateActive
 	h.runUntil(30 * time.Second)
 
-	h.checker.info = hotspot()
+	h.checker.infos = []network.Info{hotspot()}
 	h.runUntil(90 * time.Second)
 	before := len(h.publisher.sent)
 
-	h.checker.info = homeNetwork()
+	h.checker.infos = []network.Info{homeNetwork()}
 	h.tick(100 * time.Second)
 
 	if len(h.publisher.sent) <= before {
@@ -288,6 +288,24 @@ func TestRejoiningTheAllowedNetworkRepublishes(t *testing.T) {
 	}
 	if last := h.publisher.sent[len(h.publisher.sent)-1]; last.State != "active" {
 		t.Errorf("republished %q, want the current active state", last.State)
+	}
+}
+
+func TestVPNDoesNotHideAllowedPhysicalNetwork(t *testing.T) {
+	h := newHarness(t)
+	h.checker.infos = []network.Info{
+		{Connected: true, Interface: "CatoNetworks", LocalIP: netip.MustParseAddr("192.168.16.122")},
+		homeNetwork(),
+	}
+
+	h.tick(0)
+
+	status := h.engine.Status()
+	if !status.Allowed || status.NetworkRule != "Home" {
+		t.Fatalf("network decision = (%q, %v), want (Home, true)", status.NetworkRule, status.Allowed)
+	}
+	if status.Network.Interface != "Ethernet" || status.Network.LocalIP != netip.MustParseAddr("192.168.1.42") {
+		t.Fatalf("matched network = %+v, want the physical Home adapter", status.Network)
 	}
 }
 
@@ -316,7 +334,7 @@ func TestNoAllowedNetworksPublishesNothing(t *testing.T) {
 		Config:    cfg,
 		Logger:    slog.New(slog.NewTextHandler(io.Discard, nil)),
 		Detectors: nil,
-		Checker:   &fakeChecker{info: homeNetwork()},
+		Checker:   &fakeChecker{infos: []network.Info{homeNetwork()}},
 		Publisher: publisher,
 	})
 	if err != nil {
@@ -419,7 +437,7 @@ mqtt:
 			&fakeDetector{app: "zoom", state: model.StateActive, confidence: 0.75},
 			&fakeDetector{app: "teams", state: model.StateActive, confidence: 0.95},
 		},
-		Checker:   &fakeChecker{info: homeNetwork()},
+		Checker:   &fakeChecker{infos: []network.Info{homeNetwork()}},
 		Publisher: publisher,
 	})
 	if err != nil {

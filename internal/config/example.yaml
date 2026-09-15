@@ -1,4 +1,4 @@
-# CallMQTT configuration.
+# In a Call Notification configuration.
 #
 # Copy to %APPDATA%\callmqtt\config.yaml (Windows) and edit.
 # Check it with:  callmqtt --validate-config
@@ -9,12 +9,12 @@ app:
   device_id: auto
 
 mqtt:
-  host: 192.168.1.10
+  host: 192.168.68.166
   port: 1883
-  username: callmqtt
-  # Prefer an environment variable over a literal secret. CallMQTT warns if
+  username: mqcommunicator
+  # Prefer an environment variable over a literal secret. In a Call Notification warns if
   # this is written directly into the file.
-  password: "${CALLMQTT_MQTT_PASSWORD}"
+  password: mqcommunicator1!
   discovery:
     # Creates the Home Assistant binary_sensor automatically. With this on you
     # never write a line of Home Assistant YAML.
@@ -27,10 +27,7 @@ mqtt:
 allowed_networks:
   - name: Home
     cidrs:
-      - "192.168.1.0/24"
-  - name: Office
-    cidrs:
-      - "10.20.0.0/16"
+      - "192.168.68.0/24"
 
 detectors:
   teams:

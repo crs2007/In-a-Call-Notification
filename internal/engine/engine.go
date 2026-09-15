@@ -231,14 +231,14 @@ func (e *Engine) refreshNetwork(ctx context.Context, now time.Time) {
 	e.netCheckAt = now
 	e.netKnown = true
 
-	info, err := e.checker.Current(ctx)
+	infos, err := e.checker.Current(ctx)
 	if err != nil {
 		e.log.Warn("network check failed, suspending publishing", "error", err)
 		e.netInfo, e.netRule, e.netAllowed = network.Info{}, "", false
 		return
 	}
 
-	rule, allowed := e.matcher.Match(info)
+	info, rule, allowed := e.matcher.MatchAny(infos)
 	if allowed != e.netAllowed || rule != e.netRule {
 		e.log.Info("network changed",
 			"interface", info.Interface, "rule", rule, "allowed", allowed)

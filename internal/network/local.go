@@ -2,16 +2,10 @@ package network
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net"
 	"net/netip"
 )
-
-// routeProbe is an address used only to ask the operating system which local
-// interface would carry traffic to the outside world. It is in TEST-NET-1
-// (RFC 5737), so it is guaranteed not to be a real host.
-const routeProbe = "192.0.2.1:9"
 
 // LocalChecker reports the network using nothing but the standard library.
 //
@@ -26,83 +20,65 @@ const routeProbe = "192.0.2.1:9"
 // broken by a system language change, so it is what v0.1 matches on.
 type LocalChecker struct{}
 
-// Current reports the interface that would carry outbound traffic, along with
-// its address and subnet.
-func (LocalChecker) Current(context.Context) (Info, error) {
-	local, err := outboundAddr()
-	if err != nil {
-		// No route to anywhere means no usable network. That is a legitimate
-		// state, not a failure, and it denies.
-		return Info{Connected: false}, nil
-	}
-
-	iface, prefix, err := interfaceFor(local)
-	if err != nil {
-		// The address is real even if its interface could not be identified,
-		// so subnet matching can still work from the address alone.
-		return Info{Connected: true, LocalIP: local}, nil
-	}
-
-	return Info{
-		Connected: true,
-		Interface: iface,
-		LocalIP:   local,
-		Prefix:    prefix,
-	}, nil
-}
-
-// outboundAddr returns the source address the OS would use to reach the
-// internet. Dialing UDP sends no packets; it only resolves the route.
-func outboundAddr() (netip.Addr, error) {
-	conn, err := net.Dial("udp4", routeProbe)
-	if err != nil {
-		return netip.Addr{}, fmt.Errorf("resolve outbound route: %w", err)
-	}
-	defer conn.Close()
-
-	addrPort, ok := conn.LocalAddr().(*net.UDPAddr)
-	if !ok {
-		return netip.Addr{}, errors.New("resolve outbound route: unexpected address type")
-	}
-
-	addr, ok := netip.AddrFromSlice(addrPort.IP)
-	if !ok {
-		return netip.Addr{}, errors.New("resolve outbound route: unparseable address")
-	}
-	return addr.Unmap(), nil
-}
-
-// interfaceFor finds the interface holding the given address, and the subnet
-// it is configured with.
-func interfaceFor(addr netip.Addr) (string, netip.Prefix, error) {
+// Current reports every usable address on an interface that is currently up.
+// A VPN may own the default route, so selecting only the outbound interface
+// would hide an otherwise allowed physical adapter.
+func (LocalChecker) Current(context.Context) ([]Info, error) {
 	ifaces, err := net.Interfaces()
 	if err != nil {
-		return "", netip.Prefix{}, fmt.Errorf("enumerate interfaces: %w", err)
+		return nil, fmt.Errorf("enumerate interfaces: %w", err)
 	}
 
+	return infosForInterfaces(ifaces, func(iface net.Interface) ([]net.Addr, error) {
+		return iface.Addrs()
+	}), nil
+}
+
+func infosForInterfaces(ifaces []net.Interface, addrs func(net.Interface) ([]net.Addr, error)) []Info {
+	var infos []Info
 	for _, iface := range ifaces {
-		addrs, err := iface.Addrs()
+		if iface.Flags&net.FlagUp == 0 || iface.Flags&net.FlagLoopback != 0 {
+			continue
+		}
+
+		assigned, err := addrs(iface)
 		if err != nil {
 			continue // an interface that cannot be read is not evidence of anything
 		}
-		for _, a := range addrs {
-			ipNet, ok := a.(*net.IPNet)
+		for _, assignedAddr := range assigned {
+			addr, prefix, ok := usablePrefix(assignedAddr)
 			if !ok {
 				continue
 			}
-			candidate, ok := netip.AddrFromSlice(ipNet.IP)
-			if !ok || candidate.Unmap() != addr {
-				continue
-			}
-
-			ones, _ := ipNet.Mask.Size()
-			prefix, err := addr.Prefix(ones)
-			if err != nil {
-				return iface.Name, netip.Prefix{}, nil
-			}
-			return iface.Name, prefix, nil
+			infos = append(infos, Info{
+				Connected: true,
+				Interface: iface.Name,
+				LocalIP:   addr,
+				Prefix:    prefix,
+			})
 		}
 	}
+	return infos
+}
 
-	return "", netip.Prefix{}, fmt.Errorf("no interface holds address %s", addr)
+func usablePrefix(assigned net.Addr) (netip.Addr, netip.Prefix, bool) {
+	ipNet, ok := assigned.(*net.IPNet)
+	if !ok {
+		return netip.Addr{}, netip.Prefix{}, false
+	}
+
+	addr, ok := netip.AddrFromSlice(ipNet.IP)
+	if !ok {
+		return netip.Addr{}, netip.Prefix{}, false
+	}
+	addr = addr.Unmap()
+	if !addr.IsGlobalUnicast() {
+		return netip.Addr{}, netip.Prefix{}, false
+	}
+
+	ones, bits := ipNet.Mask.Size()
+	if ones < 0 || bits != addr.BitLen() {
+		return addr, netip.Prefix{}, true
+	}
+	return addr, netip.PrefixFrom(addr, ones).Masked(), true
 }

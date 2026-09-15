@@ -210,6 +210,26 @@ func TestTeamsInCall_IsActive(t *testing.T) {
 	}
 }
 
+func TestTeamsInCallGenericTitle_RequiresMic(t *testing.T) {
+	cfg := liveConfig(t)
+	snaps := loadFixture(t, "teams-in-call-generic-title.txt")
+	for i, obs := range snaps {
+		got := find(t, cfg.Evaluate(obs, testThreshold, time.Now()), "teams")
+		if got.State != model.StateActive {
+			t.Errorf("snapshot %d: teams state = %v, confidence = %v, want active", i, got.State, got.Confidence)
+		}
+
+		obs.MicInUse = nil
+		got = find(t, cfg.Evaluate(obs, testThreshold, time.Now()), "teams")
+		if got.State != model.StateInactive {
+			t.Errorf("snapshot %d without mic: teams state = %v, confidence = %v, want inactive", i, got.State, got.Confidence)
+		}
+		if got.Confidence >= testThreshold {
+			t.Errorf("snapshot %d without mic: teams confidence = %v crossed the active threshold", i, got.Confidence)
+		}
+	}
+}
+
 // S4: muting/unmuting Teams must cause literally no state or score change,
 // because the new (MSIX) Teams client exposes no distinguishable mute-state
 // signal in the window title or the mic-in-use entry.
@@ -382,7 +402,7 @@ func TestIdle_IsInactiveForEveryApp(t *testing.T) {
 func TestReasons_NeverContainWindowTitles(t *testing.T) {
 	cfg := liveConfig(t)
 	for _, fixture := range []string{
-		"teams-in-call.txt", "teams-in-call-muted.txt", "teams-open-no-call.txt",
+		"teams-in-call.txt", "teams-in-call-muted.txt", "teams-in-call-generic-title.txt", "teams-open-no-call.txt",
 		"zoom-in-call.txt", "zoom-open-no-call.txt", "slack-huddle.txt",
 	} {
 		for _, obs := range loadFixture(t, fixture) {

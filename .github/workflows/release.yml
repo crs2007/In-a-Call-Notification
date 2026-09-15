@@ -22,6 +22,59 @@ jobs:
         with:
           go-version-file: go.mod
 
+      - name: Build release artifacts for version preflight
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --clean --skip=publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify the amd64 executable reports the release version
+        shell: pwsh
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          $metadataFiles = @(Get-ChildItem -Path dist -Filter metadata.json -Recurse)
+          $artifactFiles = @(Get-ChildItem -Path dist -Filter artifacts.json -Recurse)
+          if ($metadataFiles.Count -ne 1 -or $artifactFiles.Count -ne 1) {
+            throw "Expected one metadata.json and one artifacts.json in dist"
+          }
+
+          $metadata = Get-Content -Raw $metadataFiles[0].FullName | ConvertFrom-Json
+          $artifacts = Get-Content -Raw $artifactFiles[0].FullName | ConvertFrom-Json
+          $releaseTag = $env:RELEASE_TAG
+          $tagVersion = $releaseTag -replace '^v', ''
+          if ($metadata.tag -ne $releaseTag -or $metadata.version -ne $tagVersion) {
+            throw "GoReleaser metadata tag/version '$($metadata.tag)'/'$($metadata.version)' does not match '$releaseTag'/'$tagVersion'"
+          }
+
+          $amd64Binaries = @($artifacts | Where-Object {
+            $_.type -eq 'Binary' -and
+            $_.goos -eq 'windows' -and
+            $_.goarch -eq 'amd64'
+          })
+          if ($amd64Binaries.Count -ne 1) {
+            throw "Expected one Windows amd64 binary artifact, found $($amd64Binaries.Count)"
+          }
+
+          $binaryPath = (Resolve-Path -LiteralPath $amd64Binaries[0].path).Path
+          $stdoutPath = Join-Path $env:RUNNER_TEMP 'callmqtt-version.stdout.txt'
+          $stderrPath = Join-Path $env:RUNNER_TEMP 'callmqtt-version.stderr.txt'
+          $process = Start-Process -FilePath $binaryPath -ArgumentList '-version' -Wait -PassThru `
+            -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath
+          $output = (Get-Content -Raw $stdoutPath).Trim()
+          if ($process.ExitCode -ne 0) {
+            $stderr = (Get-Content -Raw $stderrPath).Trim()
+            throw "Version command exited with $($process.ExitCode): $stderr"
+          }
+
+          $expected = "In a Call Notification $($metadata.version)"
+          if ($output -eq 'In a Call Notification dev' -or $output -ne $expected) {
+            throw "Expected '$expected', got '$output'"
+          }
+
       - uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser

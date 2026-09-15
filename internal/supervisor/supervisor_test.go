@@ -26,8 +26,8 @@ func (f *fakeDetector) Detect(context.Context) model.DetectionResult {
 
 type fakeChecker struct{}
 
-func (fakeChecker) Current(context.Context) (network.Info, error) {
-	return network.Info{Connected: true, LocalIP: netip.MustParseAddr("192.168.1.5")}, nil
+func (fakeChecker) Current(context.Context) ([]network.Info, error) {
+	return []network.Info{{Connected: true, LocalIP: netip.MustParseAddr("192.168.1.5")}}, nil
 }
 
 // fakePublisher tracks whether it was ever closed, so tests can assert the

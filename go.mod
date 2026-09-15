@@ -23,3 +23,5 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	golang.org/x/net v0.43.0 // indirect
 )
+
+replace github.com/gogpu/systray => ./third_party/systray

@@ -42,7 +42,7 @@ type flags struct {
 
 func main() {
 	if err := run(); err != nil {
-		fmt.Fprintln(os.Stderr, "callmqtt:", err)
+		fmt.Fprintln(os.Stderr, "In a Call Notification:", err)
 		reportError(err)
 		os.Exit(1)
 	}
@@ -61,16 +61,22 @@ func run() error {
 	flag.Parse()
 
 	if f.showVersion {
-		fmt.Println("callmqtt", version)
+		fmt.Println("In a Call Notification", version)
 		return nil
-	}
-
-	if flag.Arg(0) == "init" {
-		return initConfig(f.configPath)
 	}
 
 	if flag.Arg(0) == "startup" {
 		return startupCommand(flag.Arg(1))
+	}
+
+	configPath, err := absolutePath(f.configPath)
+	if err != nil {
+		return err
+	}
+	f.configPath = configPath
+
+	if flag.Arg(0) == "init" {
+		return initConfig(f.configPath)
 	}
 
 	cfg, err := config.Load(f.configPath)
@@ -79,6 +85,10 @@ func run() error {
 			return fmt.Errorf("no config at %s\n\nRun `callmqtt init` to create a starter config, then edit it", f.configPath)
 		}
 		return err
+	}
+	cfg.Logging.File, err = absolutePath(cfg.Logging.File)
+	if err != nil {
+		return fmt.Errorf("resolve log path: %w", err)
 	}
 
 	if f.validateConfig {
@@ -136,7 +146,7 @@ func runAgent(ctx context.Context, cfg *config.Config, log *slog.Logger, f flags
 		return err
 	}
 
-	log.Info("callmqtt started",
+	log.Info("In a Call Notification started",
 		"version", version, "device_id", cfg.App.DeviceID,
 		"broker", fmt.Sprintf("%s:%d", cfg.MQTT.Host, cfg.MQTT.Port))
 
@@ -151,7 +161,7 @@ func runAgent(ctx context.Context, cfg *config.Config, log *slog.Logger, f flags
 	if err := sup.Close(shutdownCtx); err != nil {
 		log.Warn("shutdown", "error", err)
 	}
-	log.Info("callmqtt stopped")
+	log.Info("In a Call Notification stopped")
 
 	if errors.Is(uiErr, context.Canceled) {
 		return nil
@@ -192,7 +202,7 @@ func runOnce(ctx context.Context, cfg *config.Config, log *slog.Logger, detector
 }
 
 func usage() {
-	fmt.Fprintf(os.Stderr, `callmqtt %s - publish desktop call presence to MQTT
+	fmt.Fprintf(os.Stderr, `In a Call Notification %s - publish desktop call presence to MQTT
 
 Usage:
   callmqtt [flags]              run the agent
@@ -359,6 +369,17 @@ func defaultConfigPath() string {
 		return "config.yaml"
 	}
 	return filepath.Join(dir, "callmqtt", "config.yaml")
+}
+
+func absolutePath(path string) (string, error) {
+	if path == "" {
+		return "", nil
+	}
+	absolute, err := filepath.Abs(path)
+	if err != nil {
+		return "", fmt.Errorf("resolve path %q: %w", path, err)
+	}
+	return absolute, nil
 }
 
 func addrString(info network.Info) string {

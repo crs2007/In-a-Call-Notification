@@ -36,36 +36,41 @@ rules:
   # NOT be in window_include_regex on its own. Only the real meeting
   # title, "Meeting with <name> | Microsoft Teams" (present alongside the
   # bare "Meet" window throughout testdata/probe/teams-in-call.txt), is
-  # matched now.
+  # matched without microphone evidence. A second live capture on 2026-09-15 exposed the meeting as
+  # "Weekly Zac | Microsoft Teams", alongside a Chat window and Teams mic
+  # and webcam entries (teams-in-call-generic-title.txt). Because that title
+  # is not intrinsically call-specific, its window evidence requires the mic
+  # signal to cross the active threshold.
   - app: teams
     process_names:
       - ms-teams.exe
     # Captured meeting window (teams-in-call.txt):
     #   title="Meeting with Sharon Rimer | Microsoft Teams"
+    # Captured generic meeting window (teams-in-call-generic-title.txt):
+    #   title="Weekly Zac | Microsoft Teams"
     # Deliberately excludes the bare "Meet | Microsoft Teams" utility
     # window - see the false-positive note above and the
     # teams-idle-meet-window-only regression test in rules_test.go.
     window_include_regex:
-      - '^Meeting with .+ \| Microsoft Teams$'
+      - '^.+ \| Microsoft Teams$'
     # Captured chat window, mic idle (teams-open-no-call.txt):
     #   title="Chat | Copilot Israel - Live | Microsoft Teams"
-    # The include pattern above would not match this anyway (it starts with
-    # "Chat |", not "Meeting with"), but the exclude is kept as an explicit,
-    # tested veto: a future, differently-worded meeting title must never be
-    # allowed to slip past a chat window by accident.
+    # These known idle titles are explicit per-window vetoes. Other Teams
+    # titles contribute window evidence, but still require the microphone to
+    # cross the active threshold.
     window_exclude_regex:
       - '^Chat \|.*\| Microsoft Teams$'
+      - '^Meet \| Microsoft Teams$'
     # Captured mic-in-use entry during a call (teams-in-call.txt):
     #   MSTeams_8wekyb3d8bbwe
     mic_process_regex:
       - '(?i)^MSTeams'
     weights:
       process: 0.20
-      window: 0.55
+      window: 0.40
       mic: 0.25
-      # process + window = 0.75, already active on the real meeting window
-      # alone (it is a distinctive, product-specific string); process +
-      # window + mic = 1.00 for the common case of a real, audible call.
+      # process + window = 0.60, deliberately inactive for a title alone;
+      # process + window + mic = 0.85 for a captured live call.
       # The bare "Meet | Microsoft Teams" utility window no longer matches
       # window_include_regex at all, so on its own it scores process-only
       # (0.20), well below the 0.70 active threshold.

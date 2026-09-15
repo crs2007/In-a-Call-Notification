@@ -12,7 +12,7 @@ import (
 // this, a first-run error (no config yet) or any other startup failure just
 // makes the exe silently exit with nothing on screen.
 func reportError(err error) {
-	platformwindows.ShowError("CallMQTT", err.Error())
+	platformwindows.ShowError("In a Call Notification", err.Error())
 }
 
 // brokerDialog adapts the Win32 broker settings dialog to the shape the tray

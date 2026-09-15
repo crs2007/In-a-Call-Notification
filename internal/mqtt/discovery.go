@@ -85,13 +85,13 @@ func BuildDiscovery(cfg *config.Config, version string) discoveryConfig {
 		Icon:          "mdi:phone-in-talk",
 		Device: device{
 			Identifiers:  []string{"callmqtt_" + cfg.App.DeviceID},
-			Name:         "CallMQTT " + cfg.App.DeviceID,
-			Manufacturer: "CallMQTT",
+			Name:         "In a Call Notification " + cfg.App.DeviceID,
+			Manufacturer: "In a Call Notification",
 			Model:        "Desktop call presence",
 			SWVersion:    version,
 		},
 		Origin: origin{
-			Name:       "callmqtt",
+			Name:       "In a Call Notification",
 			SWVersion:  version,
 			SupportURL: "https://github.com/crs2007/In-a-Call-Notification",
 		},

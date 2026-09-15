@@ -191,7 +191,7 @@ func (d *dialog) show() error {
 		}
 	}
 
-	title, err := windows.UTF16PtrFromString("CallMQTT — Broker Settings")
+	title, err := windows.UTF16PtrFromString("In a Call Notification — MQTT Broker Settings")
 	if err != nil {
 		return fmt.Errorf("encode window title: %w", err)
 	}
@@ -292,7 +292,7 @@ func (d *dialog) confirm() {
 	port, err := strconv.Atoi(portText)
 	if err != nil || port < 1 || port > 65535 {
 		msg, _ := windows.UTF16PtrFromString("Port must be a number between 1 and 65535.")
-		title, _ := windows.UTF16PtrFromString("CallMQTT")
+		title, _ := windows.UTF16PtrFromString("In a Call Notification")
 		procMessageBoxW.Call(d.hwnd, uintptr(unsafe.Pointer(msg)), uintptr(unsafe.Pointer(title)), mbOK|mbIconWarning)
 		return
 	}

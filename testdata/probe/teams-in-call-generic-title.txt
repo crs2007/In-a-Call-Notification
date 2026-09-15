@@ -1,0 +1,8 @@
+=== 2026-09-15 ===
+[windows] 2 visible
+  pid=unknown  proc=ms-teams.exe  title="Chat | Dor Bitton | Microsoft Teams"
+  pid=unknown  proc=ms-teams.exe  title="Weekly Zac | Microsoft Teams"
+[microphone] 1 in use
+  MSTeams_8wekyb3d8bbwe
+[webcam] 1 in use
+  MSTeams_8wekyb3d8bbwe

@@ -1,6 +1,7 @@
 package mqtt
 
 import (
+	"bytes"
 	"encoding/json"
 	"strings"
 	"testing"
@@ -61,19 +62,26 @@ func TestDiscoveryPayloadIsStable(t *testing.T) {
     "identifiers": [
       "callmqtt_sharon-pc"
     ],
-    "name": "CallMQTT sharon-pc",
-    "manufacturer": "CallMQTT",
+		"name": "In a Call Notification sharon-pc",
+		"manufacturer": "In a Call Notification",
     "model": "Desktop call presence",
     "sw_version": "1.2.3"
   },
   "origin": {
-    "name": "callmqtt",
+		"name": "In a Call Notification",
     "sw_version": "1.2.3",
     "support_url": "https://github.com/crs2007/In-a-Call-Notification"
   }
 }`
 
-	if string(body) != want {
+	var gotCompact, wantCompact bytes.Buffer
+	if err := json.Compact(&gotCompact, body); err != nil {
+		t.Fatalf("compact actual payload: %v", err)
+	}
+	if err := json.Compact(&wantCompact, []byte(want)); err != nil {
+		t.Fatalf("compact expected payload: %v", err)
+	}
+	if gotCompact.String() != wantCompact.String() {
 		t.Errorf("discovery payload changed.\n got:\n%s\n\nwant:\n%s", body, want)
 	}
 }

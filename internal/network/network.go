@@ -33,7 +33,7 @@ type Info struct {
 
 // Checker reports the current network. Implementations live in platform/.
 type Checker interface {
-	Current(ctx context.Context) (Info, error)
+	Current(ctx context.Context) ([]Info, error)
 }
 
 // Matcher evaluates Info against the user's allow-list.
@@ -94,16 +94,23 @@ func NewMatcher(rules []config.NetworkRule) (*Matcher, error) {
 // An empty allow-list, a disconnected machine, or a network matching nothing
 // all deny.
 func (m *Matcher) Match(info Info) (string, bool) {
-	if !info.Connected {
-		return "", false
-	}
+	_, rule, allowed := m.MatchAny([]Info{info})
+	return rule, allowed
+}
 
+// MatchAny reports the first allow-list rule satisfied by any connected
+// candidate, along with the candidate that matched. Rule order remains the
+// policy tie-breaker; interface names and address ranges are never treated as
+// evidence unless an existing rule explicitly matches them.
+func (m *Matcher) MatchAny(infos []Info) (Info, string, bool) {
 	for _, r := range m.rules {
-		if r.matches(info) {
-			return r.name, true
+		for _, info := range infos {
+			if info.Connected && r.matches(info) {
+				return info, r.name, true
+			}
 		}
 	}
-	return "", false
+	return Info{}, "", false
 }
 
 func (r rule) matches(info Info) bool {

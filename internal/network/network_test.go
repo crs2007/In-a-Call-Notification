@@ -123,6 +123,86 @@ func TestMatch(t *testing.T) {
 	}
 }
 
+func TestMatchAny(t *testing.T) {
+	vpn := Info{Connected: true, Interface: "CatoNetworks", LocalIP: addr(t, "192.168.16.122")}
+	home := Info{Connected: true, Interface: "Ethernet", LocalIP: addr(t, "192.168.1.42")}
+	docker := Info{Connected: true, Interface: "Docker", LocalIP: addr(t, "172.18.0.1")}
+
+	tests := []struct {
+		name      string
+		infos     []Info
+		wantInfo  Info
+		wantRule  string
+		wantAllow bool
+	}{
+		{
+			name:      "VPN candidate does not hide allowed physical adapter",
+			infos:     []Info{vpn, home},
+			wantInfo:  home,
+			wantRule:  "Home",
+			wantAllow: true,
+		},
+		{
+			name:  "no matching adapter denies",
+			infos: []Info{vpn, docker},
+		},
+		{
+			name:  "disconnected matching adapter denies",
+			infos: []Info{{Connected: false, Interface: "Ethernet", LocalIP: addr(t, "192.168.1.42")}},
+		},
+		{
+			name: "empty candidates deny",
+		},
+	}
+
+	m, err := NewMatcher(homeAndOffice())
+	if err != nil {
+		t.Fatalf("NewMatcher: %v", err)
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotInfo, gotRule, gotAllow := m.MatchAny(tt.infos)
+			if gotAllow != tt.wantAllow || gotRule != tt.wantRule || gotInfo != tt.wantInfo {
+				t.Fatalf("MatchAny() = (%+v, %q, %v), want (%+v, %q, %v)",
+					gotInfo, gotRule, gotAllow, tt.wantInfo, tt.wantRule, tt.wantAllow)
+			}
+		})
+	}
+}
+
+func TestVirtualAdapterRequiresExplicitAddressMatch(t *testing.T) {
+	docker := Info{Connected: true, Interface: "Docker", LocalIP: addr(t, "172.18.0.1")}
+	tests := []struct {
+		name      string
+		rules     []config.NetworkRule
+		wantAllow bool
+	}{
+		{
+			name:  "private virtual address alone denies",
+			rules: homeAndOffice(),
+		},
+		{
+			name:      "explicit virtual address CIDR allows",
+			rules:     []config.NetworkRule{{Name: "Lab", CIDRs: []string{"172.18.0.0/16"}}},
+			wantAllow: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m, err := NewMatcher(tt.rules)
+			if err != nil {
+				t.Fatalf("NewMatcher: %v", err)
+			}
+			_, _, gotAllow := m.MatchAny([]Info{docker})
+			if gotAllow != tt.wantAllow {
+				t.Fatalf("allowed = %v, want %v", gotAllow, tt.wantAllow)
+			}
+		})
+	}
+}
+
 // An empty allow-list must publish nothing. This is the single most important
 // assertion in the package: it is the difference between a misconfigured agent
 // staying quiet and one broadcasting presence from anywhere.

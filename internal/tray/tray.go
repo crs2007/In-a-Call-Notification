@@ -66,8 +66,8 @@ func Run(opts Options) error {
 	a := &app{opts: opts, tray: systray.New()}
 	a.buildMenu()
 
-	a.tray.SetIcon(iconPNG(colorGray)).
-		SetTooltip("CallMQTT").
+	a.tray.SetIcon(iconPNG(trayIconState{color: colorGray})).
+		SetTooltip("In a Call Notification | On call: starting | MQTT: disconnected").
 		SetMenu(a.menu)
 	a.tray.Show()
 
@@ -92,7 +92,7 @@ type app struct {
 	loginItem    *systray.MenuItem
 	pauseItem    *systray.MenuItem
 
-	lastIcon iconColor
+	lastIcon trayIconState
 }
 
 func (a *app) log() *slog.Logger { return a.opts.Logger }
@@ -131,7 +131,7 @@ func (a *app) buildMenu() {
 	a.allowNetItem = m.Add("Allow current network", func() { a.allowCurrentNetwork() })
 	m.AddSeparator()
 
-	m.Add("Broker settings…", func() { a.openBrokerDialog() })
+	m.Add("MQTT broker settings…", func() { a.openBrokerDialog() })
 	if a.opts.Startup != nil {
 		enabled, err := a.opts.Startup.IsEnabled()
 		if err != nil {
@@ -173,10 +173,12 @@ func (a *app) refreshLoop(stop <-chan struct{}) {
 
 func (a *app) refresh() {
 	status := a.opts.Supervisor.Status()
+	brokerConnected := a.opts.Supervisor.BrokerConnected()
 
 	a.stateItem.SetLabel(stateLabel(status))
 	a.networkItem.SetLabel(networkLabel(status))
-	a.brokerItem.SetLabel(brokerLabel(a.opts.Supervisor.BrokerConnected()))
+	a.brokerItem.SetLabel(brokerLabel(brokerConnected))
+	a.tray.SetTooltip(statusTooltip(status, brokerConnected))
 
 	if status.Network.Prefix.IsValid() {
 		a.allowNetItem.SetLabel(fmt.Sprintf("Allow current network (%s)", status.Network.Prefix))
@@ -194,10 +196,10 @@ func (a *app) refresh() {
 		a.pauseItem.SetLabel("Pause detection")
 	}
 
-	c := iconFor(status, a.opts.Supervisor.BrokerConnected())
-	if c != a.lastIcon {
-		a.tray.SetIcon(iconPNG(c))
-		a.lastIcon = c
+	icon := iconFor(status, brokerConnected)
+	if icon != a.lastIcon {
+		a.tray.SetIcon(iconPNG(icon))
+		a.lastIcon = icon
 	}
 }
 
@@ -234,6 +236,30 @@ func brokerLabel(connected bool) string {
 		return "Broker: connected"
 	}
 	return "Broker: disconnected"
+}
+
+func statusTooltip(s engine.Status, brokerConnected bool) string {
+	call := "not on a call"
+	if s.Paused {
+		call = "detection paused"
+	} else if s.State == model.StateUnknown {
+		call = "starting"
+	} else if s.State == model.StateActive {
+		app := s.App
+		if app == "" {
+			app = strings.Join(s.Apps, ", ")
+		}
+		call = "yes"
+		if app != "" {
+			call += " (" + title(app) + ")"
+		}
+	}
+
+	mqttStatus := "disconnected"
+	if brokerConnected {
+		mqttStatus = "connected"
+	}
+	return fmt.Sprintf("In a Call Notification | On call: %s | MQTT: %s", call, mqttStatus)
 }
 
 func title(s string) string {
@@ -397,45 +423,113 @@ const (
 	colorRed
 )
 
-// iconFor picks the tray icon colour. Red always means "on a call" — nothing
-// else is allowed to produce it, since that is the one colour a user reacts
-// to. Yellow flags a degraded-but-running state (paused, off an allowed
-// network, or the broker unreachable) so a silently-not-working agent is
-// still visible at a glance.
-func iconFor(s engine.Status, brokerConnected bool) iconColor {
-	if s.State == model.StateActive && !s.Paused {
-		return colorRed
-	}
-	if s.State == model.StateUnknown {
-		return colorGray
-	}
-	if s.Paused || !s.Allowed || !brokerConnected {
-		return colorYellow
-	}
-	return colorGreen
+type trayIconState struct {
+	color           iconColor
+	brokerConnected bool
 }
 
-// iconPNG renders a small solid dot, generated instead of embedded so the
-// tray needs no asset files.
-func iconPNG(c iconColor) []byte {
+// iconFor combines call/detection state in the broadcast glyph with MQTT
+// connectivity in a persistent badge, so neither signal can hide the other.
+func iconFor(s engine.Status, brokerConnected bool) trayIconState {
+	state := trayIconState{brokerConnected: brokerConnected}
+	if s.State == model.StateActive && !s.Paused {
+		state.color = colorRed
+		return state
+	}
+	if s.State == model.StateUnknown {
+		state.color = colorGray
+		return state
+	}
+	if s.Paused || !s.Allowed {
+		state.color = colorYellow
+		return state
+	}
+	state.color = colorGreen
+	return state
+}
+
+// iconPNG renders the call-state broadcast glyph plus a green/red MQTT badge.
+func iconPNG(state trayIconState) []byte {
 	rgba := map[iconColor]color.RGBA{
-		colorGray:   {R: 130, G: 130, B: 130, A: 255},
-		colorGreen:  {R: 30, G: 170, B: 70, A: 255},
-		colorYellow: {R: 210, G: 170, B: 20, A: 255},
-		colorRed:    {R: 210, G: 30, B: 30, A: 255},
-	}[c]
+		colorGray:   {R: 140, G: 140, B: 140, A: 255},
+		colorGreen:  {R: 34, G: 197, B: 94, A: 255},
+		colorYellow: {R: 245, G: 158, B: 11, A: 255},
+		colorRed:    {R: 239, G: 68, B: 68, A: 255},
+	}[state.color]
 
 	const size = 22
 	img := image.NewRGBA(image.Rect(0, 0, size, size))
-	cx, cy, r := size/2, size/2, size/2-1
+
+	const (
+		cx              = 4.5
+		cy              = 17.5
+		rDotSq          = 2.5 * 2.5
+		r1InSq, r1OutSq = 5.4 * 5.4, 7.8 * 7.8
+		r2InSq, r2OutSq = 9.8 * 9.8, 12.2 * 12.2
+		r3InSq, r3OutSq = 14.2 * 14.2, 16.6 * 16.6
+		samples         = 4
+	)
+
 	for y := 0; y < size; y++ {
 		for x := 0; x < size; x++ {
-			dx, dy := x-cx, y-cy
-			if dx*dx+dy*dy <= r*r {
-				img.SetRGBA(x, y, rgba)
+			hits := 0
+			for sy := 0; sy < samples; sy++ {
+				py := float64(y) + (float64(sy)+0.5)/float64(samples)
+				dy := cy - py
+				for sx := 0; sx < samples; sx++ {
+					px := float64(x) + (float64(sx)+0.5)/float64(samples)
+					dx := px - cx
+
+					d2 := dx*dx + dy*dy
+					// Base transmitter node
+					if d2 <= rDotSq {
+						hits++
+						continue
+					}
+					// MQTT broadcast waves radiating upward and rightward
+					if dx >= -0.2 && dy >= -0.2 {
+						if (d2 >= r1InSq && d2 <= r1OutSq) ||
+							(d2 >= r2InSq && d2 <= r2OutSq) ||
+							(d2 >= r3InSq && d2 <= r3OutSq) {
+							hits++
+						}
+					}
+				}
+			}
+
+			if hits > 0 {
+				alpha := uint8((hits * 255) / (samples * samples))
+				img.SetRGBA(x, y, color.RGBA{
+					R: uint8((uint32(rgba.R) * uint32(alpha)) / 255),
+					G: uint8((uint32(rgba.G) * uint32(alpha)) / 255),
+					B: uint8((uint32(rgba.B) * uint32(alpha)) / 255),
+					A: alpha,
+				})
 			}
 		}
 	}
+
+	badge := color.RGBA{R: 239, G: 68, B: 68, A: 255}
+	if state.brokerConnected {
+		badge = color.RGBA{R: 34, G: 197, B: 94, A: 255}
+	}
+	for y := 14; y < size; y++ {
+		for x := 14; x < size; x++ {
+			dx := float64(x) + 0.5 - 17.5
+			dy := float64(y) + 0.5 - 17.5
+			d2 := dx*dx + dy*dy
+			switch {
+			case d2 <= 3.6*3.6:
+				img.SetRGBA(x, y, color.RGBA{R: 32, G: 32, B: 32, A: 255})
+			case d2 <= 4.2*4.2:
+				img.SetRGBA(x, y, color.RGBA{A: 180})
+			}
+			if d2 <= 2.5*2.5 {
+				img.SetRGBA(x, y, badge)
+			}
+		}
+	}
+
 	var buf bytes.Buffer
 	_ = png.Encode(&buf, img)
 	return buf.Bytes()
