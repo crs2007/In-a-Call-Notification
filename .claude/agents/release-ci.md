@@ -36,6 +36,11 @@ The README answers, in this order: what is this · why · which apps are
 supported · **what leaves your PC** · install · MQTT config · allowed-network
 config · permissions · compatibility matrix · architecture diagram.
 
+Structure and section names follow the `readme-standards` skill
+(`.claude/skills/readme-standards/SKILL.md`). Before finishing any README
+change, run `go run ./.claude/skills/readme-standards/scripts/validate_readme.go`
+and clear every required failure.
+
 **The privacy section is non-negotiable and you enforce it.** State it plainly:
 the agent publishes only call state, app name and confidence; it never
 publishes meeting titles, participant names or conversation content; it

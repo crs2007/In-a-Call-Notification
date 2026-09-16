@@ -25,3 +25,12 @@
   - Use the `release-ci` subagent for this documentation work — it owns
     `.github/workflows/`, `.goreleaser.yaml`, and the user-facing docs
     (README, CONTRIBUTING, SECURITY, docs/).
+
+## README standards
+
+- Any change to `README.md` (or a new README anywhere in the repo) follows the
+  `readme-standards` skill in `.claude/skills/readme-standards/` — checklist,
+  template, and validator.
+- Run the validator before merging a README change:
+  `go run ./.claude/skills/readme-standards/scripts/validate_readme.go`
+  (add `--strict` to also fail on recommended sections).
