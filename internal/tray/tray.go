@@ -57,8 +57,9 @@ type Options struct {
 }
 
 // Run builds the tray icon and menu and blocks pumping the OS message loop
-// until Quit is chosen. Call it from main after everything else is wired up.
-func Run(opts Options) error {
+// until Quit is chosen or ctx is cancelled (e.g. Ctrl-C from a console).
+// Call it from main after everything else is wired up.
+func Run(ctx context.Context, opts Options) error {
 	if opts.PollInterval <= 0 {
 		opts.PollInterval = 2 * time.Second
 	}
@@ -74,6 +75,20 @@ func Run(opts Options) error {
 	stop := make(chan struct{})
 	go a.refreshLoop(stop)
 	defer close(stop)
+
+	// Remove() posts the platform's quit signal, the same one the "Quit" menu
+	// item sends, so a signal-driven shutdown shares the exact exit path a
+	// deliberate quit takes — and, crucially, lets Run() return so main can
+	// reach sup.Close() and publish "offline".
+	watchDone := make(chan struct{})
+	go func() {
+		select {
+		case <-ctx.Done():
+			a.tray.Remove()
+		case <-watchDone:
+		}
+	}()
+	defer close(watchDone)
 
 	return a.tray.Run()
 }

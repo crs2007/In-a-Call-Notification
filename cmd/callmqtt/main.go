@@ -111,6 +111,12 @@ func run() error {
 
 	// Signals are handled before anything connects, so an interrupt during a
 	// slow broker connection still shuts down cleanly.
+	//
+	// This only reaches the process from a console: a -H=windowsgui tray
+	// build has no console to send Ctrl-C from, and Windows has no SIGTERM
+	// equivalent (WM_CLOSE/logoff handling is out of scope). If a signal
+	// does arrive in a tray build, tray.Run watches this same ctx and quits
+	// the message loop the same way its own "Quit" menu item does.
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
