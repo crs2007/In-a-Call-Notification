@@ -75,6 +75,12 @@ type Client struct {
 
 // New dials the broker and starts autopaho's reconnect loop. It returns as
 // soon as the attempt is under way; use AwaitConnection to wait for success.
+//
+// ctx is the connection's lifetime, not the caller's: autopaho tears the
+// connection down and stops reconnecting when ctx is cancelled, so it must
+// outlive whatever operation happened to trigger this call (a request
+// timeout, a settings-dialog deadline) and live as long as the client
+// itself should stay connected.
 func New(ctx context.Context, opts Options) (*Client, error) {
 	cfg := opts.Config
 
