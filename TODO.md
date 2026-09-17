@@ -153,7 +153,7 @@ still outstanding (need a console + a tray-build binary to run them).**
 
 ## Phase 2 — Config and secrets
 
-### [ ] 2.1 `Save` must never write an env-referenced password as a literal
+### [x] 2.1 `Save` must never write an env-referenced password as a literal
 
 **Bug:** `Config.Settings()` seeds `Password` from the expanded value;
 `Save` rewrites `mqtt.password` unconditionally. Any checkbox toggle
@@ -162,29 +162,33 @@ writes the real secret into `config.yaml`.
 **Touches:** `internal/config/save.go`, `internal/config/save_test.go`,
 `internal/tray/tray.go`, `cmd/callmqtt/dialog_windows.go`.
 
-- [ ] Change `Settings.Password` semantics: add `PasswordChanged bool`.
+- [x] Change `Settings.Password` semantics: add `PasswordChanged bool`.
       `Config.Settings()` sets `Password` to the expanded value (the
       dialog needs to pre-fill it) and `PasswordChanged=false`.
-- [ ] `Save`: write `mqtt.password` **only if** `PasswordChanged`.
+- [x] `Save`: write `mqtt.password` **only if** `PasswordChanged`.
       Otherwise leave the node untouched (which preserves `${VAR}`).
-- [ ] `dialog_windows.go` / `openBrokerDialog`: set `PasswordChanged =
+- [x] `dialog_windows.go` / `openBrokerDialog`: set `PasswordChanged =
       fields.Password != current.Password`.
-- [ ] While there: `Save` also unconditionally rewrites `host`, `port`,
-      `username`, `discovery.enabled`, and every detector. Apply the same
-      rule — only write what the mutation touched. Simplest: make
-      `Settings` a patch (`*string`/`*int`/`*bool` fields, nil = untouched)
-      and have each tray action set exactly one field. That also removes
-      the shared-slice aliasing on `AllowedNetworks`.
-- [ ] **Repro:** the `TestReproSaveLeaksEnvPassword` from the review —
-      config with `password: ${CALLMQTT_MQTT_PASSWORD}`, env set, toggle
-      one detector, `Save`, assert the file still contains the literal
-      `${CALLMQTT_MQTT_PASSWORD}` and not the secret.
-- [ ] Second test: dialog-driven change with `PasswordChanged=true`
-      **does** write the new literal (and `PasswordIsLiteral()` becomes
-      true on reload, so the warning fires).
+- [ ] **Follow-up, not done here:** `Save` still unconditionally rewrites
+      `host`, `port`, `username`, `discovery.enabled`, and every detector.
+      Lower severity than the password (none of those are secrets), and
+      fixing it properly means turning `Settings` into a patch
+      (`*string`/`*int`/`*bool` fields, nil = untouched) with each tray
+      action setting exactly one field — a bigger refactor touching every
+      call site in `tray.go`. Scoped out of this PR; the shared-slice
+      aliasing on `AllowedNetworks` this would also fix is still there.
+- [x] **Repro:** `TestSaveLeavesEnvPasswordAloneWhenUnchanged` — config
+      with `password: ${CALLMQTT_TEST_PASSWORD}`, env set, toggle one
+      detector, `Save`, assert the file still contains the literal
+      `${CALLMQTT_TEST_PASSWORD}` and not the secret.
+- [x] Second test: `TestSaveWritesPasswordWhenChanged` — a dialog-driven
+      change with `PasswordChanged=true` **does** write the new literal
+      (and `PasswordIsLiteral()` becomes true on reload, so the warning
+      fires).
 
 **Done when:** both tests pass; a config that referenced env before a
-tray click still references env after it.
+tray click still references env after it. **Done** — `go vet ./...`,
+`go test ./...`, and `go build/vet/test -tags tray ./...` all pass.
 
 ### [ ] 2.2 Scrub the example config and fix the `init` message
 

@@ -76,6 +76,7 @@ func TestSaveAppliesChanges(t *testing.T) {
 	s.BrokerPort = 8883
 	s.Username = "sharon"
 	s.Password = "hunter2"
+	s.PasswordChanged = true
 	s.Discovery = false
 	s.Detectors["zoom"] = false
 	s.Detectors["teams"] = true
@@ -233,6 +234,7 @@ func TestPasswordRoundTrip(t *testing.T) {
 
 			s := cfg.Settings()
 			s.Password = want
+			s.PasswordChanged = true
 			if err := Save(path, s); err != nil {
 				t.Fatalf("save: %v", err)
 			}
@@ -258,6 +260,83 @@ func TestPasswordRoundTrip(t *testing.T) {
 	}
 }
 
+// A save that never touched the password (toggling a detector, editing the
+// allow-list, ...) must not turn a ${VAR} reference into the literal secret
+// it currently expands to. Settings() always carries the expanded value so a
+// dialog can pre-fill it; without PasswordChanged gating the write, every
+// unrelated tray click would leak the secret into the file.
+func TestSaveLeavesEnvPasswordAloneWhenUnchanged(t *testing.T) {
+	t.Setenv("CALLMQTT_TEST_PASSWORD", "s3cret")
+	path := writeTemp(t, []byte(minimal+"  password: \"${CALLMQTT_TEST_PASSWORD}\"\n"+
+		"detectors:\n  teams: {enabled: true}\n  zoom: {enabled: true}\n  slack: {enabled: true}\n"))
+
+	cfg, err := Load(path)
+	if err != nil {
+		t.Fatalf("load: %v", err)
+	}
+	if cfg.MQTT.Password != "s3cret" {
+		t.Fatalf("password = %q, want the expanded value", cfg.MQTT.Password)
+	}
+
+	s := cfg.Settings()
+	s.Detectors["zoom"] = false // an unrelated change; PasswordChanged stays false
+
+	if err := Save(path, s); err != nil {
+		t.Fatalf("save: %v", err)
+	}
+
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read back: %v", err)
+	}
+	if !strings.Contains(string(raw), "${CALLMQTT_TEST_PASSWORD}") {
+		t.Errorf("save rewrote the env reference; file no longer contains it:\n%s", raw)
+	}
+	if strings.Contains(string(raw), "s3cret") {
+		t.Errorf("save leaked the expanded secret into the file:\n%s", raw)
+	}
+
+	after, err := Load(path)
+	if err != nil {
+		t.Fatalf("reload: %v", err)
+	}
+	if after.PasswordIsLiteral() {
+		t.Error("password should still be reported as env-sourced after an unrelated save")
+	}
+}
+
+// The counterpart to the test above: when a save is actually a
+// dialog-driven password change, the new literal must be written and
+// PasswordIsLiteral must flip to true on reload.
+func TestSaveWritesPasswordWhenChanged(t *testing.T) {
+	t.Setenv("CALLMQTT_TEST_PASSWORD", "s3cret")
+	path := writeTemp(t, []byte(minimal+"  password: \"${CALLMQTT_TEST_PASSWORD}\"\n"))
+
+	cfg, err := Load(path)
+	if err != nil {
+		t.Fatalf("load: %v", err)
+	}
+
+	s := cfg.Settings()
+	s.Password = "new-literal-secret"
+	s.PasswordChanged = true
+
+	if err := Save(path, s); err != nil {
+		t.Fatalf("save: %v", err)
+	}
+
+	after, err := Load(path)
+	if err != nil {
+		t.Fatalf("reload: %v", err)
+	}
+	if after.MQTT.Password != "new-literal-secret" {
+		t.Errorf("password = %q, want the new literal", after.MQTT.Password)
+	}
+	if !after.PasswordIsLiteral() {
+		t.Error("a dialog-written password must be reported as literal")
+	}
+}
+
 // The saved file holds a plaintext password, so it must not be world-readable.
 //
 // Windows is exempt because it does not model Unix permission bits at all:
@@ -277,6 +356,7 @@ func TestSavedConfigIsNotWorldReadable(t *testing.T) {
 
 	s := cfg.Settings()
 	s.Password = "hunter2"
+	s.PasswordChanged = true
 	if err := Save(path, s); err != nil {
 		t.Fatalf("save: %v", err)
 	}

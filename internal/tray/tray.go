@@ -405,6 +405,7 @@ func (a *app) openBrokerDialog() {
 			s.BrokerPort = settings.BrokerPort
 			s.Username = settings.Username
 			s.Password = settings.Password
+			s.PasswordChanged = settings.PasswordChanged
 		}, nil, false)
 	}()
 }

@@ -35,5 +35,6 @@ func brokerDialog(current config.Settings) (config.Settings, bool, error) {
 	next.BrokerPort = fields.Port
 	next.Username = fields.Username
 	next.Password = fields.Password
+	next.PasswordChanged = fields.Password != current.Password
 	return next, true, nil
 }

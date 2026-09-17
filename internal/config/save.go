@@ -16,16 +16,26 @@ import (
 // need typing. Thresholds, debounces and poll intervals stay in the file,
 // where changing them is a considered act rather than a stray click.
 type Settings struct {
-	BrokerHost      string
-	BrokerPort      int
-	Username        string
+	BrokerHost string
+	BrokerPort int
+	Username   string
+	// Password holds the expanded value so a dialog can pre-fill it. Save
+	// only writes it back to the file when PasswordChanged is true — see
+	// that field's comment.
 	Password        string
+	PasswordChanged bool
 	Detectors       map[string]bool
 	AllowedNetworks []NetworkRule
 	Discovery       bool
 }
 
 // Settings extracts the UI-editable subset of the configuration.
+//
+// PasswordChanged starts false: Settings() is also how a mutation that has
+// nothing to do with the password (toggling a detector, editing the
+// allow-list) gets its starting point, and such a save must leave
+// mqtt.password exactly as the file had it — literal or ${VAR} — rather than
+// overwrite it with today's expanded value.
 func (c *Config) Settings() Settings {
 	detectors := make(map[string]bool, len(c.Detectors))
 	for name, d := range c.Detectors {
@@ -37,6 +47,7 @@ func (c *Config) Settings() Settings {
 		BrokerPort:      c.MQTT.Port,
 		Username:        c.MQTT.Username,
 		Password:        c.MQTT.Password,
+		PasswordChanged: false,
 		Detectors:       detectors,
 		AllowedNetworks: c.AllowedNetworks,
 		Discovery:       c.MQTT.Discovery.Enabled,
@@ -72,7 +83,13 @@ func Save(path string, s Settings) error {
 	setScalar(root, "!!str", s.BrokerHost, "mqtt", "host")
 	setScalar(root, "!!int", fmt.Sprint(s.BrokerPort), "mqtt", "port")
 	setScalar(root, "!!str", s.Username, "mqtt", "username")
-	setScalar(root, "!!str", s.Password, "mqtt", "password")
+	// Only touch mqtt.password when the caller actually changed it. Settings
+	// always carries the *expanded* value (so a dialog can show it), and
+	// writing that back unconditionally would turn a ${VAR} reference into
+	// the literal secret on every unrelated save (e.g. toggling a detector).
+	if s.PasswordChanged {
+		setScalar(root, "!!str", s.Password, "mqtt", "password")
+	}
 	setScalar(root, "!!bool", fmt.Sprint(s.Discovery), "mqtt", "discovery", "enabled")
 
 	for name, enabled := range s.Detectors {
