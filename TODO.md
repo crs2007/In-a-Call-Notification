@@ -205,11 +205,16 @@ tray click still references env after it. **Done** — `go vet ./...`,
       true (the file only ever contains the `${VAR}` reference), and it
       now tells the user how to set it (`setx` on Windows, plus the
       new-terminal caveat).
-- [ ] **Follow-up, not done here:** a `gitleaks`/`trufflehog` CI step, or
-      at minimum `grep -n 'password: [^$]' internal/config/example.yaml`
-      failing the build. Touches `.github/workflows/ci.yml`, which is the
-      `release-ci` agent's territory per `CLAUDE.md`; handing it off
-      separately rather than editing that file from here.
+- [x] **Follow-up:** added a `check-example-config` job to
+      `.github/workflows/ci.yml` (ubuntu-latest, no Go toolchain needed)
+      with two grep-based steps: one fails if `mqtt.password` in
+      `example.yaml` is anything but a `${VAR}` reference, the other fails
+      if the rotated `mqcommunicator`/`192.168.68.*` strings ever reappear.
+      Note: the TODO's suggested `grep -n 'password: [^$]'` false-positives
+      on the current, correct file (`\s*` before `[^$]` can back off and
+      match the space right before `${`); used
+      `'^\s*password:\s*[^$[:space:]]'` instead, verified against the real
+      file plus hand-built good/bad cases before landing.
 
 **Done when:** `callmqtt init` + `--validate-config` with no env var set
 reports only the "mqtt.host"-style problems you'd expect, not a working

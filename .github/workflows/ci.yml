@@ -59,3 +59,26 @@ jobs:
         env:
           GOOS: darwin
           GOARCH: arm64
+
+  # Regression guard for the leaked-broker-password incident (TODO.md 2.2):
+  # example.yaml must only ever reference secrets via ${VAR}, never write
+  # one in as a literal. No Go toolchain needed, so it's a plain shell job.
+  check-example-config:
+    name: check example.yaml has no real credentials
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: mqtt.password must be an env reference, not a literal
+        run: |
+          if grep -nE '^\s*password:\s*[^$[:space:]]' internal/config/example.yaml; then
+            echo "example.yaml must reference \${VAR}, not a literal password" >&2
+            exit 1
+          fi
+
+      - name: no leaked broker identifiers
+        run: |
+          if grep -inE 'mqcommunicator|192\.168\.68\.' internal/config/example.yaml; then
+            echo "example.yaml must not reference the rotated broker credentials" >&2
+            exit 1
+          fi
