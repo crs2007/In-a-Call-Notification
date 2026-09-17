@@ -299,11 +299,30 @@ func buildDetectors(cfg *config.Config, f flags) ([]model.Detector, error) {
 	if f.simulate {
 		return []model.Detector{simulate.NewDetector()}, nil
 	}
-	rulesCfg, err := rules.Default()
+
+	rulesCfg, err := loadRules(cfg, f)
 	if err != nil {
 		return nil, fmt.Errorf("load detection rules: %w", err)
 	}
-	return detectors.New(rulesCfg, cfg.Detection.ActiveThreshold, detectors.WindowsSnapshot(), time.Now), nil
+
+	enabled := func(app string) bool { return cfg.Detectors[app].Enabled }
+	return detectors.New(rulesCfg, cfg.Detection.ActiveThreshold, cfg.Detection.InactiveThreshold, enabled, detectors.WindowsSnapshot(), time.Now), nil
+}
+
+// loadRules picks the shipped rule set, or cfg.RulesFile if the user set one,
+// resolving a relative path against the config file's own directory so
+// "rules_file: my-rules.yaml" means "next to config.yaml", not the process's
+// working directory.
+func loadRules(cfg *config.Config, f flags) (*rules.Config, error) {
+	if cfg.RulesFile == "" {
+		return rules.Default()
+	}
+
+	path := cfg.RulesFile
+	if !filepath.IsAbs(path) {
+		path = filepath.Join(filepath.Dir(f.configPath), path)
+	}
+	return rules.LoadFile(path)
 }
 
 // newLogger writes human-readable output to stderr and, when configured, JSON

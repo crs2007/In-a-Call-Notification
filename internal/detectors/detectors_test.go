@@ -53,6 +53,10 @@ func fixedNow(t time.Time) func() time.Time {
 	return func() time.Time { return t }
 }
 
+// allEnabled is the enabled-check most tests in this file want: every rule
+// in cfg gets a detector.
+func allEnabled(string) bool { return true }
+
 func TestNew_FullObservationCrossesThreshold(t *testing.T) {
 	cfg := loadTestConfig(t)
 	snap := fakeSnapshot(
@@ -63,7 +67,7 @@ func TestNew_FullObservationCrossesThreshold(t *testing.T) {
 	)
 	now := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 
-	dets := New(cfg, 0.5, snap, fixedNow(now))
+	dets := New(cfg, 0.5, 0.3, allEnabled, snap, fixedNow(now))
 	if len(dets) != 2 {
 		t.Fatalf("got %d detectors, want 2", len(dets))
 	}
@@ -95,7 +99,7 @@ func TestNew_NoSignalsIsInactiveWithZeroConfidence(t *testing.T) {
 	snap := fakeSnapshot(nil, nil, nil, nil)
 	now := time.Now()
 
-	dets := New(cfg, 0.5, snap, fixedNow(now))
+	dets := New(cfg, 0.5, 0.3, allEnabled, snap, fixedNow(now))
 	for _, d := range dets {
 		result := d.Detect(context.Background())
 		if result.State != model.StateInactive {
@@ -120,7 +124,7 @@ func TestNew_MultipleRulesEachProduceOwnResult(t *testing.T) {
 	)
 	now := time.Now()
 
-	dets := New(cfg, 0.5, snap, fixedNow(now))
+	dets := New(cfg, 0.5, 0.3, allEnabled, snap, fixedNow(now))
 	if len(dets) != 2 {
 		t.Fatalf("got %d detectors, want 2", len(dets))
 	}
@@ -147,7 +151,7 @@ func TestNew_MultipleRulesEachProduceOwnResult(t *testing.T) {
 func TestDetector_ImplementsModelDetector(t *testing.T) {
 	cfg := loadTestConfig(t)
 	snap := fakeSnapshot(nil, nil, nil, nil)
-	dets := New(cfg, 0.5, snap, fixedNow(time.Now()))
+	dets := New(cfg, 0.5, 0.3, allEnabled, snap, fixedNow(time.Now()))
 	for _, d := range dets {
 		var _ model.Detector = d
 		// ctx is ignored by design (no platform call here takes one); a
@@ -155,6 +159,119 @@ func TestDetector_ImplementsModelDetector(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 		_ = d.Detect(ctx)
+	}
+}
+
+func TestNew_DisabledAppSkipped(t *testing.T) {
+	const threeAppRulesYAML = `
+rules:
+  - app: teams
+    process_names: ["ms-teams.exe"]
+    window_include_regex: ["Meeting"]
+    weights:
+      process: 0.2
+      window: 0.6
+  - app: zoom
+    process_names: ["zoom.exe"]
+    window_include_regex: ["Zoom Meeting"]
+    weights:
+      process: 0.2
+      window: 0.6
+  - app: slack
+    process_names: ["slack.exe"]
+    window_include_regex: ["Huddle"]
+    weights:
+      process: 0.2
+      window: 0.6
+`
+	cfg, err := rules.Load([]byte(threeAppRulesYAML))
+	if err != nil {
+		t.Fatalf("load rules: %v", err)
+	}
+	snap := fakeSnapshot(nil, nil, nil, nil)
+	disableZoom := func(app string) bool { return app != "zoom" }
+
+	dets := New(cfg, 0.5, 0.3, disableZoom, snap, fixedNow(time.Now()))
+	if len(dets) != 2 {
+		t.Fatalf("got %d detectors, want 2", len(dets))
+	}
+	for _, d := range dets {
+		if d.App() == "zoom" {
+			t.Errorf("zoom detector present despite being disabled")
+		}
+	}
+}
+
+// TestDetect_HysteresisHoldsActiveBetweenThresholds walks one detector's
+// confidence 0.85 -> 0.60 -> 0.25 against a fixture rule crossing the
+// default active (0.70) and inactive (0.30) thresholds, and checks the
+// "Teams generic title without mic" flicker never reads Inactive until
+// confidence actually drops below inactiveThreshold.
+//
+// The middle step (0.60) uses a mic-only match rather than a window-only
+// one: in rules.go, hasWindowMatch requires the matching window's own
+// process to be in ProcessNames, which is exactly what hasProcess also
+// checks, so any observation that credits Window necessarily credits
+// Process too (0.25+0.60=0.85, never 0.60 alone). Mic evidence has no such
+// coupling (matchesAny only looks at the mic-in-use list), so it is what
+// isolates the middle confidence value here.
+func TestDetect_HysteresisHoldsActiveBetweenThresholds(t *testing.T) {
+	const hysteresisRuleYAML = `
+rules:
+  - app: teams
+    process_names: ["ms-teams.exe"]
+    window_include_regex: ["Meeting"]
+    mic_process_regex: ["ms-teams.exe"]
+    weights:
+      process: 0.25
+      window: 0.60
+      mic: 0.60
+`
+	cfg, err := rules.Load([]byte(hysteresisRuleYAML))
+	if err != nil {
+		t.Fatalf("load rules: %v", err)
+	}
+
+	meetingWindow := platformwindows.WindowInfo{PID: 1, Title: "Meeting with Bob"}
+	process := platformwindows.WindowInfo{PID: 1, Title: "ms-teams.exe window"}
+	procNames := map[uint32]string{1: "ms-teams.exe"}
+
+	// obsA: process present + matching window title -> 0.25+0.60 = 0.85.
+	obsA := fakeSnapshot([]platformwindows.WindowInfo{meetingWindow}, procNames, nil, nil)
+	// obsB: microphone in use by teams only, no window or process -> 0.60.
+	obsB := fakeSnapshot(nil, nil, []string{"ms-teams.exe"}, nil)
+	// obsC: process present only, no window match, no mic -> 0.25.
+	obsC := fakeSnapshot([]platformwindows.WindowInfo{process}, procNames, nil, nil)
+
+	dets := New(cfg, 0.70, 0.30, allEnabled, obsA, fixedNow(time.Now()))
+	if len(dets) != 1 {
+		t.Fatalf("got %d detectors, want 1", len(dets))
+	}
+	d, ok := dets[0].(*Detector)
+	if !ok {
+		t.Fatalf("detector is %T, want *Detector", dets[0])
+	}
+
+	steps := []struct {
+		name       string
+		snap       Snapshot
+		wantState  model.CallState
+		wantConfid float64
+	}{
+		{"obsA", obsA, model.StateActive, 0.85},
+		{"obsB", obsB, model.StateActive, 0.60},
+		{"obsC", obsC, model.StateInactive, 0.25},
+	}
+
+	for _, step := range steps {
+		d.snapshot = step.snap
+		result := d.Detect(context.Background())
+		if result.Confidence != step.wantConfid {
+			t.Errorf("%s: Confidence = %v, want %v", step.name, result.Confidence, step.wantConfid)
+		}
+		if result.State != step.wantState {
+			t.Errorf("%s: State = %v, want %v", step.name, result.State, step.wantState)
+		}
 	}
 }
 

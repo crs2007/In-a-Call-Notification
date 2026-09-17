@@ -37,6 +37,11 @@ detectors:
   slack:
     enabled: true
 
+# Override the built-in detection rules (process names, window title regexes,
+# weights) with your own file, instead of editing the binary's embedded
+# rules.yaml. Relative to this config file's directory.
+# rules_file: rules.yaml
+
 detection:
   # A signal must reach active_threshold to count as a call. Raise it if you
   # get false positives; a light that lies is worse than one that is late.

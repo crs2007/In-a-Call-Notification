@@ -69,10 +69,17 @@ func (s Snapshot) observe() rules.Observation {
 // consumes detectors: one model.Detector per app, so internal/detection can
 // resolve them independently.
 type Detector struct {
-	rule            rules.CompiledRule
-	snapshot        Snapshot
-	activeThreshold float64
-	now             func() time.Time
+	rule              rules.CompiledRule
+	snapshot          Snapshot
+	activeThreshold   float64
+	inactiveThreshold float64
+	now               func() time.Time
+
+	// wasActive carries the previous Detect result across polls, so a rule
+	// that dipped below activeThreshold but not below inactiveThreshold (the
+	// "Teams generic title without mic" flicker) is still reported active
+	// instead of bouncing state every poll.
+	wasActive bool
 }
 
 // App implements model.Detector.
@@ -83,23 +90,34 @@ func (d *Detector) App() string { return d.rule.App }
 // the injected Snapshot functions themselves guarantee.
 func (d *Detector) Detect(_ context.Context) model.DetectionResult {
 	obs := d.snapshot.observe()
-	return d.rule.Evaluate(obs, d.activeThreshold, d.now())
+	result := d.rule.Evaluate(obs, d.activeThreshold, d.now())
+
+	if d.wasActive && result.State == model.StateInactive && result.Confidence >= d.inactiveThreshold {
+		result.State = model.StateActive
+	}
+	d.wasActive = result.State == model.StateActive
+
+	return result
 }
 
-// New builds one model.Detector per rule in cfg, all reading the same
-// Snapshot of platform signals on every poll.
+// New builds one model.Detector per rule in cfg whose app the enabled check
+// approves, all reading the same Snapshot of platform signals on every poll.
 //
-// activeThreshold and now are injected rather than read from a package-level
-// clock or config, so the whole chain stays testable in microseconds and
-// tunable without touching this package.
-func New(cfg *rules.Config, activeThreshold float64, snapshot Snapshot, now func() time.Time) []model.Detector {
+// activeThreshold, inactiveThreshold and now are injected rather than read
+// from a package-level clock or config, so the whole chain stays testable in
+// microseconds and tunable without touching this package.
+func New(cfg *rules.Config, activeThreshold, inactiveThreshold float64, enabled func(app string) bool, snapshot Snapshot, now func() time.Time) []model.Detector {
 	out := make([]model.Detector, 0, len(cfg.Rules))
 	for _, r := range cfg.Rules {
+		if !enabled(r.App) {
+			continue
+		}
 		out = append(out, &Detector{
-			rule:            r,
-			snapshot:        snapshot,
-			activeThreshold: activeThreshold,
-			now:             now,
+			rule:              r,
+			snapshot:          snapshot,
+			activeThreshold:   activeThreshold,
+			inactiveThreshold: inactiveThreshold,
+			now:               now,
 		})
 	}
 	return out
