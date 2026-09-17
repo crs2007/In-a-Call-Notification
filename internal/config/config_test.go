@@ -1,6 +1,7 @@
 package config
 
 import (
+	"os"
 	"strings"
 	"testing"
 )
@@ -208,6 +209,28 @@ func TestLiteralPasswordIsFlagged(t *testing.T) {
 	}
 	if !cfg.PasswordIsLiteral() {
 		t.Error("a password written into the file should be reported as literal")
+	}
+}
+
+// The shipped example must never parse into a working config that happens to
+// point at a real broker. With CALLMQTT_MQTT_PASSWORD unset, the ${VAR}
+// reference in example.yaml should expand to empty, not leak a literal
+// secret — this is the guard against the mqcommunicator leak recurring.
+func TestExampleConfigHasNoWorkingCredentials(t *testing.T) {
+	if orig, ok := os.LookupEnv("CALLMQTT_MQTT_PASSWORD"); ok {
+		os.Unsetenv("CALLMQTT_MQTT_PASSWORD")
+		t.Cleanup(func() { os.Setenv("CALLMQTT_MQTT_PASSWORD", orig) })
+	}
+
+	cfg, err := Parse(Example)
+	if err != nil {
+		t.Fatalf("example.yaml should still parse: %v", err)
+	}
+	if cfg.PasswordIsLiteral() {
+		t.Error("example.yaml's password must reference an env var, not a literal")
+	}
+	if cfg.MQTT.Password != "" {
+		t.Errorf("mqtt.password = %q, want empty with the env var unset", cfg.MQTT.Password)
 	}
 }
 

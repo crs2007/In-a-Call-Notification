@@ -9,12 +9,12 @@ app:
   device_id: auto
 
 mqtt:
-  host: 192.168.68.166
+  host: 192.168.1.10
   port: 1883
-  username: mqcommunicator
+  username: callmqtt
   # Prefer an environment variable over a literal secret. In a Call Notification warns if
   # this is written directly into the file.
-  password: PASSWORD
+  password: ${CALLMQTT_MQTT_PASSWORD}
   discovery:
     # Creates the Home Assistant binary_sensor automatically. With this on you
     # never write a line of Home Assistant YAML.
@@ -27,7 +27,7 @@ mqtt:
 allowed_networks:
   - name: Home
     cidrs:
-      - "192.168.68.0/24"
+      - "192.168.1.0/24"
 
 detectors:
   teams:

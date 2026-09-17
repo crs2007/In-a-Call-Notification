@@ -281,7 +281,10 @@ Before starting, edit that file and set:
   mqtt.username      if your broker requires one
   allowed_networks   the subnets you are willing to publish from
 
-The password is read from the CALLMQTT_MQTT_PASSWORD environment variable.
+The password is read from the CALLMQTT_MQTT_PASSWORD environment variable
+(config.yaml only references it as ${CALLMQTT_MQTT_PASSWORD}). Set it with:
+  setx CALLMQTT_MQTT_PASSWORD "yourpassword"
+then open a new terminal, since setx does not affect the current one.
 Then check your work with:  callmqtt --validate-config
 `, path, config.AutoDeviceID(), config.AutoDeviceID(), config.AutoDeviceID())
 	return nil

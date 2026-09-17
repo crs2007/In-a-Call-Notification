@@ -190,26 +190,32 @@ writes the real secret into `config.yaml`.
 tray click still references env after it. **Done** — `go vet ./...`,
 `go test ./...`, and `go build/vet/test -tags tray ./...` all pass.
 
-### [ ] 2.2 Scrub the example config and fix the `init` message
+### [x] 2.2 Scrub the example config and fix the `init` message
 
 **Touches:** `internal/config/example.yaml`, `cmd/callmqtt/main.go`,
 `internal/config/config_test.go`.
 
-- [ ] `example.yaml`: `host: 192.168.1.10`, `username: callmqtt`,
+- [x] `example.yaml`: `host: 192.168.1.10`, `username: callmqtt`,
       `password: ${CALLMQTT_MQTT_PASSWORD}`, `cidrs: ["192.168.1.0/24"]`.
-      Keep the comments.
-- [ ] Add a test that parses `config.Example` with the env var **unset**
-      and asserts `PasswordIsLiteral() == false` and `MQTT.Password == ""`
-      — this is the guard against the leak recurring.
-- [ ] `initConfig` output: the sentence about `CALLMQTT_MQTT_PASSWORD` is
-      now true; also tell the user to set it (`setx` on Windows).
-- [ ] Add a `gitleaks`/`trufflehog` step to `ci.yml`, or at minimum a
-      `grep -n 'password: [^$]' internal/config/example.yaml` that fails
-      CI. Cheap and it would have caught this.
+      Kept the comments.
+- [x] **Repro:** `TestExampleConfigHasNoWorkingCredentials` — parses
+      `config.Example` with the env var unset, asserts
+      `PasswordIsLiteral() == false` and `MQTT.Password == ""`.
+- [x] `initConfig` output: the `CALLMQTT_MQTT_PASSWORD` sentence is now
+      true (the file only ever contains the `${VAR}` reference), and it
+      now tells the user how to set it (`setx` on Windows, plus the
+      new-terminal caveat).
+- [ ] **Follow-up, not done here:** a `gitleaks`/`trufflehog` CI step, or
+      at minimum `grep -n 'password: [^$]' internal/config/example.yaml`
+      failing the build. Touches `.github/workflows/ci.yml`, which is the
+      `release-ci` agent's territory per `CLAUDE.md`; handing it off
+      separately rather than editing that file from here.
 
 **Done when:** `callmqtt init` + `--validate-config` with no env var set
 reports only the "mqtt.host"-style problems you'd expect, not a working
-config pointing at someone's broker.
+config pointing at someone's broker. **Done** — `go vet`, `go build`, and
+`go test` (with and without `-tags tray`) all pass; `grep -rn
+'mqcommunicator|192.168.68' internal/config/example.yaml` is empty.
 
 ### [ ] 2.3 Expand `${VAR}` after parsing, not before
 
