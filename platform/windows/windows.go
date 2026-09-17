@@ -3,6 +3,7 @@
 package windows
 
 import (
+	"sync"
 	"syscall"
 	"unsafe"
 
@@ -31,13 +32,26 @@ type WindowInfo struct {
 	Title string
 }
 
+// enumMu serialises access to enumBuffer across concurrent VisibleWindows
+// calls.
+//
+// EnumWindows is synchronous, so a single call's reset-call-copy sequence is
+// safe on its own. But VisibleWindows can itself be called concurrently by
+// more than one engine generation's poll loop — e.g. during a
+// supervisor-driven reload, the old generation's poll can still be mid-flight
+// (inside a detector, inside VisibleWindows) when the new generation starts
+// its own poll. Without a lock, one call's `enumBuffer = enumBuffer[:0]`
+// races with another's in-flight `append`. The mutex makes concurrent callers
+// serialize instead.
+var enumMu sync.Mutex
+
 // enumBuffer accumulates results for the in-flight EnumWindows call.
 //
 // syscall.NewCallback allocates a callback slot that is never released, and
 // the process is capped at a few thousand of them. A long-running poll loop
 // must therefore create the callback exactly once, at package level, and
 // share state through a package variable rather than a closure per call.
-// EnumWindows is synchronous, so a single unsynchronised buffer is safe here.
+// Access to this buffer is guarded by enumMu; see its comment for why.
 var enumBuffer []WindowInfo
 
 var enumCallback = syscall.NewCallback(func(hwnd syscall.Handle, _ uintptr) uintptr {
@@ -66,6 +80,9 @@ var enumCallback = syscall.NewCallback(func(hwnd syscall.Handle, _ uintptr) uint
 // user is "in a call" is a rule owned by internal/detectors, not this
 // package.
 func VisibleWindows() []WindowInfo {
+	enumMu.Lock()
+	defer enumMu.Unlock()
+
 	enumBuffer = enumBuffer[:0]
 	procEnumWindows.Call(enumCallback, 0)
 	out := make([]WindowInfo, len(enumBuffer))

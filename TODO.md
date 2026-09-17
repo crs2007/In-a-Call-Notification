@@ -290,16 +290,25 @@ passes.
       `Status()` on another for ~100ms. CI runs `-race` on Windows so
       this will actually be checked.
 
-### [ ] 3.3 `VisibleWindows` must be safe under concurrent callers
+### [x] 3.3 `VisibleWindows` must be safe under concurrent callers
 
 **Touches:** `platform/windows/windows.go`.
 
-- [ ] Wrap `VisibleWindows` in a package `sync.Mutex` — `EnumWindows` is
+- [x] Wrap `VisibleWindows` in a package `sync.Mutex` — `EnumWindows` is
       synchronous per call, but the supervisor (even after 1.2) can have
       the old engine mid-poll when the new one starts. Update the comment
-      to say why.
-- [ ] Alternative once 5.1 lands: the mutex is still correct and cheap;
+      to say why. Added `enumMu`, locked for the reset-call-copy sequence;
+      the stale "unsynchronised buffer is safe here" comment is gone.
+- [x] Alternative once 5.1 lands: the mutex is still correct and cheap;
       keep it.
+- [x] Added `platform/windows/windows_test.go` (new,
+      `//go:build windows`): `TestVisibleWindowsConcurrent` hammers
+      `VisibleWindows()` from 10 goroutines × 50 calls.
+
+**Done when:** `go test -race ./platform/windows/...` is clean. **Code and
+test done; `-race` itself could not be run in this sandbox (no C
+compiler, so `CGO_ENABLED` can't turn on) — needs confirming on the
+Windows CI runner, which has the toolchain.**
 
 ### [ ] 3.4 `tray.app.lastIcon` race
 
