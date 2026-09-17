@@ -6,6 +6,7 @@ import (
 	"io"
 	"log/slog"
 	"net/netip"
+	"sync"
 	"testing"
 	"time"
 
@@ -397,6 +398,31 @@ func TestFailedPublishIsRetried(t *testing.T) {
 	}
 }
 
+// A state transition that fails to publish must be retried well before the
+// next heartbeat, not just papered over by the startup announcement's
+// separate !e.published retry path (that's TestFailedPublishIsRetried).
+func TestTransientPublishFailureDoesNotLoseTransition(t *testing.T) {
+	h := newHarness(t)
+
+	h.runUntil(10 * time.Second) // startup announcement + settled inactive
+
+	h.publisher.err = errors.New("broker unreachable")
+	h.detector.state, h.detector.confidence = model.StateActive, 0.9
+	h.runUntil(30 * time.Second) // debounces to active while publishing fails
+
+	if got := h.publisher.states(); len(got) > 0 && got[len(got)-1] == "active" {
+		t.Fatal("active state was recorded as published despite a failing broker")
+	}
+
+	h.publisher.err = nil
+	h.runUntil(34 * time.Second) // two poll intervals, nowhere near the 60s heartbeat
+
+	got := h.publisher.states()
+	if len(got) == 0 || got[len(got)-1] != "active" {
+		t.Fatalf("publishes = %v, want the active transition retried once the broker recovered", got)
+	}
+}
+
 // An inactive payload must not name the app that was last in a call.
 func TestInactivePayloadCarriesNoApp(t *testing.T) {
 	h := newHarness(t)
@@ -414,6 +440,58 @@ func TestInactivePayloadCarriesNoApp(t *testing.T) {
 	if last.App != "" || len(last.Apps) != 0 {
 		t.Errorf("inactive payload named apps %q/%v", last.App, last.Apps)
 	}
+}
+
+// Status() is called from the tray's goroutine while Run/Evaluate mutates
+// engine state on another. -race must find nothing, and this needs to churn
+// both goroutines for long enough to actually exercise that.
+func TestStatusIsSafeForConcurrentReads(t *testing.T) {
+	h := newHarness(t)
+
+	stop := time.After(100 * time.Millisecond)
+	done := make(chan struct{})
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	go func() {
+		defer wg.Done()
+		at := time.Duration(0)
+		toggle := false
+		for {
+			select {
+			case <-done:
+				return
+			default:
+			}
+			toggle = !toggle
+			if toggle {
+				h.detector.state = model.StateActive
+			} else {
+				h.detector.state = model.StateInactive
+			}
+			h.engine.Evaluate(context.Background(), h.start.Add(at))
+			at += pollInterval
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case <-done:
+				return
+			default:
+			}
+			status := h.engine.Status()
+			_ = status.Apps
+			_ = status.Reasons
+		}
+	}()
+
+	<-stop
+	close(done)
+	wg.Wait()
 }
 
 // Two apps in a call at once are both reported rather than one being picked.

@@ -259,34 +259,34 @@ and without `-tags tray`), and `go test ./...` (with and without
 
 ## Phase 3 — Engine correctness and data races
 
-### [ ] 3.1 A failed state-change publish must be retried on the next poll
+### [x] 3.1 A failed state-change publish must be retried on the next poll
 
 **Bug:** `changed` is consumed even when `PublishState` fails; the new
 state waits for the heartbeat (up to 60s).
 
 **Touches:** `internal/engine/engine.go`, `internal/engine/engine_test.go`.
 
-- [ ] Add `pending bool` to `Engine`. Set it when `changed || rejoined ||
+- [x] Add `pending bool` to `Engine`. Set it when `changed || rejoined ||
       startupAnnouncement`. Publish when `pending || heartbeatDue`. Clear
       `pending` only on publish success.
-- [ ] Log the failure at `Warn` with a "will retry" suffix and — since it
+- [x] Log the failure at `Warn` with a "will retry" suffix and — since it
       now retries every 2s — rate-limit the log line (once per 30s, or
       log only on first failure and on recovery).
-- [ ] **Repro:** `TestReproLostTransitionOnTransientPublishFailure` from
+- [x] **Repro:** `TestReproLostTransitionOnTransientPublishFailure` from
       the review, renamed `TestTransientPublishFailureDoesNotLoseTransition`.
 
 **Done when:** the test passes and `TestFailedPublishIsRetried` still
 passes.
 
-### [ ] 3.2 `Engine.Status()` must be safe to call from another goroutine
+### [x] 3.2 `Engine.Status()` must be safe to call from another goroutine
 
 **Touches:** `internal/engine/engine.go`.
 
-- [ ] Guard `e.status` with a `sync.RWMutex` (write under lock at the end
+- [x] Guard `e.status` with a `sync.RWMutex` (write under lock at the end
       of `evaluate`, `Status()` takes `RLock` and returns a copy). Copy
       the `Apps`/`Reasons` slices on write so the reader can't alias the
       resolver's buffers.
-- [ ] Add a `-race` test: run `Evaluate` in a loop on one goroutine and
+- [x] Add a `-race` test: run `Evaluate` in a loop on one goroutine and
       `Status()` on another for ~100ms. CI runs `-race` on Windows so
       this will actually be checked.
 

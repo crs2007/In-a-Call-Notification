@@ -11,6 +11,7 @@ package engine
 import (
 	"context"
 	"log/slog"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -60,11 +61,14 @@ type Engine struct {
 	netCheckAt time.Time
 	netKnown   bool
 
-	wasAllowed  bool
-	lastPublish time.Time
-	published   bool
-	status      Status
-	paused      atomic.Bool
+	wasAllowed     bool
+	lastPublish    time.Time
+	published      bool
+	pending        bool
+	publishFailing bool
+	statusMu       sync.RWMutex
+	status         Status
+	paused         atomic.Bool
 }
 
 // Options collects the engine's dependencies. Everything platform-specific
@@ -114,8 +118,25 @@ func (e *Engine) Run(ctx context.Context) error {
 	}
 }
 
-// Status returns the most recent snapshot.
-func (e *Engine) Status() Status { return e.status }
+// Status returns the most recent snapshot. Safe to call from any goroutine —
+// the tray calls it from one that isn't running evaluate.
+func (e *Engine) Status() Status {
+	e.statusMu.RLock()
+	defer e.statusMu.RUnlock()
+	return copyStatus(e.status)
+}
+
+// copyStatus deep-copies the slice fields so a caller can't alias the
+// engine's internal buffers.
+func copyStatus(s Status) Status {
+	if s.Apps != nil {
+		s.Apps = append([]string(nil), s.Apps...)
+	}
+	if s.Reasons != nil {
+		s.Reasons = append([]string(nil), s.Reasons...)
+	}
+	return s
+}
 
 // SetPaused turns detection on or off without stopping the engine.
 //
@@ -145,8 +166,19 @@ func (e *Engine) evaluate(ctx context.Context, now time.Time) {
 	e.refreshNetwork(ctx, now)
 
 	state, changed := e.machine.Update(resolved, now)
+	if changed {
+		// A transition must survive an early return (network gate below, a
+		// failed publish further down) and be retried on a later poll rather
+		// than waiting for the next heartbeat.
+		e.pending = true
+	}
 
-	e.status = Status{
+	e.statusMu.Lock()
+	lastChange := e.status.LastChange
+	if changed {
+		lastChange = now
+	}
+	e.status = copyStatus(Status{
 		State:       state,
 		App:         resolved.App,
 		Apps:        resolved.Apps,
@@ -155,11 +187,11 @@ func (e *Engine) evaluate(ctx context.Context, now time.Time) {
 		Network:     e.netInfo,
 		NetworkRule: e.netRule,
 		Allowed:     e.netAllowed,
-		LastChange:  e.status.LastChange,
+		LastChange:  lastChange,
 		Paused:      e.paused.Load(),
-	}
+	})
+	e.statusMu.Unlock()
 	if changed {
-		e.status.LastChange = now
 		e.log.Info("call state changed",
 			"state", state, "app", resolved.App, "confidence", resolved.Confidence,
 			"network", e.netRule, "publishing", e.netAllowed)
@@ -182,6 +214,7 @@ func (e *Engine) evaluate(ctx context.Context, now time.Time) {
 	e.wasAllowed = true
 	if rejoined {
 		e.log.Info("joined allowed network, resuming publishing", "network", e.netRule)
+		e.pending = true
 	}
 
 	heartbeatDue := e.published && now.Sub(e.lastPublish) >= e.cfg.Poll.Heartbeat()
@@ -193,8 +226,11 @@ func (e *Engine) evaluate(ctx context.Context, now time.Time) {
 	// clears that, instead of leaving the light red for a whole exit debounce
 	// every time the agent restarts.
 	startupAnnouncement := !e.published
+	if startupAnnouncement {
+		e.pending = true
+	}
 
-	if !changed && !rejoined && !heartbeatDue && !startupAnnouncement {
+	if !e.pending && !heartbeatDue {
 		return
 	}
 
@@ -213,11 +249,19 @@ func (e *Engine) evaluate(ctx context.Context, now time.Time) {
 	}
 
 	if err := e.publisher.PublishState(ctx, payload); err != nil {
-		e.log.Error("publish state", "error", err, "state", state)
+		if !e.publishFailing {
+			e.log.Warn("publish state, will retry", "error", err, "state", state)
+			e.publishFailing = true
+		}
 		return
+	}
+	if e.publishFailing {
+		e.log.Info("publish recovered", "state", state)
+		e.publishFailing = false
 	}
 	e.published = true
 	e.lastPublish = now
+	e.pending = false
 }
 
 // refreshNetwork re-reads the network on its own slower interval.
