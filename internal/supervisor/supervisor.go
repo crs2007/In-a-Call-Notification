@@ -183,6 +183,19 @@ func (s *Supervisor) SetPaused(paused bool) {
 	}
 }
 
+// Paused reports whether the running generation currently has detection
+// paused. Unlike Status().Paused, this reads the engine's live atomic flag
+// rather than the last-computed snapshot, so it's correct immediately after
+// SetPaused rather than after the next poll tick.
+func (s *Supervisor) Paused() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.gen == nil {
+		return false
+	}
+	return s.gen.eng.Paused()
+}
+
 // BrokerConnected reports whether the running generation's publisher
 // currently has a live broker connection.
 func (s *Supervisor) BrokerConnected() bool {

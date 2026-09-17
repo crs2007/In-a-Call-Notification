@@ -310,24 +310,32 @@ test done; `-race` itself could not be run in this sandbox (no C
 compiler, so `CGO_ENABLED` can't turn on) — needs confirming on the
 Windows CI runner, which has the toolchain.**
 
-### [ ] 3.4 `tray.app.lastIcon` race
+### [x] 3.4 `tray.app.lastIcon` race
 
-**Touches:** `internal/tray/tray.go`.
+**Touches:** `internal/tray/tray.go`, `internal/tray/tray_test.go`,
+`internal/supervisor/supervisor.go`.
 
-- [ ] Route every UI update through the refresh loop: `applyChange` and
+- [x] Route every UI update through the refresh loop: `applyChange` and
       `togglePause` should send on a `refreshNow chan struct{}` (buffered
       1) instead of calling `a.refresh()` directly. `refreshLoop` selects
       on ticker + that channel. Then `lastIcon` is touched by exactly one
-      goroutine.
-- [ ] `togglePause`: after `SetPaused`, the engine's `status.Paused` is
-      stale until its next tick. Either have `Supervisor.SetPaused` also
-      call `eng.Evaluate(now)` synchronously, or have the tray derive the
-      pause label from `Supervisor.Paused()` rather than from the status
-      snapshot.
+      goroutine. Implemented via a `requestRefresh()` helper doing a
+      non-blocking send.
+- [x] `togglePause`: after `SetPaused`, the engine's `status.Paused` is
+      stale until its next tick. Chose the "derive from `Paused()`"
+      option: added `Supervisor.Paused()` (reads the engine's atomic
+      flag, not the poll snapshot); `togglePause` and `refresh()` both
+      read it directly instead of `Status().Paused`.
+      `Options.Supervisor` is now a `supervisorAPI` interface (new seam,
+      mirrors `engine.Publisher`) so `tray_test.go` can fake it.
+- [x] Added `TestRefreshIsRaceFreeUnderConcurrentApplyChangeAndTogglePause`
+      in `tray_test.go`, with a `fakeSupervisor`.
 
 **Done when:** `go test -race -tags tray ./internal/tray/` passes with a
 test that hammers `refresh` and `applyChange` concurrently (fake
-supervisor is fine; `tray_test.go` already has scaffolding).
+supervisor is fine; `tray_test.go` already has scaffolding). **Code and
+test done; same `-race`-in-this-sandbox limitation as 3.2/3.3 — needs
+confirming on Windows CI.**
 
 ---
 

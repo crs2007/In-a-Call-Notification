@@ -4,10 +4,20 @@ package tray
 
 import (
 	"bytes"
+	"context"
 	"image/color"
 	"image/png"
+	"io"
+	"log/slog"
+	"os"
+	"path/filepath"
+	"sync"
 	"testing"
+	"time"
 
+	"github.com/gogpu/systray"
+
+	"github.com/crs2007/callmqtt/internal/config"
 	"github.com/crs2007/callmqtt/internal/engine"
 	"github.com/crs2007/callmqtt/internal/model"
 )
@@ -63,4 +73,136 @@ func TestStatusTooltip(t *testing.T) {
 			}
 		})
 	}
+}
+
+// fakeSupervisor is a minimal supervisorAPI, so tests never touch a real
+// engine or broker connection. Status()'s State flips on every call and
+// BrokerConnected() flips on every call, so refresh() computes a genuinely
+// different icon most of the time — the point being to make a.lastIcon get
+// written often, not just read, while it's under concurrent pressure.
+type fakeSupervisor struct {
+	mu        sync.Mutex
+	cfg       *config.Config
+	paused    bool
+	connected bool
+	tick      int
+	reloads   int
+}
+
+func (f *fakeSupervisor) Config() *config.Config {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.cfg
+}
+
+func (f *fakeSupervisor) Status() engine.Status {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.tick++
+	state := model.StateInactive
+	if f.tick%2 == 0 {
+		state = model.StateActive
+	}
+	return engine.Status{State: state, App: "teams", Allowed: true}
+}
+
+func (f *fakeSupervisor) Reload(_ context.Context, cfg *config.Config) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.cfg = cfg
+	f.reloads++
+	return nil
+}
+
+func (f *fakeSupervisor) SetPaused(paused bool) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.paused = paused
+}
+
+func (f *fakeSupervisor) Paused() bool {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.paused
+}
+
+func (f *fakeSupervisor) BrokerConnected() bool {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.connected = !f.connected
+	return f.connected
+}
+
+// newTestApp builds an app the way Run does, minus the parts that would
+// actually show a tray icon or pump the OS message loop — systray.New()'s
+// message-only window and menu construction work fine without either.
+func newTestApp(t *testing.T, sup supervisorAPI, cfgPath string, pollInterval time.Duration) *app {
+	t.Helper()
+	a := &app{
+		opts: Options{
+			Supervisor:   sup,
+			Logger:       slog.New(slog.NewTextHandler(io.Discard, nil)),
+			ConfigPath:   cfgPath,
+			PollInterval: pollInterval,
+		},
+		tray:       systray.New(),
+		refreshNow: make(chan struct{}, 1),
+	}
+	a.buildMenu()
+	return a
+}
+
+// TestRefreshIsRaceFreeUnderConcurrentApplyChangeAndTogglePause is the repro
+// for TODO.md 3.4: before the fix, applyChange and togglePause each called
+// a.refresh() directly from their own goroutines, racing with refreshLoop's
+// goroutine over a.lastIcon. Run with -race: it must fail on the old code
+// (direct a.refresh() calls) and pass once applyChange/togglePause only ever
+// request a refresh through refreshNow.
+func TestRefreshIsRaceFreeUnderConcurrentApplyChangeAndTogglePause(t *testing.T) {
+	// applyChange reloads the config on every toggle; set this so the
+	// package-level "env var referenced but not set" warning doesn't fire on
+	// every one of them.
+	t.Setenv("CALLMQTT_MQTT_PASSWORD", "unused-test-password")
+
+	dir := t.TempDir()
+	cfgPath := filepath.Join(dir, "config.yaml")
+	if err := os.WriteFile(cfgPath, config.Example, 0o600); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+	cfg, err := config.Load(cfgPath)
+	if err != nil {
+		t.Fatalf("load config: %v", err)
+	}
+
+	a := newTestApp(t, &fakeSupervisor{cfg: cfg}, cfgPath, time.Millisecond)
+
+	stop := make(chan struct{})
+	go a.refreshLoop(stop)
+
+	var wg sync.WaitGroup
+	for i := 0; i < 4; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for j := 0; j < 25; j++ {
+				a.toggleDetector("teams")
+			}
+		}()
+	}
+	for i := 0; i < 4; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for j := 0; j < 200; j++ {
+				a.togglePause()
+			}
+		}()
+	}
+	wg.Wait()
+
+	// toggleDetector's applyChange runs its Save/Load/Reload/refresh on a
+	// spawned goroutine; give the slowest of those a chance to land — and to
+	// race against refreshLoop, still running below — before stop closes it.
+	time.Sleep(200 * time.Millisecond)
+	close(stop)
 }

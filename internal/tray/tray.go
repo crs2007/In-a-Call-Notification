@@ -28,7 +28,6 @@ import (
 	"github.com/crs2007/callmqtt/internal/config"
 	"github.com/crs2007/callmqtt/internal/engine"
 	"github.com/crs2007/callmqtt/internal/model"
-	"github.com/crs2007/callmqtt/internal/supervisor"
 )
 
 // Startup manages whether the agent launches at login. Implementations live
@@ -45,9 +44,21 @@ type Startup interface {
 // file, since there is otherwise no way to change those four fields at all.
 type Dialog func(current config.Settings) (config.Settings, bool, error)
 
+// supervisorAPI is exactly what app needs from a *supervisor.Supervisor.
+// Depending on the interface rather than the concrete type lets tests hand
+// app a fake instead of a live engine and broker connection.
+type supervisorAPI interface {
+	Config() *config.Config
+	Status() engine.Status
+	Reload(ctx context.Context, cfg *config.Config) error
+	SetPaused(paused bool)
+	Paused() bool
+	BrokerConnected() bool
+}
+
 // Options configures the tray.
 type Options struct {
-	Supervisor   *supervisor.Supervisor
+	Supervisor   supervisorAPI
 	Logger       *slog.Logger
 	ConfigPath   string
 	LogPath      string
@@ -64,7 +75,7 @@ func Run(ctx context.Context, opts Options) error {
 		opts.PollInterval = 2 * time.Second
 	}
 
-	a := &app{opts: opts, tray: systray.New()}
+	a := &app{opts: opts, tray: systray.New(), refreshNow: make(chan struct{}, 1)}
 	a.buildMenu()
 
 	a.tray.SetIcon(iconPNG(trayIconState{color: colorGray})).
@@ -106,6 +117,12 @@ type app struct {
 	allowNetItem *systray.MenuItem
 	loginItem    *systray.MenuItem
 	pauseItem    *systray.MenuItem
+
+	// refreshNow lets other goroutines request a refresh without calling
+	// a.refresh() themselves, so refreshLoop's goroutine stays the only one
+	// that ever touches lastIcon. Buffered 1 with a non-blocking send: a
+	// refresh already queued doesn't need a second one behind it.
+	refreshNow chan struct{}
 
 	lastIcon trayIconState
 }
@@ -182,12 +199,19 @@ func (a *app) refreshLoop(stop <-chan struct{}) {
 			return
 		case <-ticker.C:
 			a.refresh()
+		case <-a.refreshNow:
+			a.refresh()
 		}
 	}
 }
 
 func (a *app) refresh() {
 	status := a.opts.Supervisor.Status()
+	// SetPaused flips the engine's atomic flag without re-running evaluate,
+	// so the snapshot's Paused can lag by up to one poll interval. Paused()
+	// reads the live flag directly, keeping every label below correct right
+	// after a toggle.
+	status.Paused = a.opts.Supervisor.Paused()
 	brokerConnected := a.opts.Supervisor.BrokerConnected()
 
 	a.stateItem.SetLabel(stateLabel(status))
@@ -322,7 +346,7 @@ func (a *app) applyChange(mutate func(*config.Settings), item *systray.MenuItem,
 			}
 			return
 		}
-		a.refresh()
+		a.requestRefresh()
 	}()
 }
 
@@ -364,9 +388,19 @@ func (a *app) toggleStartup() {
 }
 
 func (a *app) togglePause() {
-	next := !a.opts.Supervisor.Status().Paused
+	next := !a.opts.Supervisor.Paused()
 	a.opts.Supervisor.SetPaused(next)
-	a.refresh()
+	a.requestRefresh()
+}
+
+// requestRefresh asks refreshLoop to run a.refresh() on its own goroutine, so
+// callers on other goroutines (the systray callback goroutine, applyChange's
+// spawned goroutines) never touch lastIcon themselves.
+func (a *app) requestRefresh() {
+	select {
+	case a.refreshNow <- struct{}{}:
+	default:
+	}
 }
 
 // allowCurrentNetwork appends the live subnet to the allow-list by name, so
