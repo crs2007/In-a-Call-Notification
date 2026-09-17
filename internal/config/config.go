@@ -9,6 +9,7 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/netip"
 	"os"
 	"path/filepath"
@@ -147,28 +148,26 @@ type Logging struct {
 // paths and detection regexes in the config cannot be mangled by accident.
 var envPattern = regexp.MustCompile(`\$\{([A-Za-z_][A-Za-z0-9_]*)\}`)
 
-// expandEnv replaces ${NAME} with the environment value, or with the empty
-// string if unset. Validation then catches the resulting empty required field,
-// which gives a better message than "unknown variable" would.
-func expandEnv(raw []byte) []byte {
-	return envPattern.ReplaceAllFunc(raw, func(match []byte) []byte {
-		name := envPattern.FindSubmatch(match)[1]
-		return []byte(os.Getenv(string(name)))
+// expandField replaces every ${NAME} in value with the environment value, or
+// with the empty string if unset (Validate then catches the resulting empty
+// required field, which gives a better message than "unknown variable"
+// would). field is used only in the warning log line: an unset variable
+// otherwise fails silently and empty, which is how people spend an hour on
+// "auth failed".
+//
+// This runs on already-parsed string fields, never on the raw YAML source —
+// substituting into the source before parsing let a password containing a
+// YAML metacharacter (#, ": ", a leading */&/[, a newline) truncate itself or
+// corrupt the document.
+func expandField(field, value string) string {
+	return envPattern.ReplaceAllStringFunc(value, func(match string) string {
+		name := envPattern.FindStringSubmatch(match)[1]
+		val, ok := os.LookupEnv(name)
+		if !ok {
+			slog.Warn("config: environment variable referenced but not set", "field", field, "variable", name)
+		}
+		return val
 	})
-}
-
-// referencesEnv reports whether mqtt.password in the raw, unexpanded file was
-// written as a ${VAR} reference rather than as a literal secret.
-func referencesEnv(raw []byte) bool {
-	var probe struct {
-		MQTT struct {
-			Password string `yaml:"password"`
-		} `yaml:"mqtt"`
-	}
-	if err := yaml.Unmarshal(raw, &probe); err != nil {
-		return false
-	}
-	return envPattern.MatchString(probe.MQTT.Password)
 }
 
 // Load reads, defaults and validates the configuration at path.
@@ -184,10 +183,23 @@ func Load(path string) (*Config, error) {
 // entry point; Parse exists so that tests need no temporary files.
 func Parse(raw []byte) (*Config, error) {
 	cfg := Defaults()
-	if err := yaml.Unmarshal(expandEnv(raw), cfg); err != nil {
+	if err := yaml.Unmarshal(raw, cfg); err != nil {
 		return nil, fmt.Errorf("parse config: %w", err)
 	}
-	cfg.passwordFromEnv = referencesEnv(raw)
+	// passwordFromEnv must be read before expansion below overwrites it.
+	cfg.passwordFromEnv = envPattern.MatchString(cfg.MQTT.Password)
+
+	// ${VAR} is expanded only in the fields where an environment override
+	// makes sense, and only after YAML parsing has already tokenized the
+	// file — so a value containing #, ": ", a leading */&/[, or a newline
+	// can never be mistaken for YAML syntax.
+	cfg.MQTT.Host = expandField("mqtt.host", cfg.MQTT.Host)
+	cfg.MQTT.Username = expandField("mqtt.username", cfg.MQTT.Username)
+	cfg.MQTT.Password = expandField("mqtt.password", cfg.MQTT.Password)
+	cfg.MQTT.ClientID = expandField("mqtt.client_id", cfg.MQTT.ClientID)
+	cfg.Logging.File = expandField("logging.file", cfg.Logging.File)
+	cfg.RulesFile = expandField("rules_file", cfg.RulesFile)
+
 	cfg.applyDerivedDefaults()
 	if err := cfg.Validate(); err != nil {
 		return nil, err

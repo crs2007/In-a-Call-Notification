@@ -222,7 +222,7 @@ config pointing at someone's broker. **Done** — `go vet`, `go build`, and
 `go test` (with and without `-tags tray`) all pass; `grep -rn
 'mqcommunicator|192.168.68' internal/config/example.yaml` is empty.
 
-### [ ] 2.3 Expand `${VAR}` after parsing, not before
+### [x] 2.3 Expand `${VAR}` after parsing, not before
 
 **Bug:** textual substitution into the YAML source. A password containing
 `#` is silently truncated; `: `, leading `*`/`&`/`[`, or newlines break
@@ -230,22 +230,30 @@ parsing or inject keys.
 
 **Touches:** `internal/config/config.go`, `internal/config/config_test.go`.
 
-- [ ] Remove `expandEnv([]byte)`. Unmarshal the raw file first.
-- [ ] Walk the parsed struct and expand `${VAR}` in string fields only.
-      Don't reflect over everything — there are exactly the fields where
-      env makes sense: `mqtt.host`, `mqtt.username`, `mqtt.password`,
-      `mqtt.client_id`, `logging.file`, `rules_file`. Do those explicitly.
-- [ ] `passwordFromEnv` becomes trivial: check the *unexpanded* string
-      before expanding it. Delete `referencesEnv` and its second parse.
-- [ ] Unset variable: keep current behaviour (empty string, validation
-      catches it) but log at Warn which variable was unset — silent empty
-      is how people spend an hour on "auth failed".
-- [ ] **Repro:** `TestReproHashInPassword` from the review (env
-      `hunter2 #2024` round-trips intact) plus one with a newline in the
-      value asserting the config parses and nothing else changed.
+- [x] Removed `expandEnv([]byte)`. `Parse` now unmarshals the raw file
+      first, unexpanded.
+- [x] Added `expandField(field, value string) string`, called explicitly
+      for exactly the fields where env makes sense: `mqtt.host`,
+      `mqtt.username`, `mqtt.password`, `mqtt.client_id`, `logging.file`,
+      `rules_file`. No reflection over the whole struct.
+- [x] `passwordFromEnv` is now `envPattern.MatchString(cfg.MQTT.Password)`
+      read right after unmarshal, before `expandField` overwrites it.
+      Deleted `referencesEnv` and its second parse.
+- [x] Unset variable: still expands to empty (`Validate` catches it), but
+      `expandField` now logs at `slog.Warn` with the field name and the
+      variable that was missing.
+- [x] **Repro:** `TestReproHashInPassword` (env `hunter2 #2024` round-trips
+      intact) and `TestReproNewlineInPassword` (a newline in the env value
+      can't inject a YAML key — asserts `logging.level` still comes from
+      the file, not the injected value). Also added
+      `TestUnsetEnvVarExpandsEmpty` for the unset-variable path, and
+      updated `TestBareDollarIsNotExpanded` to call `expandField` directly
+      now that `expandEnv([]byte)` is gone.
 
 **Done when:** a password containing any YAML metacharacter survives
-`Load` byte-for-byte.
+`Load` byte-for-byte. **Done** — `go vet ./...`, `go build ./...` (with
+and without `-tags tray`), and `go test ./...` (with and without
+`-tags tray`) all pass.
 
 ---
 

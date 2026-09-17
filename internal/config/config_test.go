@@ -107,9 +107,56 @@ func TestEnvExpansion(t *testing.T) {
 func TestBareDollarIsNotExpanded(t *testing.T) {
 	// Detection rules are regexes; $ is an anchor, not a variable.
 	t.Setenv("HOME", "/should-not-appear")
-	got := string(expandEnv([]byte(`regex: "Microsoft Teams$HOME"`)))
+	got := expandField("test", "Microsoft Teams$HOME")
 	if !strings.Contains(got, "$HOME") {
 		t.Errorf("bare $NAME must be left alone, got %q", got)
+	}
+}
+
+// Expansion must happen on the already-parsed string, not on the YAML
+// source: substituting into the source let a password containing '#' get
+// truncated as a YAML comment before it ever reached the parser.
+func TestReproHashInPassword(t *testing.T) {
+	t.Setenv("CALLMQTT_TEST_PASSWORD", "hunter2 #2024")
+
+	cfg, err := Parse([]byte(minimal + "  password: \"${CALLMQTT_TEST_PASSWORD}\"\n"))
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+	if cfg.MQTT.Password != "hunter2 #2024" {
+		t.Errorf("password = %q, want the env value intact", cfg.MQTT.Password)
+	}
+}
+
+// The same class of bug: a newline in the env value must not be able to
+// inject a YAML key or otherwise change how the rest of the document parses.
+func TestReproNewlineInPassword(t *testing.T) {
+	t.Setenv("CALLMQTT_TEST_PASSWORD", "line1\nlogging:\n  level: debug")
+
+	cfg, err := Parse([]byte(minimal + "  password: \"${CALLMQTT_TEST_PASSWORD}\"\nlogging:\n  level: info\n"))
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+	if cfg.MQTT.Password != "line1\nlogging:\n  level: debug" {
+		t.Errorf("password = %q, want the env value intact", cfg.MQTT.Password)
+	}
+	if cfg.Logging.Level != "info" {
+		t.Errorf("logging.level = %q, want the value the file actually set (an injected key must not win)", cfg.Logging.Level)
+	}
+}
+
+// An unset ${VAR} must still resolve to empty (Validate reports it, same as
+// before) rather than becoming an error in its own right — env-var typos
+// shouldn't need a different failure mode than a missing field.
+func TestUnsetEnvVarExpandsEmpty(t *testing.T) {
+	os.Unsetenv("CALLMQTT_DOES_NOT_EXIST")
+
+	cfg, err := Parse([]byte(minimal + "  password: \"${CALLMQTT_DOES_NOT_EXIST}\"\n"))
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+	if cfg.MQTT.Password != "" {
+		t.Errorf("password = %q, want empty for an unset variable", cfg.MQTT.Password)
 	}
 }
 
