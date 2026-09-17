@@ -18,21 +18,23 @@ Conventions used below:
 
 ## Phase 0 — Out-of-band, do today
 
-### [ ] 0.1 Rotate the leaked broker credentials
+### [x] 0.1 Rotate the leaked broker credentials
 
 The password `mqcommunicator1!` for user `mqcommunicator` on
 `192.168.68.166` is in `internal/config/example.yaml` at `4733015`, which
 is on `origin/main`. Assume it is public.
 
-- [ ] Change that user's password on the Mosquitto broker (or delete the
+- [x] Change that user's password on the Mosquitto broker (or delete the
       user and create a new one).
-- [ ] Update the real `%APPDATA%\callmqtt\config.yaml` on each machine
+- [x] Update the real `%APPDATA%\callmqtt\config.yaml` on each machine
       to the new secret via `${CALLMQTT_MQTT_PASSWORD}`.
-- [ ] Decide whether to rewrite history. Recommendation: **don't** — the
+- [x] Decide whether to rewrite history. Recommendation: **don't** — the
       value is already rotated, and a force-push on `main` costs more than
       it saves. Note the rotation date in `SECURITY.md` instead.
 
-**Done when:** the old password is rejected by the broker.
+**Done when:** the old password is rejected by the broker. **Confirmed
+done by the user; history was not rewritten, per the recommendation
+above.**
 
 ---
 
