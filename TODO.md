@@ -341,46 +341,59 @@ confirming on Windows CI.**
 
 ## Phase 4 — Controls that don't do anything
 
-### [ ] 4.1 Honour `detectors.<app>.enabled`
+### [x] 4.1 Honour `detectors.<app>.enabled`
 
 **Touches:** `cmd/callmqtt/main.go`, `internal/detectors/detectors.go`,
-`internal/detectors/detectors_test.go`.
+`internal/detectors/detectors_test.go`, `internal/config/config.go`,
+`internal/config/config_test.go`.
 
-- [ ] `detectors.New` takes `enabled map[string]bool` (or a
-      `func(app string) bool`) and skips rules whose app is disabled.
-      Unknown app names in config (typo: `team:`) should be reported by
-      `Validate` — add a check against `rules.Default()`'s app list.
-- [ ] `buildDetectors` passes `cfg.Detectors`.
-- [ ] Test: rules with teams+zoom+slack, config disables zoom, `New`
-      returns two detectors and neither is zoom.
+- [x] `detectors.New` takes `enabled func(app string) bool` and skips
+      rules whose app is disabled. Unknown app names in config (typo:
+      `team:`) are now reported by `Validate` — checked against
+      `rules.Default()`'s app list, sorted for deterministic output.
+- [x] `buildDetectors` passes a closure over `cfg.Detectors`.
+- [x] Test: `TestNew_DisabledAppSkipped` — rules with teams+zoom+slack,
+      config disables zoom, `New` returns two detectors and neither is
+      zoom. Validate side: a `detectors.team` typo test asserting the
+      error names the bad key.
 
 **Done when:** unticking "Zoom" in the tray and running `--once` with
-Zoom in a meeting reports `inactive`.
+Zoom in a meeting reports `inactive`. **Code and unit tests done; this
+manual, real-app check is still outstanding.**
 
-### [ ] 4.2 Decide `rules_file` and `inactive_threshold`
+### [x] 4.2 Decide `rules_file` and `inactive_threshold`
 
 Both are parsed, validated, documented, and never read. Pick per field:
 
-- [ ] `rules_file`: **implement** — it's the natural escape hatch when a
+- [x] `rules_file`: **implement** — it's the natural escape hatch when a
       Teams update changes a title and the user can't wait for a release.
       `buildDetectors`: if set, `rules.LoadFile(path)`, else `Default()`.
-      Resolve relative to the config file's directory. Add to
+      Resolve relative to the config file's directory. Added to
       `example.yaml` commented out.
-- [ ] `inactive_threshold`: **implement hysteresis or delete it.**
-      Recommendation: implement — it's ten lines in `rules.Evaluate` /
-      `detection.Machine` (once active, stay active until confidence
-      drops *below* `inactive_threshold`, not merely below `active`).
-      This directly addresses the Teams "generic title without mic"
-      flicker described in `rules.yaml`. Needs a state-machine test with
-      confidence walking 0.85 → 0.60 → 0.25.
+- [x] `inactive_threshold`: **implement hysteresis or delete it.**
+      Implemented in `detectors.Detector`, not `rules.Evaluate` —
+      `rules.CompiledRule.Evaluate`/`Config.Evaluate` are deliberately
+      stateless and fixture-tested by ~15 call sites in `rules_test.go`,
+      so the hysteresis memory (`wasActive bool`) lives on the long-lived
+      `Detector` instance instead, which already wraps one `Evaluate` call
+      per poll. Once active, stays active until confidence drops *below*
+      `inactive_threshold`, not merely below `active_threshold`. This
+      directly addresses the Teams "generic title without mic" flicker
+      described in `rules.yaml`.
+- [x] **Repro:** `TestDetect_HysteresisHoldsActiveBetweenThresholds` —
+      confidence walks 0.85 → 0.60 → 0.25 (the 0.60 step isolated via a
+      mic-only match, since a window match in this rule engine always
+      implies a process match too, making a window-only 0.60 unreachable);
+      state stays Active through 0.60 and only drops to Inactive at 0.25.
 
-### [ ] 4.3 `Validate` must reject an empty `device_id`
+### [x] 4.3 `Validate` must reject an empty `device_id`
 
 **Touches:** `internal/config/config.go`.
 
-- [ ] After `applyDerivedDefaults`, if `App.DeviceID == ""` add a problem
+- [x] After `applyDerivedDefaults`, if `App.DeviceID == ""` add a problem
       ("device_id resolves to empty; set app.device_id explicitly").
-      Non-ASCII hostnames hit this.
+      Non-ASCII hostnames hit this. **Repro:** a `device_id` that
+      slugifies to empty (`"###"`) fails `Validate` with that message.
 
 ---
 

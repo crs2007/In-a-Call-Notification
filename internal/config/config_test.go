@@ -221,6 +221,16 @@ func TestValidationRejects(t *testing.T) {
 			yaml:      minimal + "detectors:\n  teams: {enabled: false}\n  zoom: {enabled: false}\n  slack: {enabled: false}\n",
 			wantError: "no detectors are enabled",
 		},
+		{
+			name:      "typo'd detector app name",
+			yaml:      minimal + "detectors:\n  team: {enabled: true}\n",
+			wantError: "detectors.team does not match a known detection rule",
+		},
+		{
+			name:      "device_id slugifies to empty",
+			yaml:      minimal + "app:\n  device_id: \"###\"\n",
+			wantError: "device_id resolves to empty",
+		},
 	}
 
 	for _, tt := range tests {

@@ -14,10 +14,13 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
 	"gopkg.in/yaml.v3"
+
+	"github.com/crs2007/callmqtt/internal/rules"
 )
 
 // Example is the annotated starter configuration written by `callmqtt init`.
@@ -303,6 +306,10 @@ func (c *Config) Validate() error {
 		problems = append(problems, fmt.Errorf(format, args...))
 	}
 
+	if c.App.DeviceID == "" {
+		add("device_id resolves to empty; set app.device_id explicitly")
+	}
+
 	if c.MQTT.Host == "" {
 		add("mqtt.host is required")
 	}
@@ -388,6 +395,27 @@ func (c *Config) Validate() error {
 
 	if len(c.EnabledDetectors()) == 0 {
 		add("no detectors are enabled, so no call could ever be detected")
+	}
+
+	// rules.Default() parses an embedded, compile-time-fixed YAML, so it
+	// failing here would mean the binary itself is broken, not the user's
+	// config. Skip the typo check in that case rather than mask it as a
+	// config problem.
+	if rulesCfg, err := rules.Default(); err == nil {
+		known := make(map[string]bool, len(rulesCfg.Rules))
+		for _, rule := range rulesCfg.Rules {
+			known[rule.App] = true
+		}
+		names := make([]string, 0, len(c.Detectors))
+		for name := range c.Detectors {
+			names = append(names, name)
+		}
+		sort.Strings(names)
+		for _, name := range names {
+			if !known[name] {
+				add("detectors.%s does not match a known detection rule (typo?)", name)
+			}
+		}
 	}
 
 	return errors.Join(problems...)
