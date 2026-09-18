@@ -44,6 +44,20 @@ and a confidence score. It never publishes meeting titles, participant names or
 any conversation content. It publishes nothing at all while off an allowed
 network.
 
+**Network matching today is by local subnet (CIDR) only.** The config schema
+also accepts `ssids`, `bssids` and `gateways` in `allowed_networks`, but no
+current platform implementation populates SSID, BSSID or gateway information —
+those fields are planned, not shipped, and a rule that relies on them alone
+fails config validation. A subnet is not a unique identity: `192.168.1.0/24`
+is a common router default that someone else's home or a coffee shop could
+plausibly share. Pick a non-default subnet for your home network (change your
+router's LAN range from the factory default) so `allowed_networks` actually
+distinguishes "home" from "somewhere with the same default subnet". Stronger
+identity — matching a specific SSID or gateway MAC/BSSID — is aspirational,
+not implemented; see
+[SECURITY.md](SECURITY.md#threat-model--known-limitations) for the full
+threat model.
+
 ## What Home Assistant sees
 
 The agent publishes one retained JSON message to
@@ -153,7 +167,7 @@ important ones and their defaults:
 | `mqtt.discovery.enabled` / `.prefix` | `true` / `homeassistant` | Auto-create the Home Assistant `binary_sensor`. |
 | `topics.state` | `desktop-presence/{device_id}/call` | Where the JSON state payload is published. |
 | `topics.availability` | `desktop-presence/{device_id}/availability` | `online` / `offline`, with an MQTT last-will. |
-| `allowed_networks` | *(empty — publishes nothing)* | Rules matched by `ssids`, `bssids`, `cidrs` or `gateways`; any one field matching is enough. |
+| `allowed_networks` | *(empty — publishes nothing)* | Rules matched by `ssids`, `bssids`, `cidrs` or `gateways`. **Only `cidrs` currently matches anything** — `ssids`/`bssids`/`gateways` are accepted by the schema but not yet implemented on any platform; a rule relying on them alone fails config validation. See [Privacy](#privacy). |
 | `detectors.<teams\|zoom\|slack>.enabled` | `true` | Turn individual app detectors on or off. |
 | `detection.active_threshold` / `.inactive_threshold` | `0.70` / `0.30` | Confidence needed to enter / leave the `active` state. |
 | `detection.enter_debounce_seconds` / `.exit_debounce_seconds` | `2` / `8` | Asymmetric on purpose: quick to light up, slow to go dark. |

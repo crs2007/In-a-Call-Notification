@@ -1,6 +1,18 @@
 Open-source project plan: local call-presence → MQTT
 ====================================================
 
+> **Status (2026-09): this document is an early design/research scrape, not
+> current documentation.** It predates implementation and describes several
+> things — most importantly SSID/BSSID/gateway network matching, and a
+> `callmqtt diagnose` command — as if shipped. They are not. The network
+> matcher that actually ships today matches by local subnet (CIDR) only;
+> SSID, BSSID and gateway matching are planned but not implemented on any
+> platform. Also, this project is Windows-only for now — the macOS sections
+> below are aspirational, not current. For the real, current behaviour, see
+> [README.md](../README.md) (Privacy and Configuration sections) and
+> [SECURITY.md](../SECURITY.md) (Threat model & known limitations). Treat
+> everything below as historical brainstorming, not a spec.
+
 This is very feasible, but there is one important architectural constraint that emerged from the research:
 
 **There is no single reliable, vendor-neutral desktop API that tells a local application “the user is currently in a Zoom/Slack/Teams call.”** The best solution is a **multi-signal detector** with app-specific adapters, OS-level signals, and configurable rules. Existing open-source projects already demonstrate several of these techniques individually. ([GitHub](https://github.com/kantselovich/LuxaforPresence?utm_source=chatgpt.com))
@@ -1085,7 +1097,10 @@ Add:
 
 Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   callmqtt diagnose   `
 
-output:
+output (illustrative mock-up from the original design pass — no `diagnose`
+command or macOS build exists; the shipped equivalent is `callmqtt --once` /
+`--print-config` on Windows, and its network line reports subnet match only,
+never a `SSID:` field):
 
 Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   CallMQTT diagnostics  ─────────────────────────  OS: macOS 15.x  Architecture: arm64  Zoom:    Process: detected    Detector: enabled    Status: inactive  Teams:    Process: detected    Accessibility: granted    Detector: active  Slack:    Process: detected    Accessibility: granted  Network:    Interface: en0    SSID: HomeWiFi    IP: 192.168.1.23    Gateway: 192.168.1.1    Allowed: YES  MQTT:    Broker: 192.168.1.10:1883    Connected: YES   `
 
@@ -1387,6 +1402,12 @@ This will make real-world troubleshooting much easier.
 I would **not** attempt to implement everything at once.
 
 ### MVP v0.1
+
+**Not shipped as of 2026-09 — see the status note at the top of this document.**
+This was the aspirational MVP checklist at design time, not a record of what
+exists. In particular: **CIDR (subnet) matching shipped; SSID matching did
+not.** See README.md/SECURITY.md for the current, authoritative status of
+every item below.
 
 Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   ✅ Windows  ✅ macOS  ✅ Zoom  ✅ Teams  ✅ Slack  ✅ Allowed SSID  ✅ Allowed CIDR  ✅ MQTT 5  ✅ QoS 1  ✅ Tray icon  ✅ Enable/disable startup  ✅ YAML config  ✅ logging   `
 
