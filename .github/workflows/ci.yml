@@ -33,6 +33,9 @@ jobs:
       - name: build (tray tag)
         run: go build -tags tray ./...
 
+      # Includes TestFirstLaunchPackagedGUI, which builds the exe the way
+      # goreleaser ships it and launches it with no config, so a first
+      # launch that exits with nothing on screen (issue #1) fails CI here.
       - name: go test -race
         run: go test -race ./...
 
