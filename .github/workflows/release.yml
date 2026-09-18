@@ -2,7 +2,7 @@ name: Release
 
 # Every push to main cuts a release: the `version` job computes the next
 # semver tag from the latest existing v* tag (patch bump by default, `[minor]`
-# or `[major]` in the head commit message for a bigger jump, `[skip release]`
+# or `[major]` in the head commit subject for a bigger jump, `[skip release]`
 # to publish nothing), pushes that tag, and the `goreleaser` job builds and
 # publishes the assets for it. Pushing a v* tag by hand still works and takes
 # the tag as-is (that is how a -alpha.N / -rc.N pre-release is cut).
@@ -66,7 +66,9 @@ jobs:
             exit 0
           fi
 
-          message=$(git log -1 --pretty=%B)
+          # Markers are read from the subject line only, so a body that
+          # merely *mentions* "[skip release]" does not trigger it.
+          message=$(git log -1 --pretty=%s)
           if grep -qiE '\[(skip|no) release\]' <<<"$message"; then
             echo "Commit message asks to skip the release"
             echo "tag=" >> "$GITHUB_OUTPUT"

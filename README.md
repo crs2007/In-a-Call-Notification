@@ -337,7 +337,7 @@ go test -race ./...
 ```
 
 Every push to `main` is a release: the Release workflow computes the next
-semver tag (patch bump by default; `[minor]` / `[major]` in the commit message
+semver tag (patch bump by default; `[minor]` / `[major]` in the commit subject
 for a larger bump, `[skip release]` to publish nothing), pushes the tag, and
 GoReleaser builds and publishes the archives. Open an issue first for anything beyond a rule tweak so the approach
 can be agreed before you write code.

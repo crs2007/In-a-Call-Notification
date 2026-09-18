@@ -15,7 +15,9 @@
   `callmqtt_<version>_windows_arm64.zip`, and `checksums.txt` on
   `crs2007/In-a-Call-Notification`. There is no manual version bump step and
   no version file to edit — the tag *is* the version.
-- **Controlling the bump from the commit message** (head commit of the push):
+- **Controlling the bump from the commit subject line** (first line of the
+  head commit of the push — the body is ignored, so it can mention the
+  markers freely):
   - default → patch bump (`v0.1.3` → `v0.1.4`); a pre-release is promoted to
     its base version (`v0.1.0-alpha.1` → `v0.1.0`).
   - `[minor]` → `v0.1.3` → `v0.2.0`; `[major]` → `v0.1.3` → `v1.0.0`.
@@ -30,7 +32,7 @@
   `go test -race ./...` locally (a failure in the release job means the tag
   has already been pushed but nothing was published — delete the tag before
   retrying); decide whether the commit message needs a `[minor]`, `[major]`
-  or `[skip release]` marker; and if the change alters what ships (see the
+  or `[skip release]` marker in its subject line; and if the change alters what ships (see the
   checklist below), update README in the same push so the release and its
   docs match.
 - **Squash or batch work before pushing** — each push to `main` is one

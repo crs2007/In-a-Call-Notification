@@ -32,7 +32,7 @@ day and saves a user thirty seconds.
 
 `release.yml` runs on **every push to `main`**: a `version` job computes the
 next semver tag from the latest `v*` tag (patch by default, `[minor]` /
-`[major]` commit-message markers, `[skip release]` to opt out, pre-releases
+`[major]` commit-subject markers, `[skip release]` to opt out, pre-releases
 promoted to their base version), pushes it, and the `goreleaser` job — gated by
 `go vet` + `go test -race` — builds and publishes the assets for that tag.
 Hand-pushed `v*` tags (e.g. `-alpha.N`) still release as-is. Keep these three
