@@ -9,6 +9,9 @@ import "github.com/crs2007/callmqtt/internal/config"
 // without an extra dialog.
 func reportError(error) {}
 
+// reportInfo likewise: stdout is visible, so the printed message suffices.
+func reportInfo(string) {}
+
 // brokerDialog has no implementation outside Windows yet; the tray falls
 // back to opening the config file directly (see internal/tray's nil-Dialog
 // handling).

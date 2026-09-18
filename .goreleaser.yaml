@@ -28,6 +28,8 @@ builds:
     # otherwise flash on every launch; -s -w strips debug info for a
     # smaller shipped exe. version is threaded into the same var
     # cmd/callmqtt/main.go declares as `var version = "dev"`.
+    # cmd/callmqtt/firstlaunch_windows_test.go builds with these same tags
+    # and flags to smoke-test a console-less first launch; keep them in sync.
     ldflags:
       - -s -w -H=windowsgui -X main.version={{.Version}}
     env:

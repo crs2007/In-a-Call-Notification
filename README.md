@@ -223,13 +223,28 @@ use `trigger:` / `platform: state` / `service:` instead of `triggers:` /
 
 ## Installation
 
-Windows 10/11 only (amd64 or arm64). Download the latest release from the
+Windows 10/11 only. Download the latest release from the
 [releases page](https://github.com/crs2007/In-a-Call-Notification/releases/latest).
-Releases ship as `callmqtt_<version>_windows_amd64.zip` or
-`callmqtt_<version>_windows_arm64.zip` — pick the one matching your CPU
-architecture, optionally verify it against the accompanying `checksums.txt`,
-and extract it. The archive contains `callmqtt.exe`, `configs/example.yaml`,
-this README and the LICENSE.
+Releases ship as two archives:
+
+| Archive | For |
+|---|---|
+| `callmqtt_<version>_windows_amd64.zip` | Almost every PC: Intel or AMD processors |
+| `callmqtt_<version>_windows_arm64.zip` | Windows on ARM (Snapdragon-based laptops, Surface Pro X) |
+
+Not sure? **Settings → System → About → System type** says which. Extract the
+archive anywhere; it contains `callmqtt.exe`, `configs/example.yaml`, this
+README and the LICENSE. To check the download against `checksums.txt` from the
+same release:
+
+```powershell
+Get-FileHash .\callmqtt_<version>_windows_amd64.zip -Algorithm SHA256
+```
+
+The executables are not code-signed yet, so the first launch may show a
+Windows SmartScreen "Windows protected your PC" prompt: click **More info**,
+then **Run anyway**. Verifying the checksum first is what makes that a safe
+click.
 
 To build from source instead (Go 1.27+):
 
@@ -240,11 +255,10 @@ go build ./cmd/callmqtt               # headless console build, useful for debug
 
 ## Quick Start
 
-1. Write a starter config. It lands in `%APPDATA%\callmqtt\config.yaml`:
-
-   ```powershell
-   .\callmqtt.exe init
-   ```
+1. Start `callmqtt.exe` once — double-clicking it is fine. With no config
+   yet, it writes a starter one to `%APPDATA%\callmqtt\config.yaml`, shows a
+   message saying so, and exits. (From a terminal, `.\callmqtt.exe init`
+   does the same and prints the next steps.)
 
 2. Edit that file. The minimum you must change is the broker and the network
    you want to publish from:
@@ -350,11 +364,16 @@ CIDR that doesn't match your current subnet does the same. The tray menu shows w
 any) currently matches; `callmqtt --once` prints `publishing: true|false` and
 the reasons.
 
-**`callmqtt init` / `--once` / `--validate-config` print nothing.**
+**Double-clicking `callmqtt.exe` seems to do nothing.**
+It should never be silent: with no config it writes a starter one and says
+where; any other startup failure is shown in a message box. If you truly see
+nothing, SmartScreen may have blocked the launch — see
+[Installation](#installation) — or check `%APPDATA%\callmqtt\callmqtt.log`.
+
+**`--once` / `--validate-config` print nothing.**
 The release binary is a Windows GUI app (no console window), so it cannot
-write to the terminal — `init` still creates the file and startup errors are
-shown in a message box. For console output, use the headless build:
-`go build ./cmd/callmqtt`.
+write to the terminal. `init` and startup errors show a message box instead;
+for the inspection flags, use the headless build: `go build ./cmd/callmqtt`.
 
 **The light stays on after my laptop went to sleep or died.**
 Expected for up to 1.5 × `poll.heartbeat_seconds` (90 s by default), after

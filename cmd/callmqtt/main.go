@@ -30,6 +30,10 @@ import (
 // version is overridden at build time with -ldflags "-X main.version=v0.1.0".
 var version = "dev"
 
+// appTitle is the user-facing name: the title of every dialog the GUI build
+// pops, and what the first-launch smoke test looks for on screen.
+const appTitle = "In a Call Notification"
+
 type flags struct {
 	configPath     string
 	debug          bool
@@ -42,8 +46,13 @@ type flags struct {
 
 func main() {
 	if err := run(); err != nil {
-		fmt.Fprintln(os.Stderr, "In a Call Notification:", err)
-		reportError(err)
+		// A failed write means nobody could see it — the GUI build launched
+		// by a double-click has no stderr at all — so it goes in a dialog
+		// instead. When stderr works (a console, a pipe, a redirect) the
+		// text is already in front of whoever ran us and no dialog pops.
+		if _, werr := fmt.Fprintln(os.Stderr, appTitle+":", err); werr != nil {
+			reportError(err)
+		}
 		os.Exit(1)
 	}
 }
@@ -79,11 +88,10 @@ func run() error {
 		return initConfig(f.configPath)
 	}
 
-	cfg, err := config.Load(f.configPath)
+	// Only a plain launch bootstraps a missing config; the inspection flags
+	// answer questions about what is there and must not create anything.
+	cfg, err := loadConfig(f.configPath, !(f.validateConfig || f.printConfig || f.once))
 	if err != nil {
-		if os.IsNotExist(errors.Unwrap(err)) {
-			return fmt.Errorf("no config at %s\n\nRun `callmqtt init` to create a starter config, then edit it", f.configPath)
-		}
 		return err
 	}
 	cfg.Logging.File, err = absolutePath(cfg.Logging.File)
@@ -255,22 +263,66 @@ func startupCommand(action string) error {
 	}
 }
 
-// initConfig writes the annotated example config to path, and tells the user
-// the two things they now have to decide: where their broker is, and which
-// networks they are willing to publish from.
-func initConfig(path string) error {
+// loadConfig loads the config at path. When there is no file there and
+// bootstrap is set, it writes the starter config in its place and returns an
+// error saying so: on a fresh install the shipped exe is double-clicked with
+// no config anywhere, and "wrote you one, now edit it" is the one message
+// that first launch can usefully produce. The error is deliberate — the
+// starter holds placeholder values (a broker address, a subnet) that must
+// be edited before the agent could do anything but fail to connect, so it
+// is not loaded. The GUI build shows the error in a MessageBox; see main.
+//
+// With bootstrap unset a missing file is the plain error it always was.
+func loadConfig(path string, bootstrap bool) (*config.Config, error) {
+	cfg, err := config.Load(path)
+	if err == nil || !os.IsNotExist(errors.Unwrap(err)) {
+		return cfg, err
+	}
+	if !bootstrap {
+		return nil, fmt.Errorf("no config at %s\n\nRun `callmqtt init` to create a starter config, then edit it", path)
+	}
+	if err := writeStarterConfig(path); err != nil {
+		return nil, fmt.Errorf("no config at %s, and could not write a starter one: %w", path, err)
+	}
+	return nil, fmt.Errorf(`no config yet, so a starter one was written to:
+
+  %s
+
+Edit that file and set:
+  mqtt.host          your broker's address
+  mqtt.username      if your broker requires one
+  allowed_networks   the subnets you are willing to publish from
+
+then start %s again.`, path, appTitle)
+}
+
+// writeStarterConfig writes the annotated example config to path, refusing
+// to overwrite anything that is already there.
+func writeStarterConfig(path string) error {
 	if _, err := os.Stat(path); err == nil {
 		return fmt.Errorf("%s already exists; edit it, or delete it first", path)
 	}
-
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return fmt.Errorf("create config directory: %w", err)
 	}
 	if err := os.WriteFile(path, config.Example, 0o600); err != nil {
 		return fmt.Errorf("write config: %w", err)
 	}
+	return nil
+}
 
-	fmt.Printf(`Wrote %s
+// initConfig implements `callmqtt init`: it writes the starter config and
+// tells the user the two things they now have to decide — where their
+// broker is, and which networks they are willing to publish from. The
+// message is printed, or — if there is no stdout to print to, as in the GUI
+// build — shown in a dialog, since otherwise `init` looks like it did
+// nothing.
+func initConfig(path string) error {
+	if err := writeStarterConfig(path); err != nil {
+		return err
+	}
+
+	message := fmt.Sprintf(`Wrote %s
 
 This machine will appear as device id %q, so its topics are:
   desktop-presence/%s/call
@@ -287,6 +339,9 @@ The password is read from the CALLMQTT_MQTT_PASSWORD environment variable
 then open a new terminal, since setx does not affect the current one.
 Then check your work with:  callmqtt --validate-config
 `, path, config.AutoDeviceID(), config.AutoDeviceID(), config.AutoDeviceID())
+	if _, err := fmt.Print(message); err != nil {
+		reportInfo(message)
+	}
 	return nil
 }
 
