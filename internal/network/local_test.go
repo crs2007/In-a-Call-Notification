@@ -33,12 +33,14 @@ func TestLocalChecker(t *testing.T) {
 }
 
 func TestInfosForInterfaces(t *testing.T) {
+	const upRunning = net.FlagUp | net.FlagRunning
+
 	interfaces := []net.Interface{
-		{Index: 1, Name: "CatoNetworks", Flags: net.FlagUp},
-		{Index: 2, Name: "Ethernet", Flags: net.FlagUp},
-		{Index: 3, Name: "Docker", Flags: net.FlagUp},
+		{Index: 1, Name: "CatoNetworks", Flags: upRunning},
+		{Index: 2, Name: "Ethernet", Flags: upRunning},
+		{Index: 3, Name: "Docker", Flags: upRunning},
 		{Index: 4, Name: "Disconnected"},
-		{Index: 5, Name: "Loopback", Flags: net.FlagUp | net.FlagLoopback},
+		{Index: 5, Name: "Loopback", Flags: upRunning | net.FlagLoopback},
 	}
 	addresses := map[int][]net.Addr{
 		1: {ipNet("192.168.16.122", 32)},
@@ -75,6 +77,52 @@ func TestInfosForInterfaces(t *testing.T) {
 				t.Fatalf("infos = %#v, want %#v", got, tt.want)
 			}
 		})
+	}
+}
+
+// Virtual adapters and adapters that are administratively up but not
+// actually carrying traffic must never contribute evidence, even when they
+// have a plausible-looking address.
+func TestInfosForInterfacesSkipsVirtualAndNonRunningAdapters(t *testing.T) {
+	const upRunning = net.FlagUp | net.FlagRunning
+
+	tests := []struct {
+		name  string
+		iface net.Interface
+	}{
+		{"vEthernet (WSL)", net.Interface{Name: "vEthernet (WSL)", Flags: upRunning}},
+		{"VirtualBox Host-Only Network", net.Interface{Name: "VirtualBox Host-Only Network", Flags: upRunning}},
+		{"VMware Network Adapter VMnet8", net.Interface{Name: "VMware Network Adapter VMnet8", Flags: upRunning}},
+		{"Hyper-V Virtual Ethernet Adapter", net.Interface{Name: "Hyper-V Virtual Ethernet Adapter", Flags: upRunning}},
+		{"Local Area Connection* (WSL)", net.Interface{Name: "Local Area Connection* (WSL)", Flags: upRunning}},
+		{"Bluetooth Network Connection", net.Interface{Name: "Bluetooth Network Connection", Flags: upRunning}},
+		{"case-insensitive vmware match", net.Interface{Name: "vmware nat adapter", Flags: upRunning}},
+		{"up but not running Wi-Fi with no AP joined", net.Interface{Name: "Wi-Fi", Flags: net.FlagUp}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			read := func(net.Interface) ([]net.Addr, error) {
+				return []net.Addr{ipNet("192.168.1.42", 24)}, nil
+			}
+			if got := infosForInterfaces([]net.Interface{tt.iface}, read); got != nil {
+				t.Fatalf("infos = %#v, want nil", got)
+			}
+		})
+	}
+}
+
+// A genuine, running, non-virtual adapter is unaffected by the new checks.
+func TestInfosForInterfacesKeepsRealRunningAdapter(t *testing.T) {
+	iface := net.Interface{Name: "Ethernet", Flags: net.FlagUp | net.FlagRunning}
+	read := func(net.Interface) ([]net.Addr, error) {
+		return []net.Addr{ipNet("192.168.1.42", 24)}, nil
+	}
+
+	got := infosForInterfaces([]net.Interface{iface}, read)
+	want := []Info{{Connected: true, Interface: "Ethernet", LocalIP: netip.MustParseAddr("192.168.1.42"), Prefix: netip.MustParsePrefix("192.168.1.0/24")}}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("infos = %#v, want %#v", got, want)
 	}
 }
 
