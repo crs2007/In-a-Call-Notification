@@ -59,6 +59,9 @@ func loadFixture(t *testing.T, name string) []Observation {
 		case strings.HasPrefix(line, "[webcam]"):
 			section = "cam"
 			continue
+		case strings.HasPrefix(line, "[audio-out]"):
+			section = "audio"
+			continue
 		case strings.TrimSpace(line) == "":
 			continue
 		}
@@ -82,6 +85,8 @@ func loadFixture(t *testing.T, name string) []Observation {
 			cur.MicInUse = append(cur.MicInUse, strings.TrimSpace(line))
 		case "cam":
 			cur.CamInUse = append(cur.CamInUse, strings.TrimSpace(line))
+		case "audio":
+			cur.AudioOutInUse = append(cur.AudioOutInUse, strings.TrimSpace(line))
 		}
 	}
 	flush()
@@ -141,14 +146,14 @@ func TestDefault_MatchesShippedFile(t *testing.T) {
 
 func TestLoad_ShippedRulesFile(t *testing.T) {
 	cfg := liveConfig(t)
-	if len(cfg.Rules) != 3 {
-		t.Fatalf("got %d rules, want 3", len(cfg.Rules))
+	if len(cfg.Rules) != 4 {
+		t.Fatalf("got %d rules, want 4", len(cfg.Rules))
 	}
 	apps := map[string]bool{}
 	for _, r := range cfg.Rules {
 		apps[r.App] = true
 	}
-	for _, want := range []string{"teams", "zoom", "slack"} {
+	for _, want := range []string{"teams", "zoom", "slack", "meet"} {
 		if !apps[want] {
 			t.Errorf("missing rule for app %q", want)
 		}

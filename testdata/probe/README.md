@@ -27,6 +27,9 @@ Let each capture run for ~20 seconds so it contains several snapshots.
 | `zoom-in-call.txt` | Actually in a Zoom meeting. |
 | `slack-huddle.txt` | In a Slack huddle. |
 | `music-playing.txt` | Spotify or similar playing. No call app in a call. |
+| `meet-lobby.txt` | *(not yet captured)* Google Meet "Ready to join?" screen open in the browser, camera preview visible, **not** joined. Then switch to another tab in the same window for a few snapshots. |
+| `meet-in-call.txt` | *(not yet captured)* Joined to a Google Meet with at least one other participant, Meet tab in front. Then switch to another tab in the same window for a few snapshots. |
+| `meet-left.txt` | *(not yet captured)* Just after leaving the Meet, on the "You left the meeting" page. |
 
 The four "no call" captures matter **more** than the "in call" ones — they are
 what proves the red bulb won't lie.
@@ -41,3 +44,11 @@ what proves the red bulb won't lie.
   captures and disappear in the others.
 - Music playback uses audio *output*, so a media player should **not** appear
   under `[microphone]` at all.
+- `[audio-out]` — an entry here means that process has an audio *playback*
+  stream running right now (WASAPI session in the Active state); a paused
+  player is not listed. This is the signal that separates a joined Google
+  Meet (the browser is rendering call audio) from its "Ready to join?" lobby
+  (same tab title, same mic grant, nothing playing). Expect the browser here
+  in `meet-in-call.txt` and **not** in `meet-lobby.txt`. Fixtures captured
+  before this section existed simply have no `[audio-out]` block, which the
+  test parser reads as "no playback evidence".

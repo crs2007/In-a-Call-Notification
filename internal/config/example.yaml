@@ -47,6 +47,12 @@ detectors:
     enabled: true
   slack:
     enabled: true
+  # Google Meet in a browser (Chrome, Edge, Brave, Firefox, Vivaldi, Opera).
+  # Needs no extension: it reads the browser's window title, whether the
+  # browser holds the microphone, and whether it is playing audio. See the
+  # README's "Google Meet" section for what it can and cannot tell apart.
+  meet:
+    enabled: true
 
 # Override the built-in detection rules (process names, window title regexes,
 # weights) with your own file, instead of editing the binary's embedded

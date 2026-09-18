@@ -1,6 +1,7 @@
 // Command probe is a throwaway diagnostic that dumps the raw OS signals
 // CallMQTT's detectors will eventually consume: every visible window title,
-// and every application currently holding the microphone or camera.
+// every application currently holding the microphone or camera, and every
+// application with an active audio playback stream.
 //
 // It deliberately does no filtering and no interpretation. Run it while
 // joining and leaving real calls, capture the output into testdata/probe/,
@@ -45,8 +46,9 @@ func snapshot(w *os.File) {
 	devices := map[string][]string{
 		"microphone": platformwindows.AppsUsingMicrophone(names),
 		"webcam":     platformwindows.AppsUsingWebcam(names),
+		"audio-out":  platformwindows.AppsRenderingAudio(names),
 	}
-	for _, device := range []string{"microphone", "webcam"} {
+	for _, device := range []string{"microphone", "webcam", "audio-out"} {
 		apps := devices[device]
 		fmt.Fprintf(w, "[%s] %d in use\n", device, len(apps))
 		for _, app := range apps {

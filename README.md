@@ -9,13 +9,15 @@
 [![Windows](https://img.shields.io/badge/Windows-10%20%2F%2011-0078D4)](#installation)
 [![Go](https://img.shields.io/github/go-mod/go-version/crs2007/In-a-Call-Notification?logo=go&logoColor=white)](go.mod)
 
-Detect when you're in a Zoom, Microsoft Teams or Slack call — and publish that
-state to your local MQTT broker, so Home Assistant can turn on a "do not
-disturb" light for exactly as long as the call lasts.
+Detect when you're in a Zoom, Microsoft Teams, Slack or Google Meet call — and
+publish that state to your local MQTT broker, so Home Assistant can turn on a
+"do not disturb" light for exactly as long as the call lasts.
 
 Microsoft Teams detection has been confirmed against a real live call (see
 [docs/TASKS.md](docs/TASKS.md), T38); Zoom and Slack are covered by recorded
-fixtures but not yet live-confirmed the same way.
+fixtures but not yet live-confirmed the same way. Google Meet (in a browser,
+no extension needed) is the newest detector — see
+[Google Meet](#google-meet) for how it works and what it cannot tell apart.
 
 ## Table of Contents
 
@@ -26,6 +28,7 @@ fixtures but not yet live-confirmed the same way.
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Configuration](#configuration)
+- [Google Meet](#google-meet)
 - [Contributing](#contributing)
 - [FAQ / Troubleshooting](#faq--troubleshooting)
 - [License](#license)
@@ -293,7 +296,7 @@ important ones and their defaults:
 | `topics.state` | `desktop-presence/{device_id}/call` | Where the JSON state payload is published. |
 | `topics.availability` | `desktop-presence/{device_id}/availability` | `online` / `offline`, with an MQTT last-will. |
 | `allowed_networks` | *(empty — publishes nothing)* | Rules matched by `ssids`, `bssids`, `cidrs` or `gateways`. **Only `cidrs` currently matches anything** — `ssids`/`bssids`/`gateways` are accepted by the schema but not yet implemented on any platform; a rule relying on them alone fails config validation. See [Privacy](#privacy). |
-| `detectors.<teams\|zoom\|slack>.enabled` | `true` | Turn individual app detectors on or off. |
+| `detectors.<teams\|zoom\|slack\|meet>.enabled` | `true` | Turn individual app detectors on or off. `meet` is Google Meet in a browser; see [Google Meet](#google-meet). |
 | `detection.active_threshold` / `.inactive_threshold` | `0.70` / `0.30` | Confidence needed to enter / leave the `active` state. |
 | `detection.enter_debounce_seconds` / `.exit_debounce_seconds` | `2` / `8` | Asymmetric on purpose: quick to light up, slow to go dark. |
 | `poll.detect_seconds` / `.network_seconds` | `2` / `10` | How often signals and the current network are sampled. |
@@ -319,6 +322,52 @@ important ones and their defaults:
 Settings changed from the tray menu (broker, discovery, allowed network) are
 saved to `config.yaml` and applied live. Edits you make to the file by hand
 take effect on the next start.
+
+## Google Meet
+
+Google Meet runs in a browser tab, so there is no process to watch and no
+local API to ask. The `meet` detector needs **no browser extension** and no
+extra Windows permission: it combines three signals the agent already reads
+for the other apps, all from the OS side of the browser.
+
+| Signal | Where it comes from | What it means for Meet |
+| --- | --- | --- |
+| Window title | `EnumWindows` on the browser's top-level windows (Chrome, Edge, Brave, Firefox, Vivaldi, Opera, and Chrome/Edge "installed app" windows) | A window whose *active tab* is titled `Meet – abc-defg-hij` or `Meet – <calendar event>`. |
+| Microphone | The same registry `ConsentStore` used for Teams/Zoom/Slack | The browser currently holds the microphone. |
+| Audio playback | WASAPI audio sessions (`IAudioSessionManager2`) | The browser has an audio output stream running right now. |
+
+Each signal is worth 0.25. A joined call with the Meet tab in front shows all
+three (0.75, above the 0.70 threshold). The reason for the third signal is the
+**"Ready to join?" lobby**: its tab title is identical to the call's, and it
+holds the mic and camera for the self-view preview — but it plays no audio. A
+real WebRTC call keeps an output stream open for its whole duration, the lobby
+does not, so the lobby scores 0.50 and stays dark.
+
+Once a call is active, switching to another tab in the same window (which
+hides the Meet title) does not drop it: mic + playback (0.50) stays above the
+0.30 `inactive_threshold`, so the light holds until the browser releases the
+microphone. No single signal is worth 0.30 on its own, which is what stops a
+lingering `Meet – …` tab after you leave, a YouTube tab, or a bare mic grant
+from keeping (or starting) a call.
+
+Known limits, by design:
+
+- Waiting in the lobby **while another tab of the same browser plays audio**
+  looks like a call (0.75) until you join or close the lobby.
+- **Alone in a meeting** nobody else has joined, the browser may have no
+  output stream yet, so the light can stay off until a second participant's
+  audio arrives. That is the accepted side of the under-trigger tuning.
+- The `meet` rule is not yet backed by a `testdata/probe/meet-*.txt` capture;
+  its title pattern comes from Meet's documented tab titles and the browser
+  window titles present in the other captures. If it misses your call, run
+  `go run ./cmd/probe` during a real Meet (see
+  [testdata/probe/README.md](testdata/probe/README.md)) and open an issue with
+  the capture — the fix is usually one line in `rules.yaml`.
+
+No `UIAutomation`, accessibility, or screen-recording permission is involved:
+window titles, the ConsentStore and audio sessions are all readable by a
+normal user account. If Windows ever refuses one of them, that signal simply
+contributes nothing and the detector reports `inactive` rather than failing.
 
 ## Contributing
 
@@ -371,6 +420,16 @@ Those detectors are validated against recorded fixtures but have not yet been
 confirmed on a live call. Run with `--debug`, capture the process names and
 window titles it sees during a real call, and open an issue — the fix is
 usually a rule in `rules.yaml`.
+
+**Google Meet is not detected, or only once someone else joins.**
+See [Google Meet](#google-meet): the detector needs the browser's window
+title, its microphone grant *and* an audio output stream, and the last one
+only appears once there is remote audio to play. If you are the only
+participant the light may stay off; if it never turns on at all, run
+`go run ./cmd/probe --count 3` during a call and check that a browser window
+titled `Meet – …` is listed under `[windows]`, the browser under
+`[microphone]`, and the browser's exe under `[audio-out]`. Whichever is
+missing is the signal to report in an issue.
 
 ## License
 

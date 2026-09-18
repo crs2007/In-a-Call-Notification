@@ -131,3 +131,77 @@ rules:
       mic: 0.25
       # process + window = 0.60 (deliberately inactive on the marker alone);
       # process + window + mic = 0.85 (active).
+
+  # Google Meet, in a browser (chrome.exe, msedge.exe, brave.exe,
+  # firefox.exe, vivaldi.exe, opera.exe - including Chrome/Edge "installed
+  # app" (PWA) windows, which are still owned by the browser process).
+  #
+  # Fixture status: unlike the rules above, no testdata/probe/meet-*.txt
+  # capture exists yet (see the scenario table in testdata/probe/README.md).
+  # The browser-window title shape comes from the chrome.exe/brave.exe
+  # windows present in the existing captures ("<tab title> - Google Chrome",
+  # wrapped in Unicode bidi controls \u202a/\u202b ... \u202c on this
+  # Hebrew-locale machine, e.g. teams-in-call.txt), and the Meet tab title
+  # itself ("Meet – abc-defg-hij", or "Meet – <calendar event name>") from
+  # Meet's documented behaviour. The audio-out signal was verified live on
+  # 2026-09-18 with `go run ./cmd/probe` (a looping wav in pwsh.exe reported
+  # under [audio-out]; a paused Spotify.exe correctly not). Capture the
+  # meet-* scenarios and turn the synthetic tests in rules_test.go into
+  # fixture-driven ones before touching these weights.
+  #
+  # Why three signals, and why every weight is 0.25:
+  #
+  # A browser only shows its *active* tab's title, and Meet uses the same
+  # title on the pre-join "Ready to join?" lobby as in the meeting. The
+  # lobby also holds the microphone and camera for its self-view preview,
+  # exactly like the call does. So title + mic is what the lobby looks like,
+  # and must stay below the active threshold. What the lobby does not have
+  # is an audio *playback* stream: a joined WebRTC call keeps one open for
+  # its whole duration, the lobby plays nothing. That is the audio_out
+  # signal, and it is what pushes a real call over the threshold.
+  #
+  #   lobby (title + mic)                    = 0.50  inactive
+  #   in call, Meet tab in front             = 0.75  active
+  #   in call, another tab in front          = 0.50  stays active (hysteresis:
+  #                                                   >= inactive_threshold 0.30)
+  #   left the call (title only, mic freed)  = 0.25  inactive
+  #   mic only / playback only (YouTube)     = 0.25  inactive, never "sticks"
+  #
+  # Process presence is weighted 0: a browser is always open, so it is no
+  # evidence at all, and a non-zero weight here would also make the idle and
+  # music-playing fixtures (which contain chrome.exe windows) score above 0.
+  #
+  # Known limits, by construction:
+  #   - Lobby + audio playing in *another tab of the same browser* (YouTube
+  #     while waiting to be admitted) reads as 0.75 until you join or leave.
+  #   - Alone in a meeting nobody else has joined, the browser may have no
+  #     render stream yet, so the light can stay off until a second
+  #     participant's audio arrives. Under-triggering is the accepted side.
+  - app: meet
+    process_names:
+      - chrome.exe
+      - msedge.exe
+      - brave.exe
+      - firefox.exe
+      - vivaldi.exe
+      - opera.exe
+    # "Meet – abc-defg-hij - Google Chrome", "Meet – Weekly sync - Brave",
+    # "Meet – abc-defg-hij" (PWA window), optionally prefixed by a
+    # "(1) " tab badge and/or bidi control characters (\p{Cf}), with the
+    # separator as a hyphen, en dash or em dash depending on locale. The
+    # subject after the separator must start with a real character, so an
+    # empty "Meet – - Google Chrome" never matches.
+    window_include_regex:
+      - '^\p{Cf}*(\(\d+\) )?Meet [-\x{2013}\x{2014}] [^\s\-\x{2013}\x{2014}]'
+    # Mic/cam entries are NonPackaged ConsentStore paths, e.g.
+    #   C:\Program Files\Google\Chrome\Application\chrome.exe
+    mic_process_regex:
+      - '(?i)(^|\\)(chrome|msedge|brave|firefox|vivaldi|opera)\.exe$'
+    # Audio-out entries are bare exe names from platform/windows/audio.go.
+    audio_out_process_regex:
+      - '(?i)^(chrome|msedge|brave|firefox|vivaldi|opera)\.exe$'
+    weights:
+      process: 0.0
+      window: 0.25
+      mic: 0.25
+      audio_out: 0.25

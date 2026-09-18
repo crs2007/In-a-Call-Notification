@@ -35,6 +35,12 @@ func AppsUsingWebcam(map[uint32]string) []string {
 	return nil
 }
 
+// AppsRenderingAudio is unimplemented outside Windows.
+func AppsRenderingAudio(map[uint32]string) []string {
+	slog.Debug("AppsRenderingAudio: unsupported platform")
+	return nil
+}
+
 // ProcessNames is unimplemented outside Windows.
 func ProcessNames() map[uint32]string {
 	slog.Debug("ProcessNames: unsupported platform")
