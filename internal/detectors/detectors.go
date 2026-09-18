@@ -34,10 +34,15 @@ const sharedObserverTTL = 500 * time.Millisecond
 // "these windows are visible" without EnumWindows, the registry, or any OS
 // permission.
 type Snapshot struct {
-	VisibleWindows      func() []platformwindows.WindowInfo
-	ProcessNames        func() map[uint32]string
-	AppsUsingMicrophone func() []string
-	AppsUsingWebcam     func() []string
+	VisibleWindows func() []platformwindows.WindowInfo
+	ProcessNames   func() map[uint32]string
+	// AppsUsingMicrophone and AppsUsingWebcam take the same PID->exe-name map
+	// ProcessNames just returned, so they can cross-check a ConsentStore
+	// entry's owning process is actually still running without taking a
+	// second, redundant process snapshot. observe already has that map in
+	// hand by the time it calls these.
+	AppsUsingMicrophone func(procNames map[uint32]string) []string
+	AppsUsingWebcam     func(procNames map[uint32]string) []string
 }
 
 // WindowsSnapshot returns a Snapshot backed by the real platform/windows
@@ -61,8 +66,8 @@ func (s Snapshot) observe() rules.Observation {
 
 	obs := rules.Observation{
 		Windows:  make([]rules.WindowObservation, 0, len(wins)),
-		MicInUse: s.AppsUsingMicrophone(),
-		CamInUse: s.AppsUsingWebcam(),
+		MicInUse: s.AppsUsingMicrophone(names),
+		CamInUse: s.AppsUsingWebcam(names),
 	}
 	for _, w := range wins {
 		obs.Windows = append(obs.Windows, rules.WindowObservation{

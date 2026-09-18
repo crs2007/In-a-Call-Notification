@@ -17,10 +17,12 @@ package mqtt
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/url"
+	"os"
 	"sync/atomic"
 	"time"
 
@@ -80,6 +82,12 @@ type Client struct {
 	log       *slog.Logger
 	version   string
 	connected atomic.Bool
+
+	// stateSource is set once, at wiring time, by SetStateSource. It is a
+	// *func rather than a plain field because onConnectionUp runs on
+	// autopaho's own goroutine and may fire (on a reconnect) concurrently
+	// with anything else touching the Client.
+	stateSource atomic.Pointer[func() (Payload, bool)]
 }
 
 // New dials the broker and starts autopaho's reconnect loop. It returns as
@@ -149,12 +157,11 @@ func New(ctx context.Context, opts Options) (*Client, error) {
 		},
 	}
 
-	if cfg.MQTT.TLS.Enabled {
-		clientCfg.TlsCfg = &tls.Config{
-			InsecureSkipVerify: cfg.MQTT.TLS.InsecureSkipVerify, //nolint:gosec // opt-in, documented
-			MinVersion:         tls.VersionTLS12,
-		}
+	tlsCfg, err := buildTLSConfig(cfg.MQTT.TLS)
+	if err != nil {
+		return nil, fmt.Errorf("configure tls: %w", err)
 	}
+	clientCfg.TlsCfg = tlsCfg
 
 	cm, err := autopaho.NewConnection(ctx, clientCfg)
 	if err != nil {
@@ -165,12 +172,102 @@ func New(ctx context.Context, opts Options) (*Client, error) {
 	return c, nil
 }
 
-// onConnectionUp re-establishes everything the broker forgets across a
-// reconnect: that the agent is online, that the entity exists, and what the
-// current state is. Without this, a broker restart mid-call would leave Home
-// Assistant with no entity and a stale state.
+// buildTLSConfig turns cfg.MQTT.TLS into a *tls.Config, or returns nil (no
+// error) when TLS is not enabled. It is its own function, separate from New,
+// so the CA-pool and client-keypair loading can be unit tested without
+// dialing a broker.
 //
-// autopaho requires this callback not to block, so the work runs detached.
+// t.CAFile/CertFile/KeyFile are expected to already be paths this process
+// can open outright: internal/config.Load resolves a relative one against
+// the config file's directory before New ever sees it (the same convention
+// rules_file uses), so this function does no path resolution of its own —
+// only Parse-without-Load (tests, mainly) would hand it something still
+// relative to the working directory.
+//
+// A bad or unreadable PEM file fails New outright rather than falling back
+// to an insecure connection: this is a startup-time config problem, the same
+// as an invalid broker URL, not something to log and limp past.
+func buildTLSConfig(t config.TLS) (*tls.Config, error) {
+	if !t.Enabled {
+		return nil, nil
+	}
+
+	cfg := &tls.Config{
+		InsecureSkipVerify: t.InsecureSkipVerify, //nolint:gosec // opt-in, documented
+		MinVersion:         tls.VersionTLS12,
+	}
+
+	if t.CAFile != "" {
+		pem, err := os.ReadFile(t.CAFile)
+		if err != nil {
+			return nil, fmt.Errorf("read mqtt.tls.ca_file %s: %w", t.CAFile, err)
+		}
+		pool := x509.NewCertPool()
+		if !pool.AppendCertsFromPEM(pem) {
+			return nil, fmt.Errorf("mqtt.tls.ca_file %s contains no usable certificates", t.CAFile)
+		}
+		cfg.RootCAs = pool
+	}
+
+	// config.Validate already rejects one of these being set without the
+	// other, so by the time New runs this is "both set" or "neither" — but
+	// checking both here rather than trusting that keeps this function
+	// correct even if called directly (as the tests do) against a TLS value
+	// that skipped Validate.
+	if t.CertFile != "" && t.KeyFile != "" {
+		cert, err := tls.LoadX509KeyPair(t.CertFile, t.KeyFile)
+		if err != nil {
+			return nil, fmt.Errorf("load mqtt.tls client keypair (cert_file %s, key_file %s): %w", t.CertFile, t.KeyFile, err)
+		}
+		cfg.Certificates = []tls.Certificate{cert}
+	}
+
+	return cfg, nil
+}
+
+// connectionPublisher is the subset of *autopaho.ConnectionManager that
+// publish (and, through it, everything published on reconnect) needs. It
+// exists so republish can be unit tested against a fake broker connection
+// instead of a live one — there is no fake broker in this package, and
+// *autopaho.ConnectionManager can't be constructed without dialing.
+type connectionPublisher interface {
+	Publish(ctx context.Context, p *paho.Publish) (*paho.PublishResponse, error)
+}
+
+// SetStateSource registers the function republish calls, after "online" and
+// the discovery config, to find out what state to republish on a (re)connect.
+// It is meant to be called once, at wiring time, after both the engine and
+// this Client exist — typically the engine's own Status() turned into a
+// Payload — but onConnectionUp can run concurrently with that call on a later
+// reconnect, hence the atomic store rather than a plain field.
+//
+// f is a pull, not a pushed value: the engine's current state can change
+// between connects, and asking fresh here (rather than being handed a Payload
+// up front) avoids ever republishing something that was already stale by the
+// time a connect happened. ok == false means no state is known yet — e.g. at
+// startup, before the engine's first evaluate() — in which case republish
+// skips the extra publish rather than sending a meaningless zero-value
+// Payload.
+//
+// This is also what makes mqtt.retain: false viable on the state topic: with
+// retain on, a broker restart still has the retained message to fall back on
+// even without this; with it off, a bare reconnect that only re-asserted
+// "online" and the discovery config would leave the state topic silent until
+// the next heartbeat. Republishing current state on every reconnect closes
+// that gap regardless of the retain setting.
+func (c *Client) SetStateSource(f func() (Payload, bool)) {
+	c.stateSource.Store(&f)
+}
+
+// onConnectionUp re-establishes everything the broker forgets across a
+// reconnect: that the agent is online, that the entity exists, and — via
+// whatever SetStateSource wired up — what the current state actually is.
+// Without this, a broker restart mid-call would leave Home Assistant with no
+// entity and a stale, or (with retain disabled) entirely missing, state until
+// the next heartbeat.
+//
+// autopaho requires this callback not to block, so the work runs detached, in
+// republish.
 func (c *Client) onConnectionUp(cm *autopaho.ConnectionManager, _ *paho.Connack) {
 	c.log.Info("mqtt connected", "broker", c.cfg.MQTT.Host, "client_id", c.cfg.MQTT.ClientID)
 	c.connected.Store(true)
@@ -178,14 +275,42 @@ func (c *Client) onConnectionUp(cm *autopaho.ConnectionManager, _ *paho.Connack)
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
-
-		if err := c.publish(ctx, cm, c.cfg.Topics.Availability, []byte(Online), true); err != nil {
-			c.log.Error("publish availability", "error", err)
-		}
-		if err := c.publishDiscovery(ctx, cm); err != nil {
-			c.log.Error("publish home assistant discovery", "error", err)
-		}
+		c.republish(ctx, cm)
 	}()
+}
+
+// republish is onConnectionUp's detached body: publish retained "online",
+// the discovery config, and — if a state source has been wired and has
+// something to report — the current state, in that order. Each step is
+// attempted and logged independently: a failure publishing availability
+// (say) must not skip discovery or state, since each of those still helps
+// Home Assistant catch up as much as it can from a broker that just forgot
+// everything.
+func (c *Client) republish(ctx context.Context, cm connectionPublisher) {
+	if err := c.publish(ctx, cm, c.cfg.Topics.Availability, []byte(Online), true); err != nil {
+		c.log.Error("publish availability", "error", err)
+	}
+	if err := c.publishDiscovery(ctx, cm); err != nil {
+		c.log.Error("publish home assistant discovery", "error", err)
+	}
+
+	src := c.stateSource.Load()
+	if src == nil {
+		return
+	}
+	payload, ok := (*src)()
+	if !ok {
+		// Nothing evaluated yet — e.g. connecting before the engine's first
+		// poll. There is no stale value to worry about here: startup's own
+		// "unknown" announcement (see engine.go) will follow shortly from the
+		// normal publish path.
+		return
+	}
+	if err := c.publishPayload(ctx, cm, payload, c.cfg.MQTT.Retain); err != nil {
+		c.log.Error("publish state on reconnect", "error", err)
+		return
+	}
+	c.log.Info("republished state on reconnect", "state", payload.State)
 }
 
 // onConnectionDown reports whether autopaho should keep retrying. It always
@@ -213,15 +338,23 @@ func (c *Client) AwaitConnection(ctx context.Context) error {
 
 // PublishState publishes the current call state.
 func (c *Client) PublishState(ctx context.Context, p Payload) error {
-	body, err := json.Marshal(p)
-	if err != nil {
-		return fmt.Errorf("marshal state payload: %w", err)
-	}
-	if err := c.publish(ctx, c.cm, c.cfg.Topics.State, body, c.cfg.MQTT.Retain); err != nil {
+	if err := c.publishPayload(ctx, c.cm, p, c.cfg.MQTT.Retain); err != nil {
 		return err
 	}
 	c.log.Debug("published state", "topic", c.cfg.Topics.State, "state", p.State, "app", p.App)
 	return nil
+}
+
+// publishPayload marshals p and publishes it to the state topic. It is the
+// body PublishState and republish's reconnect republish both use, so a state
+// message is always built from a Payload the same way regardless of which
+// path sent it.
+func (c *Client) publishPayload(ctx context.Context, cm connectionPublisher, p Payload, retain bool) error {
+	body, err := json.Marshal(p)
+	if err != nil {
+		return fmt.Errorf("marshal state payload: %w", err)
+	}
+	return c.publish(ctx, cm, c.cfg.Topics.State, body, retain)
 }
 
 // Close publishes offline and disconnects cleanly. It is called on shutdown so
@@ -239,7 +372,7 @@ func (c *Client) Close(ctx context.Context) error {
 	return nil
 }
 
-func (c *Client) publish(ctx context.Context, cm *autopaho.ConnectionManager, topic string, body []byte, retain bool) error {
+func (c *Client) publish(ctx context.Context, cm connectionPublisher, topic string, body []byte, retain bool) error {
 	ctx, cancel := boundedPublishContext(ctx)
 	defer cancel()
 

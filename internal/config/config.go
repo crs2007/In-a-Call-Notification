@@ -70,6 +70,27 @@ func (p Poll) Network() time.Duration { return time.Duration(p.NetworkSeconds) *
 // Heartbeat returns the interval at which current state is republished.
 func (p Poll) Heartbeat() time.Duration { return time.Duration(p.HeartbeatSeconds) * time.Second }
 
+// HeartbeatExpireSafetyFactor is the margin Home Assistant's expire_after
+// keeps over heartbeat_seconds, so a heartbeat-fresh, perfectly healthy agent
+// is never declared unavailable between beats.
+//
+// internal/mqtt/discovery.go's BuildDiscovery computes
+// expire_after = heartbeat_seconds * HeartbeatExpireSafetyFactor and uses
+// this exact constant, rather than a parallel magic number, so the two never
+// drift apart. It lives here rather than in internal/mqtt because
+// internal/mqtt already imports internal/config (see client.go), not the
+// other way around.
+const HeartbeatExpireSafetyFactor = 1.5
+
+// minDetectCyclesBeforeExpire is how many detect_seconds cycles the
+// expire_after window (heartbeat_seconds * HeartbeatExpireSafetyFactor) must
+// comfortably outlast. Without this, a heartbeat interval that is technically
+// valid on its own (>= 1s) but tiny relative to a much slower detect interval
+// could let expire_after lapse between two real detect cycles, flapping the
+// Home Assistant entity to unavailable even though the agent is healthy.
+// Used only by Validate's cross-field check below.
+const minDetectCyclesBeforeExpire = 2
+
 // Detection holds the thresholds that turn a confidence score into a state.
 //
 // The debounces are deliberately asymmetric: entering a call should feel
@@ -121,6 +142,22 @@ type MQTT struct {
 type TLS struct {
 	Enabled            bool `yaml:"enabled"`
 	InsecureSkipVerify bool `yaml:"insecure_skip_verify"`
+
+	// CAFile, if set, is a PEM file whose certificates are trusted for
+	// verifying the broker, in addition to the system trust store. This is
+	// the preferred way to talk to a broker with a self-signed or
+	// private-CA-issued certificate — it keeps verification honest, unlike
+	// InsecureSkipVerify, which turns it off entirely. Relative to this
+	// config file's directory, the same as rules_file.
+	CAFile string `yaml:"ca_file"`
+	// CertFile and KeyFile, if both set, are a PEM certificate and private
+	// key presented to the broker for client-certificate authentication.
+	// Optional: most setups only need the broker to prove itself to the
+	// client (CAFile, or the system trust store), not the other way round.
+	// Both must be set together, or neither — see Validate. Relative to this
+	// config file's directory, the same as rules_file.
+	CertFile string `yaml:"cert_file"`
+	KeyFile  string `yaml:"key_file"`
 }
 
 // Discovery controls Home Assistant MQTT Discovery, which creates the
@@ -174,12 +211,39 @@ func expandField(field, value string) string {
 }
 
 // Load reads, defaults and validates the configuration at path.
+//
+// Unlike Parse, Load knows where the config file lives, so it is also
+// responsible for resolving the handful of fields that are allowed to be
+// written relative to that directory rather than to whatever directory the
+// process happens to be started from — the TLS PEM files, the same way
+// cmd/callmqtt resolves rules_file relative to the config path.
 func Load(path string) (*Config, error) {
 	raw, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("read config %s: %w", path, err)
 	}
-	return Parse(raw)
+	cfg, err := Parse(raw)
+	if err != nil {
+		return nil, err
+	}
+
+	baseDir := filepath.Dir(path)
+	cfg.MQTT.TLS.CAFile = resolveRelative(baseDir, cfg.MQTT.TLS.CAFile)
+	cfg.MQTT.TLS.CertFile = resolveRelative(baseDir, cfg.MQTT.TLS.CertFile)
+	cfg.MQTT.TLS.KeyFile = resolveRelative(baseDir, cfg.MQTT.TLS.KeyFile)
+
+	return cfg, nil
+}
+
+// resolveRelative joins path onto baseDir, unless path is empty or already
+// absolute. It exists so mqtt.tls.ca_file, cert_file and key_file can be
+// written relative to config.yaml, the same convention rules_file already
+// uses (see cmd/callmqtt's loadRules).
+func resolveRelative(baseDir, path string) string {
+	if path == "" || filepath.IsAbs(path) {
+		return path
+	}
+	return filepath.Join(baseDir, path)
 }
 
 // Parse defaults and validates an in-memory configuration. Load is the usual
@@ -202,6 +266,9 @@ func Parse(raw []byte) (*Config, error) {
 	cfg.MQTT.ClientID = expandField("mqtt.client_id", cfg.MQTT.ClientID)
 	cfg.Logging.File = expandField("logging.file", cfg.Logging.File)
 	cfg.RulesFile = expandField("rules_file", cfg.RulesFile)
+	cfg.MQTT.TLS.CAFile = expandField("mqtt.tls.ca_file", cfg.MQTT.TLS.CAFile)
+	cfg.MQTT.TLS.CertFile = expandField("mqtt.tls.cert_file", cfg.MQTT.TLS.CertFile)
+	cfg.MQTT.TLS.KeyFile = expandField("mqtt.tls.key_file", cfg.MQTT.TLS.KeyFile)
 
 	cfg.applyDerivedDefaults()
 	if err := cfg.Validate(); err != nil {
@@ -285,14 +352,26 @@ func autoDeviceID() string {
 // it is safe to embed in an MQTT topic and in a Home Assistant entity id.
 func slugify(s string) string {
 	var b strings.Builder
+	// lastWasSep tracks whether a hyphen should be suppressed: either nothing
+	// has been written yet, or the last rune written was already a hyphen.
+	// Starting true covers "nothing written yet" so a leading separator run
+	// never produces a leading hyphen, exactly as checking b.String() != ""
+	// did before.
+	lastWasSep := true
 	for _, r := range strings.ToLower(s) {
 		switch {
 		case r >= 'a' && r <= 'z', r >= '0' && r <= '9':
 			b.WriteRune(r)
+			lastWasSep = false
 		default:
-			// Collapse any run of separators into a single hyphen.
-			if cur := b.String(); cur != "" && !strings.HasSuffix(cur, "-") {
+			// Collapse any run of separators into a single hyphen. Checking
+			// lastWasSep instead of re-deriving it from b.String() keeps this
+			// O(1) per rune instead of O(n): Builder.String() copies the
+			// accumulated bytes on every call, which made a long run of
+			// separators quadratic.
+			if !lastWasSep {
 				b.WriteRune('-')
+				lastWasSep = true
 			}
 		}
 	}
@@ -321,6 +400,9 @@ func (c *Config) Validate() error {
 	}
 	if c.MQTT.Discovery.Enabled && c.MQTT.Discovery.Prefix == "" {
 		add("mqtt.discovery.prefix is required when discovery is enabled")
+	}
+	if (c.MQTT.TLS.CertFile == "") != (c.MQTT.TLS.KeyFile == "") {
+		add("mqtt.tls.cert_file and mqtt.tls.key_file must both be set, or both left empty")
 	}
 
 	if c.Topics.State == "" {
@@ -385,6 +467,19 @@ func (c *Config) Validate() error {
 	}
 	if c.Poll.HeartbeatSeconds < 1 {
 		add("poll.heartbeat_seconds must be at least 1")
+	}
+	// Cross-field, on top of the per-field minimums above: not currently
+	// reachable with the defaults or their individual minimums alone, but
+	// nothing stops a user setting a low heartbeat_seconds alongside a
+	// relatively high detect_seconds. Ties heartbeat_seconds to
+	// detect_seconds the same way internal/mqtt/discovery.go's
+	// BuildDiscovery ties expire_after to heartbeat_seconds, so the two
+	// packages' notions of "comfortably outlasts" stay in step.
+	if float64(c.Poll.HeartbeatSeconds)*HeartbeatExpireSafetyFactor < float64(c.Poll.DetectSeconds)*minDetectCyclesBeforeExpire {
+		add("poll.heartbeat_seconds (%d) is too low relative to poll.detect_seconds (%d); "+
+			"Home Assistant's expire_after window could lapse between detect cycles — "+
+			"raise heartbeat_seconds or lower detect_seconds",
+			c.Poll.HeartbeatSeconds, c.Poll.DetectSeconds)
 	}
 
 	switch strings.ToLower(c.Logging.Level) {

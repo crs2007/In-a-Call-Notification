@@ -170,6 +170,15 @@ type dialog struct {
 // called concurrently, but nothing here would break if it were.
 var dialogRegistry = map[uintptr]*dialog{}
 
+// dialogWndProcCallback is dialogWndProc's Win32 callback trampoline.
+//
+// syscall.NewCallback allocates a callback slot that is never released, and
+// the process is capped at a few thousand of them (see windows.go's
+// enumCallback for the same reasoning). show() can run more than once per
+// process — a second dialog after the first is closed — so this must be
+// created exactly once, at package level, rather than inline in show().
+var dialogWndProcCallback = syscall.NewCallback(dialogWndProc)
+
 func (d *dialog) show() error {
 	className, err := windows.UTF16PtrFromString("CallMQTTBrokerDialog")
 	if err != nil {
@@ -179,14 +188,17 @@ func (d *dialog) show() error {
 
 	wc := wndClassExW{
 		cbSize:        uint32(unsafe.Sizeof(wndClassExW{})),
-		lpfnWndProc:   syscall.NewCallback(dialogWndProc),
+		lpfnWndProc:   dialogWndProcCallback,
 		hInstance:     hinstance,
 		lpszClassName: className,
 	}
-	if ret, _, _ := procRegisterClassExW.Call(uintptr(unsafe.Pointer(&wc))); ret == 0 {
+	if ret, _, err := procRegisterClassExW.Call(uintptr(unsafe.Pointer(&wc))); ret == 0 {
 		// ERROR_CLASS_ALREADY_EXISTS is expected on a second dialog in the
-		// same process and is not a failure.
-		if err := windows.GetLastError(); err != nil && err != windows.ERROR_CLASS_ALREADY_EXISTS {
+		// same process and is not a failure. LazyProc.Call's err is always
+		// non-nil (it is built from GetLastError regardless of outcome), so
+		// it is only meaningful here because ret == 0 already means the call
+		// failed.
+		if err != nil && err != windows.ERROR_CLASS_ALREADY_EXISTS {
 			return fmt.Errorf("register window class: %w", err)
 		}
 	}
@@ -199,7 +211,7 @@ func (d *dialog) show() error {
 	x, y := centered(dialogWidth, dialogHeight)
 	style := uintptr(wsOverlapped | wsCaption | wsSysMenu)
 
-	hwnd, _, _ := procCreateWindowExW.Call(
+	hwnd, _, err := procCreateWindowExW.Call(
 		0,
 		uintptr(unsafe.Pointer(className)),
 		uintptr(unsafe.Pointer(title)),
@@ -208,7 +220,7 @@ func (d *dialog) show() error {
 		0, 0, hinstance, 0,
 	)
 	if hwnd == 0 {
-		return fmt.Errorf("create dialog window: %w", windows.GetLastError())
+		return fmt.Errorf("create dialog window: %w", err)
 	}
 	d.hwnd = hwnd
 	dialogRegistry[hwnd] = d

@@ -41,6 +41,13 @@ type Status struct {
 	Allowed     bool
 	LastChange  time.Time
 	Paused      bool
+
+	// EvaluatedAt is when this snapshot was computed, regardless of whether
+	// it was ever actually published (a poll tick with nothing new to say
+	// still updates it). CurrentPayload uses it as a republished Payload's
+	// Timestamp on a broker reconnect — see CurrentPayload for why replaying
+	// it rather than stamping the reconnect moment is the honest choice.
+	EvaluatedAt time.Time
 }
 
 // Engine ties detection, network policy and publishing together.
@@ -68,7 +75,11 @@ type Engine struct {
 	publishFailing bool
 	statusMu       sync.RWMutex
 	status         Status
-	paused         atomic.Bool
+	// evaluated is guarded by statusMu, alongside status: it flips true the
+	// first time evaluate() runs and never back, marking the point from
+	// which status.EvaluatedAt (and therefore CurrentPayload) is trustworthy.
+	evaluated bool
+	paused    atomic.Bool
 }
 
 // Options collects the engine's dependencies. Everything platform-specific
@@ -133,6 +144,48 @@ func (e *Engine) Status() Status {
 	return copyStatus(e.status)
 }
 
+// CurrentPayload returns the mqtt.Payload for the most recently evaluated
+// status, or ok == false if evaluate has never run (e.g. at startup, before
+// Run's first poll). It is meant to be wired into mqtt.Client.SetStateSource
+// — see Publisher and the wiring in internal/supervisor — so a broker
+// reconnect republishes whatever the engine currently thinks the state is,
+// instead of only "online" and the discovery config.
+func (e *Engine) CurrentPayload() (mqtt.Payload, bool) {
+	e.statusMu.RLock()
+	defer e.statusMu.RUnlock()
+	if !e.evaluated {
+		return mqtt.Payload{}, false
+	}
+	return payloadFromStatus(e.cfg.App.DeviceID, e.status), true
+}
+
+// payloadFromStatus builds the wire payload for one status snapshot. It is
+// the one place a Status becomes an mqtt.Payload, used both by evaluate's
+// normal publish path and by CurrentPayload's reconnect republish, so the two
+// can never drift on which fields travel and which don't.
+//
+// Timestamp is deliberately s.EvaluatedAt, not time.Now(): when this is
+// called from CurrentPayload on a reconnect, replaying the time the state was
+// actually last evaluated is the honest value — the state itself hasn't
+// changed, only the fact that the broker forgot it. Stamping the reconnect
+// moment instead would claim a fresher observation than was actually made.
+func payloadFromStatus(deviceID string, s Status) mqtt.Payload {
+	p := mqtt.Payload{
+		Device:     deviceID,
+		State:      string(s.State),
+		Confidence: s.Confidence,
+		Network:    s.NetworkRule,
+		Timestamp:  s.EvaluatedAt,
+	}
+	// The app is only meaningful while a call is in progress. Naming the last
+	// app seen on an inactive payload would be misleading.
+	if s.State == model.StateActive {
+		p.App = s.App
+		p.Apps = s.Apps
+	}
+	return p
+}
+
 // copyStatus deep-copies the slice fields so a caller can't alias the
 // engine's internal buffers.
 func copyStatus(s Status) Status {
@@ -185,7 +238,7 @@ func (e *Engine) evaluate(ctx context.Context, now time.Time) {
 	if changed {
 		lastChange = now
 	}
-	e.status = copyStatus(Status{
+	newStatus := Status{
 		State:       state,
 		App:         resolved.App,
 		Apps:        resolved.Apps,
@@ -196,7 +249,10 @@ func (e *Engine) evaluate(ctx context.Context, now time.Time) {
 		Allowed:     e.netAllowed,
 		LastChange:  lastChange,
 		Paused:      e.paused.Load(),
-	})
+		EvaluatedAt: now,
+	}
+	e.status = copyStatus(newStatus)
+	e.evaluated = true
 	e.statusMu.Unlock()
 	if changed {
 		e.log.Info("call state changed",
@@ -241,19 +297,7 @@ func (e *Engine) evaluate(ctx context.Context, now time.Time) {
 		return
 	}
 
-	payload := mqtt.Payload{
-		Device:     e.cfg.App.DeviceID,
-		State:      string(state),
-		Confidence: resolved.Confidence,
-		Network:    e.netRule,
-		Timestamp:  now,
-	}
-	// The app is only meaningful while a call is in progress. Naming the last
-	// app seen on an inactive payload would be misleading.
-	if state == model.StateActive {
-		payload.App = resolved.App
-		payload.Apps = resolved.Apps
-	}
+	payload := payloadFromStatus(e.cfg.App.DeviceID, newStatus)
 
 	if err := e.publisher.PublishState(ctx, payload); err != nil {
 		if !e.publishFailing {

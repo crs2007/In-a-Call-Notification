@@ -15,17 +15,24 @@ import (
 const consentStorePath = `SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\`
 
 // AppsUsingMicrophone reports the applications currently holding the
-// microphone, per HKCU and HKLM's ConsentStore. A missing or unreadable key
-// means "no evidence", not failure: this always returns a slice, even if
-// empty, and never a fatal error.
-func AppsUsingMicrophone() []string {
-	return devicesInUse("microphone")
+// microphone, per HKCU and HKLM's ConsentStore, filtered to those whose
+// owning process is still in procNames (see devicesInUse). A missing or
+// unreadable key means "no evidence", not failure: this always returns a
+// slice, even if empty, and never a fatal error.
+//
+// procNames is a PID->exe-name map shaped exactly like ProcessNames'
+// return value; callers that already called ProcessNames this poll cycle
+// (as internal/detectors does) should reuse it rather than taking a second
+// snapshot.
+func AppsUsingMicrophone(procNames map[uint32]string) []string {
+	return devicesInUse("microphone", procNames)
 }
 
 // AppsUsingWebcam reports the applications currently holding the camera. See
-// AppsUsingMicrophone for the shared ConsentStore mechanics.
-func AppsUsingWebcam() []string {
-	return devicesInUse("webcam")
+// AppsUsingMicrophone for the shared ConsentStore mechanics and procNames'
+// meaning.
+func AppsUsingWebcam(procNames map[uint32]string) []string {
+	return devicesInUse("webcam", procNames)
 }
 
 // devicesInUse reports the applications currently holding the named
@@ -40,10 +47,16 @@ func AppsUsingWebcam() []string {
 // annotate packaged apps for display is a presentation decision that
 // belongs to the caller, not this package.
 //
+// A ConsentStore entry claiming to be live is cross-checked against
+// procNames (see filterLiveConsentEntries) so a stale entry left behind by a
+// crashed or long-closed app doesn't get reported as "in use" forever — but
+// only for NonPackaged entries; see filterLiveConsentEntries's doc comment
+// for why packaged entries are not filtered this way.
+//
 // A missing key means "no evidence", never an error — the agent must keep
 // running with degraded detection rather than fail.
-func devicesInUse(device string) []string {
-	var inUse []string
+func devicesInUse(device string, procNames map[uint32]string) []string {
+	var entries []consentEntry
 
 	for _, root := range []registry.Key{registry.CURRENT_USER, registry.LOCAL_MACHINE} {
 		key, err := registry.OpenKey(root, consentStorePath+device, registry.READ)
@@ -69,21 +82,22 @@ func devicesInUse(device string) []string {
 				appNames, err := nonPackaged.ReadSubKeyNames(-1)
 				if err == nil {
 					for _, app := range appNames {
-						if isLive(nonPackaged, app) {
-							inUse = append(inUse, unmangleNonPackagedKey(app))
-						}
+						entries = append(entries, consentEntry{
+							name:        unmangleNonPackagedKey(app),
+							nonPackaged: true,
+							live:        isLive(nonPackaged, app),
+						})
 					}
 				}
 				nonPackaged.Close()
 				continue
 			}
-			if isLive(key, name) {
-				inUse = append(inUse, name)
-			}
+			entries = append(entries, consentEntry{name: name, live: isLive(key, name)})
 		}
 		key.Close()
 	}
 
+	inUse := filterLiveConsentEntries(entries, runningExeNameSet(procNames))
 	sort.Strings(inUse)
 	return inUse
 }

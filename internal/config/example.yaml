@@ -15,6 +15,17 @@ mqtt:
   # Prefer an environment variable over a literal secret. In a Call Notification warns if
   # this is written directly into the file.
   password: ${CALLMQTT_MQTT_PASSWORD}
+  # tls:
+  #   enabled: true
+  #   # Trust a self-signed or private-CA broker cert without turning off
+  #   # verification. PEM file, relative to this config file's directory.
+  #   ca_file: ca.pem
+  #   # Only if the broker requires a client certificate. Both must be set
+  #   # together, or neither.
+  #   cert_file: client.pem
+  #   key_file: client-key.pem
+  #   # Verification is real security; only for a lab broker you fully trust.
+  #   insecure_skip_verify: false
   discovery:
     # Creates the Home Assistant binary_sensor automatically. With this on you
     # never write a line of Home Assistant YAML.

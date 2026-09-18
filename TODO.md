@@ -680,33 +680,265 @@ required and recommended sections present).
 
 ## Phase 7 — Smaller smells (batch into one "cleanup" PR)
 
-- [ ] **7.1** `onConnectionUp` comment says it republishes state; make it
+- [x] **7.1** `onConnectionUp` comment says it republishes state; make it
       true — add a `SetStateSource(func() (Payload, bool))` the engine
       wires, and publish it after `online`. Then `retain: false` becomes
       a viable setting.
-- [ ] **7.2** `platform/windows/dialog.go:182` — hoist
+  - `internal/mqtt/client.go`: added `Client.SetStateSource(f func()
+    (Payload, bool))` (stored on an `atomic.Pointer`, since it's read from
+    autopaho's own goroutine on every reconnect). Extracted `onConnectionUp`'s
+    detached body into `republish(ctx, cm connectionPublisher)` — a new
+    unexported `connectionPublisher` interface (satisfied structurally by
+    `*autopaho.ConnectionManager`) that makes the whole reconnect sequence
+    unit-testable with a fake, no live broker needed. `republish` now
+    publishes retained `online`, then discovery, then — if a state source is
+    wired and reports `ok`, via a `payloadFromStatus`-shared marshal path —
+    the current state, with each step logged independently so one failure
+    doesn't skip the next.
+  - `internal/engine/engine.go`: added `Status.EvaluatedAt`, `Engine.evaluated
+    bool` (guarded by the existing `statusMu`), and `CurrentPayload() (mqtt.
+    Payload, bool)` (`ok=false` until the first `evaluate()`). Factored
+    `payloadFromStatus` out of `evaluate()` so the heartbeat/change publish
+    path and `CurrentPayload` can't drift apart.
+  - `internal/supervisor/supervisor.go`: `Publisher` interface gained
+    `SetStateSource`; `build()` wires `pub.SetStateSource(eng.CurrentPayload)`
+    right after constructing the engine.
+  - Timestamp on a republish is the time the state was last *evaluated*
+    (`Status.EvaluatedAt`), not the reconnect moment — an honest replay of
+    stale-but-true information, documented on `payloadFromStatus`.
+  - **Repro:** `internal/mqtt/client_test.go` —
+    `TestRepublishPublishesOnlineDiscoveryThenState`,
+    `TestRepublishSkipsStateWhenSourceReportsNotOK`,
+    `TestRepublishSkipsStateWhenNoSourceIsWired`,
+    `TestRepublishContinuesAfterAvailabilityFailure`, all exercising
+    `republish` directly via a `fakeConnectionPublisher`.
+    `internal/engine/engine_test.go`'s `TestCurrentPayloadReflectsLatestEvaluation`
+    covers the `ok=false`-before-first-evaluate case.
+    `internal/supervisor/supervisor_test.go`'s `TestBuildWiresEngineStateSource`
+    confirms `build()` actually wires the closure end-to-end.
+
+**Done when:** `go test ./internal/mqtt/... ./internal/engine/...
+./internal/supervisor/...` passes, and reconnecting mid-call republishes the
+current state alongside `online`. **Done** — `go build`, `go vet`, and
+`go test` (with and without `-tags tray`) all clean across the whole repo.
+
+- [x] **7.2** `platform/windows/dialog.go:182` — hoist
       `syscall.NewCallback(dialogWndProc)` to a package `var` like
       `windows.go` does. Use the `err` return of `.Call` instead of a
       separate `windows.GetLastError()` at :189 and :211.
-- [ ] **7.3** `tray.openFile` — `windows.ShellExecute(0, "open", path,
+  - Added `var dialogWndProcCallback = syscall.NewCallback(dialogWndProc)` at
+    package scope, comment mirroring `windows.go`'s `enumCallback` reasoning
+    (a callback slot is never released; allocating one per `show()` call would
+    leak one every time a dialog is shown). `show()` now uses the package var.
+  - Both `.Call()` sites (`procRegisterClassExW`, `procCreateWindowExW`) now
+    capture their own `err` return instead of discarding it; the two
+    `windows.GetLastError()` round-trips are gone. `LazyProc.Call`'s err is
+    documented as always non-nil and always exactly `windows.Errno`, so the
+    existing `ERROR_CLASS_ALREADY_EXISTS` comparison needed no type change —
+    just needed the real return instead of a second syscall.
+  - No new automated test: this package has no seam for real window creation
+    (no `dialog_test.go`), and a GUI message-loop harness wasn't built for a
+    callback-plumbing change. Verified via `go build -tags windows ./...` and
+    `go vet -tags windows ./...`, both clean — same "manual/build-clean"
+    allowance already used elsewhere in this file's own TODO history.
+
+- [x] **7.3** `tray.openFile` — `windows.ShellExecute(0, "open", path,
       "", "", SW_SHOWNORMAL)` on Windows instead of `cmd /c start`.
-- [ ] **7.4** ConsentStore liveness: in `devicesInUse`, drop entries whose
+  - `internal/tray/tray.go`'s `openFile` now delegates the Windows case to a
+    new `openFileOS(path)` seam; darwin/other branches unchanged.
+  - New `internal/tray/openfile_windows.go` (`//go:build windows && tray`):
+    calls `windows.ShellExecute(0, verbPtr, pathPtr, nil, nil,
+    windows.SW_SHOWNORMAL)` via `windows.UTF16PtrFromString`, matching
+    `platform/windows`'s existing Win32-call convention. Errors logged at
+    `slog.Debug` only, matching the original code's best-effort severity (it
+    used to discard `cmd.Start()`'s error outright).
+  - New `internal/tray/openfile_other.go` (`//go:build !windows && tray`): a
+    no-op `openFileOS` so the package still compiles on darwin/linux under
+    `-tags tray`; unreachable at runtime there.
+  - Chose build-tag-file split over an in-file runtime branch, matching how
+    `cmd/callmqtt`'s `dialog_windows.go`/`dialog_stub.go` already split
+    OS-specific behaviour in this repo.
+  - No test added for `openFileOS` itself (no existing seam, and invoking
+    `ShellExecute`/`exec.Command` isn't worth a harness for a two-line OS
+    call) — verified via `go build`/`go test -tags "windows tray"` plus a
+    cross-compiled `GOOS=darwin`/`GOOS=linux` build of the affected packages.
+
+- [x] **7.4** ConsentStore liveness: in `devicesInUse`, drop entries whose
       owning process (packaged → package family; NonPackaged → exe path)
       is not in the current process list. Requires 5.1's shared snapshot
       so it's free. Add a fixture: Teams mic entry with `Stop=0` but no
       `ms-teams.exe` running → not in use.
-- [ ] **7.5** TLS: add `mqtt.tls.ca_file` (PEM) so self-signed brokers
+  - `platform/windows/consent_pure.go`: added `consentEntry`,
+    `filterLiveConsentEntries(entries, runningExeNames)`,
+    `runningExeNameSet(procNames map[uint32]string)`, and
+    `baseExeNameLower(path)` — all pure, no registry/syscall dependency
+    (build and test on every `GOOS`, matching the file's existing
+    `isLive`/`unmangleNonPackagedKey` split).
+  - `platform/windows/consent.go`: `devicesInUse` now takes `procNames
+    map[uint32]string`, collects `consentEntry` values while walking the
+    registry, and filters through `filterLiveConsentEntries` before sorting.
+    `AppsUsingMicrophone`/`AppsUsingWebcam` now take and forward `procNames`.
+  - `internal/detectors/detectors.go`: `Snapshot`'s two fields changed to
+    `func(procNames map[uint32]string) []string`; `observe()` passes the
+    `names` map it already computed via `s.ProcessNames()` — free, per the
+    TODO's own framing, since `observe()` already had that map in hand before
+    calling either function.
+  - **Scoped gap, left deliberately unfiltered:** only `NonPackaged` entries
+    (real exe paths) are matched against the running-process set. Packaged
+    (MSIX) entries are keyed by package family name (e.g.
+    `MSTeams_8wekyb3d8bbwe`), which `golang.org/x/sys/windows` has no
+    `GetPackageFamilyName` wrapper for — resolving it would mean hand-rolling
+    a new `kernel32.dll` proc plus an `OpenProcess` call per running PID every
+    poll, materially more Win32 surface than this "smaller smell" item
+    warrants. Documented in `filterLiveConsentEntries`'s and `devicesInUse`'s
+    doc comments, in the same "heuristic, not a real classification, say so"
+    tone as `internal/network/local.go`'s `isVirtualAdapterName` comment —
+    this is a real, tracked gap, not a silently dropped one.
+  - Downstream call-site fixes for the new signature: `platform/windows/
+    stub_other.go`'s non-Windows stubs, and `cmd/probe/main.go` (already
+    computed `names := platformwindows.ProcessNames()` a few lines above its
+    call, so threading it through was likewise free).
+  - **Repro:** `platform/windows/consent_pure_test.go` —
+    `TestFilterLiveConsentEntries_NonPackagedDroppedWhenProcessNotRunning`
+    (the TODO's exact fixture: a Teams mic entry with `Stop=0` dropped when
+    `ms-teams.exe` isn't running),
+    `TestFilterLiveConsentEntries_NonPackagedKeptWhenProcessRunning`, a
+    table-driven `TestFilterLiveConsentEntries` (not-live, case-insensitivity,
+    packaged passthrough, mixed cases), and `TestBaseExeNameLower` — all pure,
+    no registry access.
+
+**Done when:** `go build -tags windows ./... && go vet -tags windows ./...`
+and `go test -tags windows ./platform/windows/... ./internal/tray/...
+./internal/detectors/...` (with and without `-tags tray`) pass. **Done** for
+7.2–7.4 — all clean; the packaged-app gap in 7.4 is a deliberate, tracked
+follow-up (see above), not an oversight.
+
+- [x] **7.5** TLS: add `mqtt.tls.ca_file` (PEM) so self-signed brokers
       don't need `insecure_skip_verify`. Optional `cert_file`/`key_file`.
-- [ ] **7.6** `expire_after` guard: `Validate` should fail if
+  - `internal/config/config.go`: `TLS` struct gained `CAFile`, `CertFile`,
+    `KeyFile`, each documented. `Validate()` rejects `cert_file` set without
+    `key_file` or vice versa (both-or-neither). All three fields go through
+    the same `${VAR}` expansion as other secret/path fields, and `Load()`
+    resolves them relative to the config file's directory (mirroring
+    `rules_file`'s resolution) via a new `resolveRelative(baseDir, path)`
+    helper; `Parse()` alone (no file path available) leaves them unresolved,
+    documented on `Load`.
+  - `internal/mqtt/client.go`: extracted `buildTLSConfig(t config.TLS)
+    (*tls.Config, error)` from `New`. `CAFile` set: reads the PEM, builds an
+    `x509.CertPool` via `AppendCertsFromPEM`, sets `RootCAs` — a read/parse
+    failure fails `New` fast (wrapped error), matching this function's
+    existing config-problem-is-fatal pattern. `CertFile`+`KeyFile` both set:
+    `tls.LoadX509KeyPair`, added to `Certificates`, same fail-fast treatment.
+  - `internal/config/example.yaml`: added a commented `tls:` block under
+    `mqtt:` documenting `ca_file`, `cert_file`/`key_file`, and
+    `insecure_skip_verify`.
+  - **Repro:** `internal/config/config_test.go` — `TestValidationRejects`
+    gained the cert/key-without-its-pair cases; added
+    `TestTLSCertAndKeyBothSetIsAccepted`, `TestTLSFieldsParsed`,
+    `TestLoadResolvesTLSPathsRelativeToConfigDir`. `internal/mqtt/
+    client_test.go` — a `generateSelfSignedCert` helper (ECDSA P256,
+    generated fresh per test, no checked-in fixture PEMs) plus
+    `TestBuildTLSConfigDisabledReturnsNil`, `TestBuildTLSConfigLoadsCAFile`,
+    `TestBuildTLSConfigRejectsMissingCAFile`,
+    `TestBuildTLSConfigRejectsGarbageCAFile`,
+    `TestBuildTLSConfigLoadsClientKeypair`,
+    `TestBuildTLSConfigRejectsBadClientKeypair`,
+    `TestBuildTLSConfigOnlyCertFileSetIsIgnored` (documents that
+    `buildTLSConfig` itself stays permissive about a lone cert/key —
+    `config.Validate` is what actually rejects that),
+    `TestBuildTLSConfigInsecureSkipVerifyPassthrough`.
+
+**Done when:** `go test ./internal/config/... ./internal/mqtt/...` passes,
+with and without `-tags tray`. **Done** — all clean.
+
+- [x] **7.6** `expire_after` guard: `Validate` should fail if
       `heartbeat_seconds * 1.5 < detect_seconds * 2` — not possible with
       current minimums, but the invariant lives in two packages and
       nothing ties them.
-- [ ] **7.7** `slugify`: trailing-hyphen handling walks `b.String()` on
+  - `internal/config/config.go`: added `HeartbeatExpireSafetyFactor = 1.5`
+    (exported) and `minDetectCyclesBeforeExpire = 2` (unexported), and a new,
+    independent check in `Validate()` (added after, not replacing, the
+    existing per-field `must be at least 1` checks):
+    `float64(c.Poll.HeartbeatSeconds)*HeartbeatExpireSafetyFactor <
+    float64(c.Poll.DetectSeconds)*minDetectCyclesBeforeExpire` fails with a
+    message naming both fields and explaining the risk (Home Assistant's
+    `expire_after` window lapsing between real detect cycles).
+  - `internal/mqtt/discovery.go`: its local `heartbeatSafetyFactor` is now
+    `const heartbeatSafetyFactor = config.HeartbeatExpireSafetyFactor` instead
+    of a parallel magic number — since `internal/mqtt` already imports
+    `internal/config` (never the reverse), the constant lives in `config` and
+    `discovery.go` references it directly, so the two can no longer drift
+    silently. Comments in both files cross-reference each other by name.
+  - **Repro:** `internal/config/config_test.go` — a `TestValidationRejects`
+    case (`detect_seconds: 5, heartbeat_seconds: 2`, each individually ≥ its
+    own minimum) asserting the combined error names both fields; and
+    `TestHeartbeatDetectBoundaryAccepted`, pinning the exact boundary
+    (`heartbeat=4, detect=3` → `4*1.5 == 3*2 == 6`, must still pass) and
+    confirming the shipped defaults don't trip the new check.
+
+- [x] **7.7** `slugify`: trailing-hyphen handling walks `b.String()` on
       every non-alnum rune (quadratic on pathological input). Track
       `lastWasSep bool` instead.
-- [ ] **7.8** `supervisor.stop` 5s wait + `Close` 5s shutdown ctx +
+  - `internal/config/config.go`: replaced the per-rune `b.String()` +
+    `strings.HasSuffix` check with a `lastWasSep bool` local, initialized
+    `true` (covers both "nothing written yet" and "last char was a
+    separator" — verified against existing test cases, e.g. `""` → `""` and
+    `"--weird--"` → `"weird"`). Pure refactor, no semantic change; the final
+    `strings.Trim(...)` (linear, one-time) is untouched, matching the TODO's
+    own scoping to the per-rune call.
+  - **Repro:** `TestSlugify` gained a 10,000-char all-`!` input (→ `""`) and a
+    mid-string separator-run case (`"a" + 500×"!" + "b"` → `"a-b"`). Added
+    `BenchmarkSlugify` (10,000-char separator-only input): `go test
+    ./internal/config/... -bench=Slugify -benchtime=1x` → `24300 ns/op`,
+    confirming linear-time behaviour on the pathological case.
+
+**Done when:** `go test ./internal/config/... ./internal/mqtt/...` passes.
+**Done** — all clean, including the new benchmark.
+
+- [x] **7.8** `supervisor.stop` 5s wait + `Close` 5s shutdown ctx +
       publish → the worst-case quit is ~15s of "why is it still in the
       tray". Cap total shutdown at 5s by sharing one deadline.
+  - `internal/supervisor/supervisor.go`: `stop(ctx, gen)` now derives one
+    `stopCtx, cancel := context.WithTimeout(ctx, stopTimeout)` at the top,
+    uses `stopCtx.Done()` in place of the old bare `time.After(5*time.
+    Second)` for the `gen.done` wait, and passes that *same* `stopCtx` to
+    `gen.pub.Close(...)` — so whatever budget the `gen.done` wait already
+    consumed, `pub.Close` only gets what's left, not a fresh 5s on top.
+    `stopTimeout` is a package `var` (5s default) rather than a `const`,
+    specifically so tests can shrink it without a real multi-second sleep.
+  - Traced the worst case with the change applied: `gen.done` never fires
+    (stuck engine, an independent pre-existing bug) → `stopCtx` expires at
+    `stopTimeout` (further bounded if the caller's own `ctx` is tighter, same
+    "sooner of the two" idiom as `mqtt.boundedPublishContext`) →
+    `gen.pub.Close(stopCtx)` is called with an already-expired ctx;
+    `mqtt.Client.Close`'s own ctx-aware publish/disconnect calls are expected
+    to fail fast on it rather than block, falling back to the Will as the
+    documented guard for exactly this "no time left for a clean offline
+    publish" case. Total worst case: bounded to ~`stopTimeout` (5s), not
+    ~15s. Concluded `internal/mqtt/client.go` needs no change — its own
+    internal bound just becomes redundant-but-harmless once fed an
+    already-expired ctx.
+  - `stop`'s doc comment now states the ~5s total worst-case bound explicitly
+    and the fail-fast-over-a-stuck-engine reasoning.
+  - **Repro:** `internal/supervisor/supervisor_test.go`'s
+    `TestStopBoundsTotalShutdownTime` — a `*generation` built directly with a
+    `done` channel that's never closed (stuck-engine stand-in) and a
+    `fakePublisher` extended with a `closeDelay` field that blocks `Close`
+    unless its ctx is cancelled first (mirroring `mqtt.Client.Close`'s real
+    behaviour). The test temporarily shrinks the package `stopTimeout` var to
+    100ms (restored via `t.Cleanup`) so the assertion is deterministic and
+    fast (~0.14s) instead of sleeping for a real 5s+, with a 2s hard
+    `time.After` guard so a genuine regression fails fast instead of hanging
+    the suite. Asserts elapsed time stays near the shrunk `stopTimeout`
+    rather than `stopTimeout + closeDelay`.
+
+**Done when:** `go test ./internal/supervisor/... ./internal/mqtt/...`
+passes and a stuck engine no longer stretches shutdown past ~5s. **Done** —
+all clean.
+
+**Phase 7 overall:** `go build ./...`, `go vet ./...`, and `go test ./...`
+are clean, with and without `-tags tray`, across the whole repo (all 7.1–7.8
+changes landed together and were verified together, not just individually).
 
 ---
 

@@ -173,6 +173,52 @@ func TestJoinAndLeaveACall(t *testing.T) {
 	}
 }
 
+// TestCurrentPayloadReflectsLatestEvaluation is the 7.1 repro: CurrentPayload
+// (what mqtt.Client.SetStateSource is wired to, via the supervisor) must
+// report ok == false until evaluate() has run at least once, and afterwards
+// must return the same state, app and confidence that PublishState actually
+// last sent — the same payload-building logic (payloadFromStatus), not a
+// second one that could drift from it.
+func TestCurrentPayloadReflectsLatestEvaluation(t *testing.T) {
+	h := newHarness(t)
+
+	if payload, ok := h.engine.CurrentPayload(); ok {
+		t.Fatalf("CurrentPayload() = %+v, ok = true before any evaluate() ran", payload)
+	}
+
+	h.runUntil(10 * time.Second) // settles to inactive, same climb as TestJoinAndLeaveACall
+	h.detector.state, h.detector.confidence = model.StateActive, 0.85
+	h.runUntil(30 * time.Second) // clears the enter debounce
+
+	payload, ok := h.engine.CurrentPayload()
+	if !ok {
+		t.Fatal("CurrentPayload() ok = false after evaluate() has run")
+	}
+	if payload.State != string(model.StateActive) {
+		t.Errorf("CurrentPayload().State = %q, want %q", payload.State, model.StateActive)
+	}
+	if payload.App != "teams" {
+		t.Errorf("CurrentPayload().App = %q, want teams", payload.App)
+	}
+	if payload.Confidence != 0.85 {
+		t.Errorf("CurrentPayload().Confidence = %v, want 0.85", payload.Confidence)
+	}
+	if payload.Device != h.engine.cfg.App.DeviceID {
+		t.Errorf("CurrentPayload().Device = %q, want %q", payload.Device, h.engine.cfg.App.DeviceID)
+	}
+
+	// It must match the last thing actually published, not a second,
+	// independently built payload that could quietly drift from it.
+	sent := h.publisher.sent
+	if len(sent) == 0 {
+		t.Fatal("no state was ever published")
+	}
+	last := sent[len(sent)-1]
+	if last.State != payload.State || last.App != payload.App || last.Confidence != payload.Confidence {
+		t.Errorf("CurrentPayload() = %+v diverges from the last PublishState call %+v", payload, last)
+	}
+}
+
 // SetPaused must take the bulb off even mid-call, and — critically — a
 // detector that keeps insisting "active" while paused must never reach the
 // broker: a pause the user can see doesn't work is worse than no pause.

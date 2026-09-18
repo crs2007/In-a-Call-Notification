@@ -46,6 +46,17 @@ type fakePublisher struct {
 	ctx    context.Context
 	events *[]string
 	closed chan struct{}
+
+	// closeDelay, when set, makes Close block for this long before
+	// completing — unless ctx is cancelled first, which it respects the same
+	// way mqtt.Client.Close's own boundedPublishContext does. Used by the 7.8
+	// shutdown-bound test to simulate a slow-but-well-behaved publisher.
+	closeDelay time.Duration
+
+	// stateSource records whatever build passed to SetStateSource, so a test
+	// can call it directly and assert on what the engine actually wires up —
+	// the 7.1 repro.
+	stateSource func() (mqtt.Payload, bool)
 }
 
 func newFakePublisher(ctx context.Context, events *[]string) *fakePublisher {
@@ -56,7 +67,15 @@ func newFakePublisher(ctx context.Context, events *[]string) *fakePublisher {
 }
 
 func (f *fakePublisher) PublishState(context.Context, mqtt.Payload) error { return nil }
-func (f *fakePublisher) Close(context.Context) error {
+func (f *fakePublisher) SetStateSource(fn func() (mqtt.Payload, bool))    { f.stateSource = fn }
+func (f *fakePublisher) Close(ctx context.Context) error {
+	if f.closeDelay > 0 {
+		select {
+		case <-time.After(f.closeDelay):
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
 	if f.events != nil {
 		*f.events = append(*f.events, "closed")
 	}
@@ -156,6 +175,66 @@ func TestReloadStopsOldBeforeBuildingNew(t *testing.T) {
 	case <-built[1].closed:
 	case <-time.After(2 * time.Second):
 		t.Fatal("current generation's publisher was never closed by Close")
+	}
+}
+
+// TestBuildWiresEngineStateSource is the 7.1 repro: build must wire the
+// publisher's SetStateSource to the freshly built engine's CurrentPayload, so
+// a broker reconnect can republish current state rather than only "online"
+// and the discovery config. Before the engine's first evaluate(), that source
+// must report ok == false; after one, it must report the state that
+// evaluate() actually computed.
+func TestBuildWiresEngineStateSource(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var built []*fakePublisher
+	sup := New(Options{
+		Logger:       testLogger(),
+		Version:      "test",
+		Checker:      fakeChecker{},
+		NewDetectors: fakeDetectorsFactory(),
+		NewPublisher: func(ctx context.Context, _ *config.Config, _ *slog.Logger, _ string) (Publisher, error) {
+			p := newFakePublisher(ctx, nil)
+			built = append(built, p)
+			return p, nil
+		},
+	})
+
+	if err := sup.Start(ctx, testConfig(t, "teams")); err != nil {
+		t.Fatalf("Start: %v", err)
+	}
+	defer func() { _ = sup.Close(ctx) }()
+
+	if len(built) != 1 {
+		t.Fatalf("expected 1 publisher built, got %d", len(built))
+	}
+	if built[0].stateSource == nil {
+		t.Fatal("build did not call SetStateSource on the publisher")
+	}
+
+	// Run's own first poll races this goroutine, so wait for it rather than
+	// asserting immediately: ok must eventually become true, and once it
+	// does the state must be whatever evaluate() actually computed, never a
+	// stale zero value. The very first poll reports "unknown" — the state
+	// machine's exit debounce hasn't yet had time to confirm "inactive" — the
+	// same "unknown" the startup announcement in engine.go documents.
+	deadline := time.Now().Add(2 * time.Second)
+	for {
+		payload, ok := built[0].stateSource()
+		if ok {
+			if payload.State != string(model.StateUnknown) {
+				t.Errorf("stateSource() state = %q, want %q (first poll, before the exit debounce confirms inactive)", payload.State, model.StateUnknown)
+			}
+			if payload.Device == "" {
+				t.Error("stateSource() payload has no device id")
+			}
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("stateSource() never reported ok == true after Start's first evaluate()")
+		}
+		time.Sleep(5 * time.Millisecond)
 	}
 }
 
@@ -299,6 +378,62 @@ func TestReloadWithNoLiveGenerationOnPublisherFailure(t *testing.T) {
 
 	if err := sup.Close(ctx); err != nil {
 		t.Fatalf("Close: %v", err)
+	}
+}
+
+// TestStopBoundsTotalShutdownTime is the 7.8 repro. gen.done deliberately
+// never closes — standing in for a Run loop that ignores its ctx and keeps
+// running, a goroutine leak that is already a bug in its own right — and the
+// publisher's Close deliberately takes longer than what's left of the shared
+// budget once stop gives up waiting on gen.done. Before 7.8, stop's own wait
+// and pub.Close's ctx were independent, so the two delays added up; after
+// 7.8 they share one deadline, so pub.Close is called with an
+// already-expired ctx and returns immediately instead of blocking for its
+// own closeDelay.
+//
+// stopTimeout is shrunk for the duration of this test so the bound can be
+// exercised in milliseconds rather than by actually sleeping for the real
+// production timeout.
+func TestStopBoundsTotalShutdownTime(t *testing.T) {
+	const testStopTimeout = 100 * time.Millisecond
+	orig := stopTimeout
+	stopTimeout = testStopTimeout
+	t.Cleanup(func() { stopTimeout = orig })
+
+	// Longer than testStopTimeout: if stop still gave pub.Close a fresh
+	// budget instead of sharing the deadline, this delay would dominate and
+	// the assertion below would fail.
+	pub := &fakePublisher{
+		ctx:        context.Background(),
+		closed:     make(chan struct{}),
+		closeDelay: 10 * testStopTimeout,
+	}
+	gen := &generation{
+		pub:       pub,
+		cancel:    func() {},
+		pubCancel: func() {},
+		done:      make(chan struct{}), // never closed: simulates a stuck engine
+	}
+
+	sup := &Supervisor{log: testLogger()}
+
+	start := time.Now()
+	stopped := make(chan struct{})
+	go func() {
+		sup.stop(context.Background(), gen)
+		close(stopped)
+	}()
+
+	// Generous upper bound so a genuine regression (delays stacking instead
+	// of sharing a deadline) fails the test instead of hanging it.
+	select {
+	case <-stopped:
+	case <-time.After(2 * time.Second):
+		t.Fatal("stop did not return within the bounded shutdown window (regression: delays are stacking instead of sharing one deadline)")
+	}
+
+	if elapsed := time.Since(start); elapsed > 3*testStopTimeout {
+		t.Errorf("stop took %v, want at most ~%v (testStopTimeout plus slack, not testStopTimeout+closeDelay)", elapsed, 3*testStopTimeout)
 	}
 }
 

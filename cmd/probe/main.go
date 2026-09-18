@@ -43,8 +43,8 @@ func snapshot(w *os.File) {
 	}
 
 	devices := map[string][]string{
-		"microphone": platformwindows.AppsUsingMicrophone(),
-		"webcam":     platformwindows.AppsUsingWebcam(),
+		"microphone": platformwindows.AppsUsingMicrophone(names),
+		"webcam":     platformwindows.AppsUsingWebcam(names),
 	}
 	for _, device := range []string{"microphone", "webcam"} {
 		apps := devices[device]

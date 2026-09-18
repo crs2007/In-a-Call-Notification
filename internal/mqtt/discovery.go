@@ -5,18 +5,20 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/eclipse/paho.golang/autopaho"
-
 	"github.com/crs2007/callmqtt/internal/config"
 )
 
-// expireAfterSeconds is the last line of defence against a light left on.
+// expire_after (below) is the last line of defence against a light left on.
 //
 // If Home Assistant hears nothing on the state topic for this long it marks
 // the entity unavailable, which turns the light off. It must comfortably
 // exceed the heartbeat interval or a healthy agent would be declared dead;
-// heartbeatSafetyFactor sets that margin.
-const heartbeatSafetyFactor = 1.5
+// config.HeartbeatExpireSafetyFactor sets that margin, and
+// internal/config.Config.Validate additionally checks it against
+// detect_seconds, so the two packages' notion of "comfortably exceeds" can't
+// drift apart. That check exists specifically to protect the relationship
+// this constant establishes here — see internal/config/config.go's Validate.
+const heartbeatSafetyFactor = config.HeartbeatExpireSafetyFactor
 
 // discoveryConfig is the Home Assistant MQTT Discovery payload.
 //
@@ -101,7 +103,7 @@ func BuildDiscovery(cfg *config.Config, version string) discoveryConfig {
 // publishDiscovery registers the entity with Home Assistant. It runs on every
 // connection, not just the first, so that a broker which lost its retained
 // messages gets them back.
-func (c *Client) publishDiscovery(ctx context.Context, cm *autopaho.ConnectionManager) error {
+func (c *Client) publishDiscovery(ctx context.Context, cm connectionPublisher) error {
 	if !c.cfg.MQTT.Discovery.Enabled {
 		return nil
 	}

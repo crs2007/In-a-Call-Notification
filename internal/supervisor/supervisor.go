@@ -21,13 +21,17 @@ import (
 	"github.com/crs2007/callmqtt/internal/config"
 	"github.com/crs2007/callmqtt/internal/engine"
 	"github.com/crs2007/callmqtt/internal/model"
+	"github.com/crs2007/callmqtt/internal/mqtt"
 	"github.com/crs2007/callmqtt/internal/network"
 )
 
 // Publisher is what a generation needs from its broker connection: the
-// engine's publish call, plus a clean way to let go of it on reload.
+// engine's publish call, a way to be told what to republish on a broker
+// reconnect (see mqtt.Client.SetStateSource), plus a clean way to let go of
+// it on reload.
 type Publisher interface {
 	engine.Publisher
+	SetStateSource(f func() (mqtt.Payload, bool))
 	Close(ctx context.Context) error
 	Connected() bool
 }
@@ -270,6 +274,13 @@ func (s *Supervisor) build(ctx context.Context, cfg *config.Config, detectors []
 		return nil, fmt.Errorf("build engine: %w", err)
 	}
 
+	// Closes the loop a reconnect needs: the engine already knows what state
+	// to report (Status, since 3.2, is safe to call from any goroutine), so
+	// wiring it as the publisher's state source is what lets onConnectionUp
+	// republish current state instead of only "online" and the discovery
+	// config (see mqtt.Client.SetStateSource).
+	pub.SetStateSource(eng.CurrentPayload)
+
 	return &generation{eng: eng, pub: pub, pubCancel: pubCancel, done: make(chan struct{})}, nil
 }
 
@@ -284,19 +295,45 @@ func (s *Supervisor) run(gen *generation) {
 	}()
 }
 
+// stopTimeout is stop's total shutdown budget, shared between waiting for
+// the engine to exit and closing the publisher (see stop). Before 7.8 these
+// were two independent 5s waits — plus whatever the caller's own ctx and
+// mqtt.Client.Close's internal bound added on top — for a worst case of
+// roughly 15s between "quit" and the tray actually going away.
+//
+// A var, not a const, solely so tests can shrink it and exercise the bound
+// deterministically in milliseconds instead of actually sleeping for 5
+// real seconds per run.
+var stopTimeout = 5 * time.Second
+
 // stop cancels a generation's Run loop, waits for it to actually exit — the
 // goroutine-leak guarantee — closes its publisher, and finally releases the
 // publisher's connection ctx.
+//
+// stop's total worst-case duration is bounded to ~stopTimeout (5s), not
+// double or triple that: waiting for gen.done and closing the publisher
+// share one deadline (stopCtx below) instead of each getting their own fresh
+// budget. If gen.done never fires (a leaked goroutine that ignores
+// cancellation — already a bug in its own right), pub.Close is still called,
+// but with whatever's left of stopCtx, which in the worst case is already
+// expired. mqtt.Client.Close derives its own bound the same way
+// (boundedPublishContext), so an already-expired stopCtx makes it fail fast
+// rather than blocking for its own separate 5s — the Will message is the
+// documented fallback for exactly this case, so failing fast here is the
+// right tradeoff over stretching shutdown to wait for a stuck engine.
 func (s *Supervisor) stop(ctx context.Context, gen *generation) {
 	gen.cancel()
 
+	stopCtx, cancel := context.WithTimeout(ctx, stopTimeout)
+	defer cancel()
+
 	select {
 	case <-gen.done:
-	case <-time.After(5 * time.Second):
+	case <-stopCtx.Done():
 		s.log.Warn("supervisor: engine did not stop in time, closing publisher anyway")
 	}
 
-	if err := gen.pub.Close(ctx); err != nil {
+	if err := gen.pub.Close(stopCtx); err != nil {
 		s.log.Warn("supervisor: close publisher", "error", err)
 	}
 	gen.pubCancel()

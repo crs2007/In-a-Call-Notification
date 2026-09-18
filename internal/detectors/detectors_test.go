@@ -45,8 +45,8 @@ func fakeSnapshot(windows []platformwindows.WindowInfo, procNames map[uint32]str
 	return Snapshot{
 		VisibleWindows:      func() []platformwindows.WindowInfo { return windows },
 		ProcessNames:        func() map[uint32]string { return procNames },
-		AppsUsingMicrophone: func() []string { return mic },
-		AppsUsingWebcam:     func() []string { return cam },
+		AppsUsingMicrophone: func(map[uint32]string) []string { return mic },
+		AppsUsingWebcam:     func(map[uint32]string) []string { return cam },
 	}
 }
 
@@ -327,11 +327,11 @@ rules:
 			atomic.AddInt32(&procCalls, 1)
 			return nil
 		},
-		AppsUsingMicrophone: func() []string {
+		AppsUsingMicrophone: func(map[uint32]string) []string {
 			atomic.AddInt32(&micCalls, 1)
 			return nil
 		},
-		AppsUsingWebcam: func() []string {
+		AppsUsingWebcam: func(map[uint32]string) []string {
 			atomic.AddInt32(&camCalls, 1)
 			return nil
 		},
@@ -368,7 +368,7 @@ func TestWindowsSnapshot_ReturnsCallablePlatformFunctions(t *testing.T) {
 	// Calling these must not panic even on a platform without the real
 	// implementation (the !windows stub returns nil).
 	_ = snap.VisibleWindows()
-	_ = snap.ProcessNames()
-	_ = snap.AppsUsingMicrophone()
-	_ = snap.AppsUsingWebcam()
+	names := snap.ProcessNames()
+	_ = snap.AppsUsingMicrophone(names)
+	_ = snap.AppsUsingWebcam(names)
 }

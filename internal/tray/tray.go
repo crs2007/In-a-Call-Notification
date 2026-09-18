@@ -446,14 +446,21 @@ func (a *app) openBrokerDialog() {
 
 // openFile hands a path to the OS's default handler, so "Open config file"
 // and "Open logs" behave the way a user already expects Explorer to.
+//
+// Windows gets its own openFileOS (openfile_windows.go), calling
+// ShellExecute directly instead of shelling out to `cmd /c start`; every
+// other OS still goes through exec.Command, since there is no equivalent
+// direct syscall this package makes for them.
 func openFile(path string) {
 	if path == "" {
 		return
 	}
+	if runtime.GOOS == "windows" {
+		openFileOS(path)
+		return
+	}
 	var cmd *exec.Cmd
 	switch runtime.GOOS {
-	case "windows":
-		cmd = exec.Command("cmd", "/c", "start", "", path)
 	case "darwin":
 		cmd = exec.Command("open", path)
 	default:

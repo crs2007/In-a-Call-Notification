@@ -231,6 +231,27 @@ func TestValidationRejects(t *testing.T) {
 			yaml:      minimal + "app:\n  device_id: \"###\"\n",
 			wantError: "device_id resolves to empty",
 		},
+		{
+			// Each field individually respects its own >= 1 minimum, but
+			// heartbeat_seconds is tiny relative to detect_seconds: 2*1.5=3
+			// is less than 5*2=10, so the expire_after window could lapse
+			// between detect cycles.
+			name:      "heartbeat too low relative to detect interval",
+			yaml:      minimal + "poll:\n  detect_seconds: 5\n  heartbeat_seconds: 2\n",
+			wantError: "poll.heartbeat_seconds (2) is too low relative to poll.detect_seconds (5)",
+		},
+		{
+			name: "tls cert_file without key_file",
+			yaml: "mqtt:\n  host: broker\n  tls:\n    cert_file: client.pem\n" +
+				"allowed_networks:\n  - {name: Home, cidrs: [\"10.0.0.0/8\"]}\n",
+			wantError: "mqtt.tls.cert_file and mqtt.tls.key_file must both be set, or both left empty",
+		},
+		{
+			name: "tls key_file without cert_file",
+			yaml: "mqtt:\n  host: broker\n  tls:\n    key_file: client-key.pem\n" +
+				"allowed_networks:\n  - {name: Home, cidrs: [\"10.0.0.0/8\"]}\n",
+			wantError: "mqtt.tls.cert_file and mqtt.tls.key_file must both be set, or both left empty",
+		},
 	}
 
 	for _, tt := range tests {
@@ -243,6 +264,29 @@ func TestValidationRejects(t *testing.T) {
 				t.Errorf("error %q does not mention %q", err, tt.wantError)
 			}
 		})
+	}
+}
+
+// TestHeartbeatDetectBoundaryAccepted pins the exact boundary of the 7.6
+// invariant: heartbeat_seconds*1.5 == detect_seconds*2 must be accepted (the
+// check is strictly-less, not less-or-equal), and the defaults comfortably
+// clear it.
+func TestHeartbeatDetectBoundaryAccepted(t *testing.T) {
+	// 4*1.5 == 3*2 == 6: right at the boundary, must not be rejected.
+	cfg, err := Parse([]byte(minimal + "poll:\n  detect_seconds: 3\n  heartbeat_seconds: 4\n"))
+	if err != nil {
+		t.Fatalf("boundary heartbeat/detect ratio rejected: %v", err)
+	}
+	if cfg.Poll.HeartbeatSeconds != 4 || cfg.Poll.DetectSeconds != 3 {
+		t.Fatalf("unexpected poll config: %+v", cfg.Poll)
+	}
+
+	// The shipped defaults (detect=2, heartbeat=60) must also stay well
+	// clear of the boundary.
+	if err := Defaults().Validate(); err == nil {
+		t.Fatal("Defaults() alone is missing required fields and should fail Validate for other reasons")
+	} else if strings.Contains(err.Error(), "too low relative to") {
+		t.Errorf("default poll settings must not trip the heartbeat/detect invariant: %v", err)
 	}
 }
 
@@ -266,6 +310,77 @@ func TestLiteralPasswordIsFlagged(t *testing.T) {
 	}
 	if !cfg.PasswordIsLiteral() {
 		t.Error("a password written into the file should be reported as literal")
+	}
+}
+
+// TestTLSCertAndKeyBothSetIsAccepted is the accept-side counterpart to the
+// "cert_file without key_file"/"key_file without cert_file" rejections in
+// TestValidationRejects: both set together is a valid, common configuration
+// (mutual TLS) and must not trip the same cross-field check.
+func TestTLSCertAndKeyBothSetIsAccepted(t *testing.T) {
+	cfg, err := Parse([]byte(minimal + "  tls:\n    cert_file: client.pem\n    key_file: client-key.pem\n"))
+	if err != nil {
+		t.Fatalf("cert_file and key_file set together should be valid: %v", err)
+	}
+	if cfg.MQTT.TLS.CertFile != "client.pem" || cfg.MQTT.TLS.KeyFile != "client-key.pem" {
+		t.Errorf("tls cert/key = %q/%q, want client.pem/client-key.pem", cfg.MQTT.TLS.CertFile, cfg.MQTT.TLS.KeyFile)
+	}
+}
+
+// TestTLSFieldsParsed confirms ca_file, cert_file and key_file round-trip
+// through Parse unresolved (Parse has no config path to resolve them
+// against — that is Load's job, covered by TestLoadResolvesTLSPathsRelativeToConfigDir).
+func TestTLSFieldsParsed(t *testing.T) {
+	yaml := minimal + "  tls:\n    enabled: true\n    ca_file: ca.pem\n" +
+		"    cert_file: client.pem\n    key_file: client-key.pem\n"
+	cfg, err := Parse([]byte(yaml))
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+	if !cfg.MQTT.TLS.Enabled {
+		t.Error("tls.enabled = false, want true")
+	}
+	if cfg.MQTT.TLS.CAFile != "ca.pem" {
+		t.Errorf("tls.ca_file = %q, want ca.pem", cfg.MQTT.TLS.CAFile)
+	}
+	if cfg.MQTT.TLS.CertFile != "client.pem" {
+		t.Errorf("tls.cert_file = %q, want client.pem", cfg.MQTT.TLS.CertFile)
+	}
+	if cfg.MQTT.TLS.KeyFile != "client-key.pem" {
+		t.Errorf("tls.key_file = %q, want client-key.pem", cfg.MQTT.TLS.KeyFile)
+	}
+}
+
+// TestLoadResolvesTLSPathsRelativeToConfigDir is the 7.5 repro: a relative
+// ca_file/cert_file/key_file must resolve against the directory holding
+// config.yaml, not the process's working directory — the same convention
+// cmd/callmqtt already applies to rules_file (see loadRules). An already
+// absolute path must be left alone.
+func TestLoadResolvesTLSPathsRelativeToConfigDir(t *testing.T) {
+	dir := t.TempDir()
+	configPath := dir + string(os.PathSeparator) + "config.yaml"
+
+	absKey := dir + string(os.PathSeparator) + "somewhere-else" + string(os.PathSeparator) + "client-key.pem"
+	body := minimal + "  tls:\n    ca_file: ca.pem\n    cert_file: certs/client.pem\n    key_file: " + absKey + "\n"
+	if err := os.WriteFile(configPath, []byte(body), 0o600); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+
+	cfg, err := Load(configPath)
+	if err != nil {
+		t.Fatalf("load: %v", err)
+	}
+
+	wantCA := dir + string(os.PathSeparator) + "ca.pem"
+	if cfg.MQTT.TLS.CAFile != wantCA {
+		t.Errorf("tls.ca_file = %q, want %q (relative to config dir)", cfg.MQTT.TLS.CAFile, wantCA)
+	}
+	wantCert := dir + string(os.PathSeparator) + "certs" + string(os.PathSeparator) + "client.pem"
+	if cfg.MQTT.TLS.CertFile != wantCert {
+		t.Errorf("tls.cert_file = %q, want %q (relative to config dir)", cfg.MQTT.TLS.CertFile, wantCert)
+	}
+	if cfg.MQTT.TLS.KeyFile != absKey {
+		t.Errorf("tls.key_file = %q, want %q (an absolute path must be left alone)", cfg.MQTT.TLS.KeyFile, absKey)
 	}
 }
 
@@ -298,10 +413,35 @@ func TestSlugify(t *testing.T) {
 		{"my pc.local", "my-pc-local"},
 		{"--weird--", "weird"},
 		{"", ""},
+		// 7.7 repro: a long run of nothing but separators must collapse to
+		// nothing, not a long run of hyphens, and must not be quadratically
+		// slow to produce (see BenchmarkSlugify).
+		{strings.Repeat("!", 10000), ""},
+		// A separator run in the middle of two alnum stretches still
+		// collapses to exactly one hyphen.
+		{"a" + strings.Repeat("!", 500) + "b", "a-b"},
 	}
 	for _, tt := range tests {
-		if got := slugify(tt.in); got != tt.want {
-			t.Errorf("slugify(%q) = %q, want %q", tt.in, got, tt.want)
+		got := slugify(tt.in)
+		want := tt.want
+		if got != want {
+			// Truncate long inputs/outputs in the failure message so it stays
+			// readable.
+			t.Errorf("slugify(%.40q...) = %.40q, want %.40q", tt.in, got, want)
 		}
+	}
+}
+
+// BenchmarkSlugify demonstrates the 7.7 fix: slugifying a long run of
+// separator characters must be linear, not quadratic, in input length. Run
+// with `go test ./internal/config/... -bench=Slugify -benchtime=1x` — there
+// is no CI gate on the result, but it should complete essentially instantly
+// even at this size, where the old strings.Builder.String()-per-rune
+// implementation would have been visibly slow.
+func BenchmarkSlugify(b *testing.B) {
+	input := strings.Repeat("!", 10000)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		slugify(input)
 	}
 }

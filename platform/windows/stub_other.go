@@ -24,13 +24,13 @@ func VisibleWindows() []WindowInfo {
 }
 
 // AppsUsingMicrophone is unimplemented outside Windows.
-func AppsUsingMicrophone() []string {
+func AppsUsingMicrophone(map[uint32]string) []string {
 	slog.Debug("AppsUsingMicrophone: unsupported platform")
 	return nil
 }
 
 // AppsUsingWebcam is unimplemented outside Windows.
-func AppsUsingWebcam() []string {
+func AppsUsingWebcam(map[uint32]string) []string {
 	slog.Debug("AppsUsingWebcam: unsupported platform")
 	return nil
 }
