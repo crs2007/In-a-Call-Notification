@@ -37,6 +37,15 @@ const (
 	Offline = "offline"
 )
 
+// publishTimeout bounds how long a single publish may block waiting for the
+// broker's acknowledgement, regardless of whatever ctx the caller happened to
+// pass in. The engine's poll loop calls PublishState once per tick; without
+// this bound a half-open socket could stall that call (and everything behind
+// it) indefinitely instead of failing after one tick-plus-5s. It is layered
+// on top of, not instead of, whatever deadline the caller's own ctx already
+// carries: context.WithTimeout always honours the earlier of the two.
+const publishTimeout = 5 * time.Second
+
 // Payload is the body of a state message.
 //
 // It carries the call state and nothing that could identify a meeting. No
@@ -121,6 +130,19 @@ func New(ctx context.Context, opts Options) (*Client, error) {
 
 		ClientConfig: paho.ClientConfig{
 			ClientID: cfg.MQTT.ClientID,
+			// PacketTimeout bounds how long paho itself waits for a QoS
+			// 1/2 PUBACK before giving up, independent of the ctx-based
+			// publishTimeout above. The two are complementary rather than
+			// redundant: publishTimeout bounds the call site (every
+			// publish, regardless of which paho internals are involved),
+			// while PacketTimeout is protocol-level and catches a stuck
+			// PUBACK even on code paths that don't route through
+			// Client.publish. It defaults to 10s if left unset, which is
+			// longer than the 5s publishTimeout already guarantees, so an
+			// unset value here would never actually fire first; matching
+			// it to publishTimeout keeps the two guards in step instead of
+			// carrying a second, looser number that could drift.
+			PacketTimeout: publishTimeout,
 			OnClientError: func(err error) {
 				c.log.Warn("mqtt client error", "error", err)
 			},
@@ -218,6 +240,9 @@ func (c *Client) Close(ctx context.Context) error {
 }
 
 func (c *Client) publish(ctx context.Context, cm *autopaho.ConnectionManager, topic string, body []byte, retain bool) error {
+	ctx, cancel := boundedPublishContext(ctx)
+	defer cancel()
+
 	_, err := cm.Publish(ctx, &paho.Publish{
 		Topic:   topic,
 		Payload: body,
@@ -228,4 +253,14 @@ func (c *Client) publish(ctx context.Context, cm *autopaho.ConnectionManager, to
 		return fmt.Errorf("publish to %s: %w", topic, err)
 	}
 	return nil
+}
+
+// boundedPublishContext derives the ctx actually used for a single publish
+// call. It exists as its own function so the bound can be asserted on in a
+// test without needing a live broker connection: context.WithTimeout already
+// takes whichever of the caller's own deadline and publishTimeout is sooner,
+// so this never lengthens a caller-supplied deadline, only ever shortens an
+// absent or overly generous one.
+func boundedPublishContext(ctx context.Context) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(ctx, publishTimeout)
 }

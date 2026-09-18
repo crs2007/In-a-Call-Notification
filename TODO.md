@@ -401,7 +401,7 @@ Both are parsed, validated, documented, and never read. Pick per field:
 
 ## Phase 5 — Performance
 
-### [ ] 5.1 Observe the platform once per tick, not once per detector
+### [x] 5.1 Observe the platform once per tick, not once per detector
 
 **Touches:** `internal/detectors/detectors.go`, `internal/engine/engine.go`
 (only if you choose B).
@@ -415,40 +415,120 @@ Both are parsed, validated, documented, and never read. Pick per field:
   `[]DetectionResult`; `model.Detector` becomes `Detect(ctx)
   []DetectionResult`. Touches more but removes the fake independence.
 
-- [ ] Implement A now; note B as a follow-up.
-- [ ] Test: fake `Snapshot` funcs count invocations; three detectors,
-      one poll → each platform func called exactly once.
+- [x] Implemented A, contained entirely to `internal/detectors/detectors.go`
+      (`engine.go` untouched). `New` builds one `*sharedObserver` (500ms TTL,
+      keyed on wall-clock time via the injected `now`, guarded by a
+      `sync.Mutex` in the same defensive style as `platform/windows`'s
+      `enumMu`) and hands the same pointer to every `*Detector` it builds.
+      `Detect` calls `d.shared.observe(d.snapshot)` instead of
+      `d.snapshot.observe()` directly; `model.Detector` and `Snapshot` are
+      both unchanged. B noted above as the not-taken cleaner alternative.
+- [x] `TestDetect_HysteresisHoldsActiveBetweenThresholds` swaps one
+      detector's `.snapshot` field three times against a clock that used to
+      be frozen (`fixedNow(time.Now())` captured once); with caching keyed
+      on elapsed wall-clock time, a frozen clock made steps 2 and 3 replay
+      step 1's cached observation. Fixed by changing that test's injected
+      clock to advance 1s (> the 500ms TTL) before each step, matching how
+      the real engine's `time.Now()` naturally advances between polls in
+      `buildDetectors` — each step is now correctly treated as a new poll
+      sweep rather than a cache hit.
+- [x] **Test:** `TestNew_SharesOneObservationAcrossDetectorsInOnePoll` —
+      three detectors (teams/zoom/slack) from one `New()` call, all four
+      `Snapshot` funcs wired to atomic counters; one poll sweep (`Detect` on
+      each) asserts every counter is exactly 1, not 3.
 
-### [ ] 5.2 Replace gopsutil in `ProcessNames` with one Toolhelp32 snapshot
+**Done when:** `go test ./internal/detectors/... ./internal/engine/...`
+passes. **Done** — `go vet` and `go test` both clean. `-race` could not be
+run in this sandbox (`CGO_ENABLED=0`, no C compiler); needs confirming on
+Windows CI.
+
+### [x] 5.2 Replace gopsutil in `ProcessNames` with one Toolhelp32 snapshot
 
 **Touches:** `platform/windows/process.go`, `go.mod` (drop gopsutil if
 `cmd/probe` doesn't need it either).
 
-- [ ] `CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0)` +
+- [x] `CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0)` +
       `Process32First/Next` from `golang.org/x/sys/windows`; ~25 lines.
-      Names come from `ProcessEntry32.ExeFile`. No `OpenProcess` at all.
-- [ ] Run `go run ./cmd/probe --count 1` before/after; the output must be
-      identical.
+      Names come from `ProcessEntry32.ExeFile` (`[MAX_PATH]uint16`, trimmed
+      at the first NUL via a new `exeFileToString` helper). No `OpenProcess`
+      call anywhere. Snapshot handle closed via `defer windows.CloseHandle`.
+      A failed `CreateToolhelp32Snapshot`/`Process32First` logs at
+      `slog.Debug` and returns an empty map, matching the prior "never a
+      failure" contract.
+- [x] `github.com/shirou/gopsutil/v4` removed from `go.mod`; `go mod tidy`
+      also dropped its now-unused transitive deps (`ebitengine/purego`,
+      `go-ole/go-ole`, `lufia/plan9stats`, `power-devops/perfstat`,
+      `tklauser/go-sysconf`, `tklauser/numcpus`, `yusufpapurcu/wmi`).
+      `grep -rn gopsutil` across the repo now returns nothing.
+- [x] `go run ./cmd/probe --count 1` compared before/after: same header,
+      same `[windows] N visible` / `pid=... proc=... title=...` formatting
+      and ordering, same `[microphone]`/`[webcam]` sections. Every PID
+      present before the change resolved to the same process name after;
+      the only diffs (a couple of extra window rows, an unread-counter
+      tick) were real desktop activity between the two runs, not a
+      regression.
+- [x] **Test:** `TestProcessNamesIncludesSelf` (new,
+      `platform/windows/process_test.go`) — the current process's own PID
+      resolves to a non-empty name.
 
-### [ ] 5.3 Bound every publish
+**Done when:** `go build/vet/test ./...` clean and probe output matches.
+**Done** — clean on both counts. `-race` could not be run in this sandbox
+(no C compiler); needs confirming on Windows CI.
+
+### [x] 5.3 Bound every publish
 
 **Touches:** `internal/mqtt/client.go`.
 
-- [ ] In `Client.publish`, wrap ctx with `context.WithTimeout(ctx, 5s)`
-      (constant, documented). The engine's poll loop can then never stall
-      more than one tick-plus-5s on a half-open socket.
-- [ ] Consider `KeepAlive: 20` → also set `paho.ClientConfig`'s
-      `PacketTimeout` so a stuck PUBACK is detected independently.
+- [x] `Client.publish` now derives its ctx via `boundedPublishContext`,
+      wrapping the caller's ctx with `context.WithTimeout(ctx,
+      publishTimeout)` (`publishTimeout = 5 * time.Second`, a documented
+      package constant). Factored into its own function purely so the
+      bound is unit-testable without a live broker connection.
+      `context.WithTimeout` always honours whichever deadline is sooner, so
+      this only ever shortens an absent/looser caller deadline, never
+      lengthens a tighter one. `New`'s connection-lifetime `ctx` handling
+      (autopaho's own `NewConnection(ctx, ...)`) is untouched — this is
+      purely the per-call publish path.
+- [x] Added `PacketTimeout: publishTimeout` to `paho.ClientConfig`
+      (confirmed the field exists and is what paho itself uses to bound a
+      QoS 1/2 PUBACK wait, independent of the caller's ctx — defaults to
+      10s if unset, which is looser than the new 5s bound). Kept in step
+      with `publishTimeout` rather than carrying two independent numbers
+      that could drift; it's a second, protocol-level guard that still
+      fires even if a future refactor ever bypassed `Client.publish`'s own
+      wrapper, in the same belt-and-suspenders spirit as this package's
+      other four independent offline-state guards.
+- [x] **Tests** (new `internal/mqtt/client_test.go` — no existing seam for
+      faking `autopaho.ConnectionManager`, and a hand-rolled fake MQTT
+      broker was judged out of scope for one test):
+      `TestPublishTimeoutConstant` pins the 5s value;
+      `TestBoundedPublishContextBoundsAnUnboundedCtx` asserts an otherwise-
+      unbounded `context.Background()` gets a deadline within
+      `publishTimeout`; `TestBoundedPublishContextNeverLoosensACallersDeadline`
+      confirms a tighter caller deadline (50ms) still fires on schedule.
 
-### [ ] 5.4 Log file growth
+**Done when:** `go test ./internal/mqtt/...` passes. **Done** — all tests
+pass, `go vet` clean.
+
+### [x] 5.4 Log file growth
 
 **Touches:** `cmd/callmqtt/main.go`.
 
-- [ ] Simplest adequate: on open, if the file is > 5 MB, rename to
-      `callmqtt.log.1` (overwrite) and start fresh. No dependency, one
-      generation of history. Document in `example.yaml`.
-- [ ] Combined with 3.1's rate-limited retry log, the broker-down case no
-      longer writes one line per 2s.
+- [x] `newLogger` calls `rotateLogIfLarge` before opening the log file: if
+      the existing file is ≥ `maxLogSize` (5 MB), it is renamed to
+      `<file>.1` (`os.Rename`, which overwrites any previous generation on
+      both Windows and POSIX) before a fresh file is opened. One
+      generation of history is kept; a missing file is not an error.
+      Documented in `example.yaml` next to `logging.file`.
+- [x] Combined with 3.1's rate-limited retry log, the broker-down case no
+      longer writes one line per 2s, so this mainly guards long uptimes
+      and `debug`-level logging.
+- [x] **Repro:** `TestRotateLogIfLarge` in `cmd/callmqtt/main_test.go` —
+      missing file is a no-op, a small file is left alone, an oversized
+      file is rotated and overwrites a stale `.1`, with byte-for-byte
+      content preserved in the rotated file.
+
+**Done when:** `go test ./cmd/callmqtt/...` passes. **Done.**
 
 ---
 

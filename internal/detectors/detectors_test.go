@@ -2,6 +2,7 @@ package detectors
 
 import (
 	"context"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -243,7 +244,16 @@ rules:
 	// obsC: process present only, no window match, no mic -> 0.25.
 	obsC := fakeSnapshot([]platformwindows.WindowInfo{process}, procNames, nil, nil)
 
-	dets := New(cfg, 0.70, 0.30, allEnabled, obsA, fixedNow(time.Now()))
+	// clock is a mutable clock, advanced between steps below so each one
+	// lands outside sharedObserverTTL and is treated as a genuinely new poll
+	// rather than replaying the cached Observation from the previous step.
+	// The real engine gets this for free from time.Now() advancing between
+	// ticks (see cmd/callmqtt/main.go's buildDetectors call); a frozen
+	// injected clock has to fake that advance explicitly.
+	clock := time.Now()
+	now := func() time.Time { return clock }
+
+	dets := New(cfg, 0.70, 0.30, allEnabled, obsA, now)
 	if len(dets) != 1 {
 		t.Fatalf("got %d detectors, want 1", len(dets))
 	}
@@ -264,6 +274,7 @@ rules:
 	}
 
 	for _, step := range steps {
+		clock = clock.Add(time.Second)
 		d.snapshot = step.snap
 		result := d.Detect(context.Background())
 		if result.Confidence != step.wantConfid {
@@ -271,6 +282,79 @@ rules:
 		}
 		if result.State != step.wantState {
 			t.Errorf("%s: State = %v, want %v", step.name, result.State, step.wantState)
+		}
+	}
+}
+
+// TestNew_SharesOneObservationAcrossDetectorsInOnePoll is the regression
+// test for TODO 5.1: three detectors built by one New call, each Detect
+// called once (one poll sweep), must together trigger every platform
+// function exactly once, not once per detector.
+func TestNew_SharesOneObservationAcrossDetectorsInOnePoll(t *testing.T) {
+	const threeAppRulesYAML = `
+rules:
+  - app: teams
+    process_names: ["ms-teams.exe"]
+    window_include_regex: ["Meeting"]
+    weights:
+      process: 0.2
+      window: 0.6
+  - app: zoom
+    process_names: ["zoom.exe"]
+    window_include_regex: ["Zoom Meeting"]
+    weights:
+      process: 0.2
+      window: 0.6
+  - app: slack
+    process_names: ["slack.exe"]
+    window_include_regex: ["Huddle"]
+    weights:
+      process: 0.2
+      window: 0.6
+`
+	cfg, err := rules.Load([]byte(threeAppRulesYAML))
+	if err != nil {
+		t.Fatalf("load rules: %v", err)
+	}
+
+	var windowsCalls, procCalls, micCalls, camCalls int32
+	snap := Snapshot{
+		VisibleWindows: func() []platformwindows.WindowInfo {
+			atomic.AddInt32(&windowsCalls, 1)
+			return nil
+		},
+		ProcessNames: func() map[uint32]string {
+			atomic.AddInt32(&procCalls, 1)
+			return nil
+		},
+		AppsUsingMicrophone: func() []string {
+			atomic.AddInt32(&micCalls, 1)
+			return nil
+		},
+		AppsUsingWebcam: func() []string {
+			atomic.AddInt32(&camCalls, 1)
+			return nil
+		},
+	}
+
+	dets := New(cfg, 0.5, 0.3, allEnabled, snap, fixedNow(time.Now()))
+	if len(dets) != 3 {
+		t.Fatalf("got %d detectors, want 3", len(dets))
+	}
+
+	// One poll sweep: the engine calls Detect on every detector in turn.
+	for _, d := range dets {
+		d.Detect(context.Background())
+	}
+
+	for name, got := range map[string]int32{
+		"VisibleWindows":      atomic.LoadInt32(&windowsCalls),
+		"ProcessNames":        atomic.LoadInt32(&procCalls),
+		"AppsUsingMicrophone": atomic.LoadInt32(&micCalls),
+		"AppsUsingWebcam":     atomic.LoadInt32(&camCalls),
+	} {
+		if got != 1 {
+			t.Errorf("%s called %d times across 3 detectors' one poll sweep, want 1", name, got)
 		}
 	}
 }

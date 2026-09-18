@@ -325,9 +325,34 @@ func loadRules(cfg *config.Config, f flags) (*rules.Config, error) {
 	return rules.LoadFile(path)
 }
 
+// maxLogSize is the size threshold at which the log file is rotated. One
+// generation of history is kept (<file>.1); anything older is simply lost,
+// which is an acceptable tradeoff for a desktop agent's log and avoids
+// pulling in a rotation dependency for something this simple.
+const maxLogSize = 5 * 1024 * 1024
+
+// rotateLogIfLarge renames path to path+".1" (overwriting any previous
+// generation) when it has grown past maxLogSize. Without this, a broker
+// outage that keeps 3.1's retry warning firing every poll — or just a long
+// enough uptime — would grow the log file without bound.
+func rotateLogIfLarge(path string) error {
+	info, err := os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
+	}
+	if info.Size() < maxLogSize {
+		return nil
+	}
+	return os.Rename(path, path+".1")
+}
+
 // newLogger writes human-readable output to stderr and, when configured, JSON
 // to a log file. Info level records state transitions only, so the log stays
-// readable across a full working day.
+// readable across a full working day. The file is rotated (see
+// rotateLogIfLarge) before each open, so it never grows without bound.
 func newLogger(cfg *config.Config, debug bool) (*slog.Logger, func(), error) {
 	level := slog.LevelInfo
 	if debug {
@@ -351,6 +376,9 @@ func newLogger(cfg *config.Config, debug bool) (*slog.Logger, func(), error) {
 	if cfg.Logging.File != "" {
 		if err := os.MkdirAll(filepath.Dir(cfg.Logging.File), 0o755); err != nil {
 			return nil, nil, fmt.Errorf("create log directory: %w", err)
+		}
+		if err := rotateLogIfLarge(cfg.Logging.File); err != nil {
+			return nil, nil, fmt.Errorf("rotate log file: %w", err)
 		}
 		file, err := os.OpenFile(cfg.Logging.File, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 		if err != nil {

@@ -61,3 +61,7 @@ poll:
 
 logging:
   level: info
+  # Defaults to %APPDATA%\callmqtt\callmqtt.log. Rotated automatically once it
+  # passes 5 MB: the old file becomes callmqtt.log.1 (overwriting any previous
+  # one), and a fresh file is started. Only one generation of history is kept.
+  # file: callmqtt.log
