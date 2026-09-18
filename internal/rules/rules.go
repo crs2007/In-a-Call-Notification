@@ -66,15 +66,6 @@ type Weights struct {
 	// No fixture currently exercises this signal; it exists so a future
 	// capture can be wired in without a schema change.
 	Cam float64 `yaml:"cam"`
-
-	// AudioOut is the weight given to this app having an active audio
-	// playback stream, as determined by AudioOutProcessRegex matching an
-	// entry in the audio-out list. It exists for browser-based calls (Google
-	// Meet), where the mic is held and the tab title is identical in the
-	// pre-join lobby and in the call, and a running render stream is what
-	// tells them apart. Music players hold a render stream too, so like Mic
-	// it is never sufficient alone.
-	AudioOut float64 `yaml:"audio_out"`
 }
 
 // Rule is the on-disk (YAML) description of how to detect one application.
@@ -108,12 +99,6 @@ type Rule struct {
 	// CamProcessRegex is the webcam equivalent of MicProcessRegex.
 	CamProcessRegex []string `yaml:"cam_process_regex,omitempty"`
 
-	// AudioOutProcessRegex are patterns tested against each entry of the
-	// audio-out list (executable names of processes with an active playback
-	// stream, e.g. "chrome.exe"). A match attributes audio playback to this
-	// app.
-	AudioOutProcessRegex []string `yaml:"audio_out_process_regex,omitempty"`
-
 	Weights Weights `yaml:"weights"`
 }
 
@@ -122,11 +107,10 @@ type Rule struct {
 type CompiledRule struct {
 	Rule
 
-	includeRe  []*regexp.Regexp
-	excludeRe  []*regexp.Regexp
-	micRe      []*regexp.Regexp
-	camRe      []*regexp.Regexp
-	audioOutRe []*regexp.Regexp
+	includeRe []*regexp.Regexp
+	excludeRe []*regexp.Regexp
+	micRe     []*regexp.Regexp
+	camRe     []*regexp.Regexp
 }
 
 // Config is a loaded, compiled set of rules, one per application.
@@ -142,15 +126,12 @@ type WindowObservation struct {
 }
 
 // Observation is everything a rule needs to score one poll: the visible
-// windows, the raw identifiers of whatever currently holds the microphone
-// and webcam, and the names of whatever is currently playing audio.
+// windows, and the raw identifiers of whatever currently holds the
+// microphone and webcam.
 type Observation struct {
 	Windows  []WindowObservation
 	MicInUse []string
 	CamInUse []string
-	// AudioOutInUse lists processes with an active playback stream. Nil when
-	// the platform offers no such signal, which simply contributes nothing.
-	AudioOutInUse []string
 }
 
 // LoadFile reads, parses and compiles a rules document from disk.
@@ -206,11 +187,7 @@ func compile(r Rule) (CompiledRule, error) {
 	if err != nil {
 		return CompiledRule{}, err
 	}
-	audioOut, err := compileAll("audio_out_process_regex", r.AudioOutProcessRegex)
-	if err != nil {
-		return CompiledRule{}, err
-	}
-	return CompiledRule{Rule: r, includeRe: include, excludeRe: exclude, micRe: mic, camRe: cam, audioOutRe: audioOut}, nil
+	return CompiledRule{Rule: r, includeRe: include, excludeRe: exclude, micRe: mic, camRe: cam}, nil
 }
 
 func compileAll(field string, patterns []string) ([]*regexp.Regexp, error) {
@@ -319,11 +296,6 @@ func (r CompiledRule) Evaluate(obs Observation, activeThreshold float64, now tim
 	if len(r.camRe) > 0 && matchesAny(r.camRe, obs.CamInUse) {
 		score += r.Weights.Cam
 		reasons = append(reasons, r.App+": webcam in use")
-	}
-
-	if len(r.audioOutRe) > 0 && matchesAny(r.audioOutRe, obs.AudioOutInUse) {
-		score += r.Weights.AudioOut
-		reasons = append(reasons, r.App+": audio playback active")
 	}
 
 	confidence := model.ClampConfidence(score)

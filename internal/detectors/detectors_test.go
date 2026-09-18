@@ -362,8 +362,7 @@ rules:
 func TestWindowsSnapshot_ReturnsCallablePlatformFunctions(t *testing.T) {
 	snap := WindowsSnapshot()
 	if snap.VisibleWindows == nil || snap.ProcessNames == nil ||
-		snap.AppsUsingMicrophone == nil || snap.AppsUsingWebcam == nil ||
-		snap.AppsRenderingAudio == nil {
+		snap.AppsUsingMicrophone == nil || snap.AppsUsingWebcam == nil {
 		t.Fatal("WindowsSnapshot left a nil field")
 	}
 	// Calling these must not panic even on a platform without the real
@@ -372,49 +371,4 @@ func TestWindowsSnapshot_ReturnsCallablePlatformFunctions(t *testing.T) {
 	names := snap.ProcessNames()
 	_ = snap.AppsUsingMicrophone(names)
 	_ = snap.AppsUsingWebcam(names)
-	_ = snap.AppsRenderingAudio(names)
-}
-
-// The audio-out signal is optional on Snapshot: a nil AppsRenderingAudio
-// means "no playback evidence", and a non-nil one is threaded through to the
-// rule's audio_out_process_regex exactly like the mic list is.
-func TestObserve_AudioOutIsOptionalAndThreadedThrough(t *testing.T) {
-	const meetRulesYAML = `
-rules:
-  - app: meet
-    process_names: ["chrome.exe"]
-    window_include_regex: ["^Meet - "]
-    mic_process_regex: ["chrome.exe"]
-    audio_out_process_regex: ["^chrome.exe$"]
-    weights:
-      process: 0.0
-      window: 0.25
-      mic: 0.25
-      audio_out: 0.25
-`
-	cfg, err := rules.Load([]byte(meetRulesYAML))
-	if err != nil {
-		t.Fatalf("load rules: %v", err)
-	}
-	wins := []platformwindows.WindowInfo{{PID: 1, Title: "Meet - abc-defg-hij - Google Chrome"}}
-	names := map[uint32]string{1: "chrome.exe"}
-
-	// Lobby-shaped: title + mic, no playback source at all.
-	without := fakeSnapshot(wins, names, []string{"chrome.exe"}, nil)
-	got := New(cfg, 0.70, 0.30, allEnabled, without, fixedNow(time.Now()))[0].Detect(context.Background())
-	if got.State != model.StateInactive || got.Confidence != 0.5 {
-		t.Fatalf("nil AppsRenderingAudio: state=%v confidence=%v, want inactive/0.5", got.State, got.Confidence)
-	}
-
-	with := without
-	with.AppsRenderingAudio = func(procNames map[uint32]string) []string {
-		if procNames[1] != "chrome.exe" {
-			t.Errorf("AppsRenderingAudio got procNames %v, want the ProcessNames map", procNames)
-		}
-		return []string{"chrome.exe"}
-	}
-	got = New(cfg, 0.70, 0.30, allEnabled, with, fixedNow(time.Now()))[0].Detect(context.Background())
-	if got.State != model.StateActive || got.Confidence != 0.75 {
-		t.Fatalf("with AppsRenderingAudio: state=%v confidence=%v, want active/0.75", got.State, got.Confidence)
-	}
 }

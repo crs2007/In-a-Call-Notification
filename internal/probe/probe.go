@@ -1,5 +1,5 @@
 // Package probe dumps the raw OS signals the detectors consume: every visible
-// window title, and every application holding the microphone or camera.
+// window title, and every application holding the microphone or camera or rendering audio.
 //
 // The output deliberately does no filtering and contains window titles, which
 // carry meeting names. It is opt-in diagnostics only and must never be wired
@@ -47,6 +47,7 @@ func Snapshot(w io.Writer) {
 	}{
 		{"microphone", platformwindows.AppsUsingMicrophone(names)},
 		{"webcam", platformwindows.AppsUsingWebcam(names)},
+		{"audio-out", platformwindows.AppsRenderingAudio(names)},
 	}
 	for _, d := range devices {
 		fmt.Fprintf(w, "[%s] %d in use\n", d.name, len(d.apps))
