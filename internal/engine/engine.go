@@ -82,10 +82,17 @@ type Options struct {
 }
 
 // New builds an engine. The network allow-list is compiled here so a malformed
-// rule fails at startup rather than at the first poll.
+// rule fails at startup rather than at the first poll. It is also checked
+// here against what opts.Checker can actually observe, so a rule that can
+// never match on this platform (SSID-only with no WLAN support, say) fails
+// startup too rather than leaving the bulb permanently dark with no
+// diagnostic.
 func New(opts Options) (*Engine, error) {
 	matcher, err := network.NewMatcher(opts.Config.AllowedNetworks)
 	if err != nil {
+		return nil, err
+	}
+	if err := network.CheckCapabilities(opts.Config.AllowedNetworks, opts.Checker.Capabilities()); err != nil {
 		return nil, err
 	}
 

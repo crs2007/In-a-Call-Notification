@@ -34,6 +34,12 @@ type Info struct {
 // Checker reports the current network. Implementations live in platform/.
 type Checker interface {
 	Current(ctx context.Context) ([]Info, error)
+
+	// Capabilities reports which Info fields this Checker can actually
+	// populate. A rule that only matches on a field the checker never fills
+	// in would silently never match, so callers use this to reject such
+	// rules up front instead. See CheckCapabilities.
+	Capabilities() Capabilities
 }
 
 // Matcher evaluates Info against the user's allow-list.

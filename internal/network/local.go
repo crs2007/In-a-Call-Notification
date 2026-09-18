@@ -5,7 +5,39 @@ import (
 	"fmt"
 	"net"
 	"net/netip"
+	"strings"
 )
+
+// virtualAdapterNames is a heuristic denylist of interface-name substrings
+// that mean "not a physical network path" on Windows: VPN split-tunnel
+// adapters, hypervisor host-only/NAT adapters, and personal-area-network
+// stacks. None of these tell you what network the machine is actually on —
+// a VMware NAT adapter reports the same subnet on every machine that has
+// VMware installed — so their addresses must never count as evidence for an
+// allow-list match. This is a name match, not a real classification: a
+// user-renamed adapter can dodge it, and a real adapter that happens to
+// contain one of these words would wrongly be skipped. The proper fix is
+// classifying by IfType/OperStatus via GetAdaptersAddresses on Windows
+// (platform/windows's job, filed as a follow-up); this list is the cheap,
+// platform-independent stopgap.
+var virtualAdapterNames = []string{
+	"vEthernet",
+	"VirtualBox Host-Only",
+	"VMware",
+	"Hyper-V",
+	"WSL",
+	"Loopback",
+	"Bluetooth",
+}
+
+func isVirtualAdapterName(name string) bool {
+	for _, virtual := range virtualAdapterNames {
+		if strings.Contains(strings.ToLower(name), strings.ToLower(virtual)) {
+			return true
+		}
+	}
+	return false
+}
 
 // LocalChecker reports the network using nothing but the standard library.
 //
@@ -34,10 +66,28 @@ func (LocalChecker) Current(context.Context) ([]Info, error) {
 	}), nil
 }
 
+// Capabilities reports that LocalChecker can only ever populate Prefix
+// (subnet) matching — SSID, BSSID and Gateway are never set by Current, so a
+// rule relying on any of those alone would never match. See
+// CheckCapabilities.
+func (LocalChecker) Capabilities() Capabilities {
+	return Capabilities{CIDR: true}
+}
+
 func infosForInterfaces(ifaces []net.Interface, addrs func(net.Interface) ([]net.Addr, error)) []Info {
 	var infos []Info
 	for _, iface := range ifaces {
 		if iface.Flags&net.FlagUp == 0 || iface.Flags&net.FlagLoopback != 0 {
+			continue
+		}
+		// FlagRunning means the adapter is actually carrying traffic, not
+		// merely administratively enabled — a Wi-Fi adapter with no AP
+		// joined is Up but not Running, and its address (if any) is not
+		// evidence of being on any particular network.
+		if iface.Flags&net.FlagRunning == 0 {
+			continue
+		}
+		if isVirtualAdapterName(iface.Name) {
 			continue
 		}
 

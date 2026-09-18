@@ -6,6 +6,7 @@ import (
 	"io"
 	"log/slog"
 	"net/netip"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -39,6 +40,12 @@ type fakeChecker struct {
 
 func (f *fakeChecker) Current(context.Context) ([]network.Info, error) {
 	return f.infos, f.err
+}
+
+// Capabilities mirrors LocalChecker's real behaviour: only subnet matching
+// is ever populated.
+func (f *fakeChecker) Capabilities() network.Capabilities {
+	return network.Capabilities{CIDR: true}
 }
 
 type fakePublisher struct {
@@ -536,5 +543,77 @@ mqtt:
 	}
 	if len(p.Apps) != 2 {
 		t.Errorf("apps = %v, want both active apps reported", p.Apps)
+	}
+}
+
+// New must reject a rule that can never match on the given Checker's
+// capabilities (TODO 6.1) — an ssids-only rule against a Checker that never
+// populates SSID is accepted by config parsing and by NewMatcher, but would
+// silently never fire.
+func TestNewRejectsRuleTheCheckerCanNeverMatch(t *testing.T) {
+	tests := []struct {
+		name    string
+		yaml    string
+		wantErr bool
+	}{
+		{
+			name: "ssids-only rule is rejected",
+			yaml: `
+allowed_networks:
+  - name: Home
+    ssids: ["Sharon-Home"]
+mqtt:
+  host: 192.168.1.10
+`,
+			wantErr: true,
+		},
+		{
+			name: "ssids plus cidrs is fine, cidrs still works",
+			yaml: `
+allowed_networks:
+  - name: Home
+    ssids: ["Sharon-Home"]
+    cidrs: ["192.168.1.0/24"]
+mqtt:
+  host: 192.168.1.10
+`,
+			wantErr: false,
+		},
+		{
+			name: "cidrs-only rule is fine",
+			yaml: `
+allowed_networks:
+  - name: Home
+    cidrs: ["192.168.1.0/24"]
+mqtt:
+  host: 192.168.1.10
+`,
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg, err := config.Parse([]byte(tt.yaml))
+			if err != nil {
+				t.Fatalf("config: %v", err)
+			}
+
+			_, err = New(Options{
+				Config:    cfg,
+				Logger:    slog.New(slog.NewTextHandler(io.Discard, nil)),
+				Checker:   &fakeChecker{infos: []network.Info{homeNetwork()}},
+				Publisher: &fakePublisher{},
+			})
+			if tt.wantErr && err == nil {
+				t.Fatal("New() = nil error, want a capability-rejection error")
+			}
+			if !tt.wantErr && err != nil {
+				t.Fatalf("New() = %v, want nil", err)
+			}
+			if tt.wantErr && err != nil && !strings.Contains(err.Error(), `rule "Home"`) {
+				t.Errorf("error %q does not name the offending rule", err.Error())
+			}
+		})
 	}
 }

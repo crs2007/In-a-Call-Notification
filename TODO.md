@@ -534,32 +534,116 @@ pass, `go vet` clean.
 
 ## Phase 6 — The network gate is weaker than it claims
 
-### [ ] 6.1 Reject rules that can never match
+### [x] 6.1 Reject rules that can never match
 
 **Touches:** `internal/config/config.go`, `internal/network/local.go`.
 
-- [ ] Expose from `network` what the current checker can populate
+- [x] Expose from `network` what the current checker can populate
       (`LocalChecker{}.Capabilities()` → `{CIDR: true, SSID: false, …}`).
-- [ ] `Validate` (or `engine.New`, which already compiles the matcher)
-      reports a rule whose *only* matchers are unsupported ("rule Home
-      matches on ssids only; SSID detection is not implemented on this
-      platform, add a cidrs entry"). A rule with `ssids` **and** `cidrs`
-      is fine.
+      Landed as `network.Capabilities{CIDR, SSID, BSSID, Gateway bool}` plus
+      a `Capabilities() Capabilities` method added directly to the
+      `network.Checker` interface (not a narrower optional-interface type
+      assertion — only three implementers existed, `LocalChecker` and two
+      test fakes, so widening the interface was the smaller, more honest
+      change: every `Checker` now has to say what it can actually see, not
+      just the one in production). `LocalChecker.Capabilities()` returns
+      `{CIDR: true}` — SSID, BSSID and Gateway are equally unsupported
+      today, not just SSID as the bullet above originally called out (see
+      `internal/network/local.go`'s `Current`/`infosForInterfaces`, which
+      never sets those three fields).
+- [x] Put the check in `engine.New`, not `config.Validate`, as the bullet
+      above suggested as the preferred seam: `New` already compiles the
+      matcher and holds `opts.Checker`, so it's the one place that has both
+      the rules and *this run's* checker without new plumbing. The actual
+      rule-vs-capability logic is the exported, unit-testable
+      `network.CheckCapabilities(rules []config.NetworkRule, caps
+      Capabilities) error` in the new `internal/network/capabilities.go` —
+      `config.Validate` doesn't know which checker will run, so it can't
+      make this judgment itself. `CheckCapabilities` reports every
+      offending rule at once (`errors.Join`, matching `Validate`'s own
+      convention), and the message matches the bullet's own example
+      verbatim for the ssids-only case: `rule "Home" matches on ssids only;
+      SSID detection is not implemented on this platform, add a cidrs
+      entry`. A rule mixing a supported and an unsupported matcher (e.g.
+      `ssids` + `cidrs`) passes, because the supported field alone is
+      enough for the rule to ever fire.
+- [x] Updated both existing `Checker` fakes
+      (`internal/engine/engine_test.go`, `internal/supervisor/supervisor_test.go`)
+      to implement `Capabilities() network.Capabilities { return
+      network.Capabilities{CIDR: true} }`, matching `LocalChecker`'s actual
+      behaviour rather than claiming more than the real checker can do.
+- [x] **Repro:** `internal/network/capabilities_test.go`
+      (`TestCheckCapabilities`) — table-driven: ssids-only, bssids-only, and
+      gateways-only rules are each rejected with a message naming the rule
+      and the missing capability; two unsupported matchers together
+      (`ssids`+`bssids`, no cidrs) are still rejected and both are named;
+      `ssids`+`cidrs` passes; `cidrs`-only passes; `gateways`-only passes
+      once the capability says `Gateway: true` (so the check is genuinely
+      keyed off the checker's capabilities, not hardcoded to "cidrs is the
+      only valid field"); a rule with no matchers at all is correctly left
+      to `config.Validate`, not this function. `internal/engine/engine_test.go`
+      (`TestNewRejectsRuleTheCheckerCanNeverMatch`) covers the wiring:
+      `engine.New` itself now rejects an ssids-only rule, accepts
+      ssids+cidrs, and accepts cidrs-only, against `fakeChecker`'s
+      `{CIDR: true}` capabilities.
 
-### [ ] 6.2 Stop treating virtual adapters as evidence
+**Done when:** `go build ./...`, `go vet ./...`, and `go test ./...` are
+clean, with and without `-tags tray`. **Done** — all four confirmed clean.
+`-race` could not be run in this sandbox (no C compiler, `CGO_ENABLED=0`),
+same limitation already noted for 3.2/3.3/5.2; still needs confirming on
+Windows CI, which has the toolchain.
+
+### [x] 6.2 Stop treating virtual adapters as evidence
 
 **Touches:** `internal/network/local.go`, `internal/network/local_test.go`.
 
-- [ ] Skip interfaces whose name matches the known virtual set on
+- [x] Skip interfaces whose name matches the known virtual set on
       Windows (`vEthernet`, `VirtualBox Host-Only`, `VMware`, `Hyper-V`,
       `WSL`, `Loopback`, `Bluetooth`) **and** interfaces without
       `FlagRunning`. Keep it a denylist with a comment; it's heuristics,
-      say so.
+      say so. Landed as a package-level `virtualAdapterNames` slice plus
+      `isVirtualAdapterName` (case-insensitive substring match) in
+      `internal/network/local.go`, with a comment written in the same style
+      as `platform/windows/windows.go`'s `enumMu` comment: it says plainly
+      that this is a name-based heuristic, not a real classification — a
+      renamed adapter dodges it, and a real adapter that happens to contain
+      one of these words would wrongly be skipped — and that the correct
+      fix is `platform/windows`'s `GetAdaptersAddresses`/`IfType`/
+      `OperStatus` follow-up (still open, see below), not this list.
+      `infosForInterfaces` now also skips any interface without
+      `net.FlagRunning` (administratively up but not actually carrying
+      traffic — e.g. a Wi-Fi adapter with no AP joined), documented inline
+      as distinct from the pre-existing `FlagUp`/`FlagLoopback` check.
+- [x] **Repro:** `internal/network/local_test.go` — updated the existing
+      `TestInfosForInterfaces` fixture's "connected" interfaces to also set
+      `FlagRunning` (they previously only set `FlagUp`, which would have
+      made the new `FlagRunning` check silently break that test rather than
+      exercise it) and added two new tests:
+      `TestInfosForInterfacesSkipsVirtualAndNonRunningAdapters` (one case
+      per denylist entry — `vEthernet (WSL)`, `VirtualBox Host-Only
+      Network`, `VMware Network Adapter VMnet8`, `Hyper-V Virtual Ethernet
+      Adapter`, a WSL-named adapter, `Bluetooth Network Connection`, a
+      lowercase `vmware` match to prove case-insensitivity, plus an
+      up-but-not-running Wi-Fi adapter) all report zero `Info`s despite
+      carrying a plausible private address; and
+      `TestInfosForInterfacesKeepsRealRunningAdapter`, asserting a genuine
+      up-and-running, non-denylisted adapter is unaffected by either new
+      check.
 - [ ] Better: Windows `GetAdaptersAddresses` gives `IfType` and
       `OperStatus`; filter to `IF_TYPE_ETHERNET_CSMACD` /
       `IF_TYPE_IEEE80211` with `IfOperStatusUp`. That's a real
       `platform/windows/network.go` and the `win-platform` agent's job.
-      Do the denylist now, file the proper version as a follow-up.
+      Do the denylist now, file the proper version as a follow-up. **Not
+      implemented here, by design** — this bullet is explicitly scoped to
+      `platform/windows` and the `win-platform` agent; it stays open and
+      unchecked as the tracked follow-up.
+
+**Done when:** `internal/network/local_test.go` covers both the denylist
+and the `FlagRunning` check via the existing `infosForInterfaces` seam
+(synthetic interfaces/flags, no real OS calls). **Done** — `go test
+./internal/network/...` is clean and includes both new tests; the
+`GetAdaptersAddresses`-based real classification remains a deliberate,
+tracked follow-up for `platform/windows`, not something silently dropped.
 
 ### [ ] 6.3 Document the honest threat model
 

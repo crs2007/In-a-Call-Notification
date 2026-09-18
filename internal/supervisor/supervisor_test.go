@@ -30,6 +30,12 @@ func (fakeChecker) Current(context.Context) ([]network.Info, error) {
 	return []network.Info{{Connected: true, LocalIP: netip.MustParseAddr("192.168.1.5")}}, nil
 }
 
+// Capabilities mirrors LocalChecker's real behaviour: only subnet matching
+// is ever populated.
+func (fakeChecker) Capabilities() network.Capabilities {
+	return network.Capabilities{CIDR: true}
+}
+
 // fakePublisher tracks whether it was ever closed and the ctx it was built
 // with, so tests can assert the old generation actually let go of its
 // broker connection and that its connection ctx was independent of the
