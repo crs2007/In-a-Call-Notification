@@ -28,7 +28,16 @@ at this size), coverage gates, Go version matrices.
 
 GoReleaser → `windows/amd64` + `windows/arm64` **zips** containing the exe,
 `configs/example.yaml` and the README. **No MSI installer in v0.1** — it costs a
-day and saves a user thirty seconds. Tag-triggered workflow on `v*`.
+day and saves a user thirty seconds.
+
+`release.yml` runs on **every push to `main`**: a `version` job computes the
+next semver tag from the latest `v*` tag (patch by default, `[minor]` /
+`[major]` commit-message markers, `[skip release]` to opt out, pre-releases
+promoted to their base version), pushes it, and the `goreleaser` job — gated by
+`go vet` + `go test -race` — builds and publishes the assets for that tag.
+Hand-pushed `v*` tags (e.g. `-alpha.N`) still release as-is. Keep these three
+in sync whenever the flow changes: `release.yml`, the *Release process*
+section of `CLAUDE.md`, and the *Contributing* paragraph in README.
 
 ## Documentation
 

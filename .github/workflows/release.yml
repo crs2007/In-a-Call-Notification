@@ -1,26 +1,148 @@
 name: Release
 
+# Every push to main cuts a release: the `version` job computes the next
+# semver tag from the latest existing v* tag (patch bump by default, `[minor]`
+# or `[major]` in the head commit message for a bigger jump, `[skip release]`
+# to publish nothing), pushes that tag, and the `goreleaser` job builds and
+# publishes the assets for it. Pushing a v* tag by hand still works and takes
+# the tag as-is (that is how a -alpha.N / -rc.N pre-release is cut).
+#
+# The tag is pushed with GITHUB_TOKEN, which deliberately does not fire a
+# second run of this workflow — the same run carries on to publish.
 on:
   push:
+    branches: [main]
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Which part of the version to bump
+        type: choice
+        default: patch
+        options: [patch, minor, major]
 
 permissions:
   contents: write
 
+# Releases must be serialised: two quick pushes to main would otherwise race
+# to compute the same "next" tag.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
-  goreleaser:
-    name: goreleaser
-    runs-on: windows-latest
+  version:
+    name: compute release tag
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.next.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           fetch-tags: true
 
+      - name: Determine and push the release tag
+        id: next
+        env:
+          BUMP_INPUT: ${{ inputs.bump }}
+        run: |
+          set -euo pipefail
+          # versionsort.suffix=- makes v0.1.0-alpha.1 sort *before* v0.1.0,
+          # as semver requires; git's default puts suffixed tags after.
+          git config versionsort.suffix -
+
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            echo "Tag push: releasing $GITHUB_REF_NAME as-is"
+            echo "tag=$GITHUB_REF_NAME" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          existing=$(git tag --points-at HEAD --list 'v*' | head -n1)
+          if [ -n "$existing" ]; then
+            echo "HEAD is already tagged $existing; the tag push releases it"
+            echo "tag=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          message=$(git log -1 --pretty=%B)
+          if grep -qiE '\[(skip|no) release\]' <<<"$message"; then
+            echo "Commit message asks to skip the release"
+            echo "tag=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          bump=${BUMP_INPUT:-}
+          if [ -z "$bump" ]; then
+            bump=patch
+            grep -qiE '\[minor\]' <<<"$message" && bump=minor
+            grep -qiE '\[major\]' <<<"$message" && bump=major
+          fi
+
+          latest=$(git tag --list 'v[0-9]*' --sort=-v:refname | head -n1)
+          latest=${latest:-v0.0.0}
+          core=${latest#v}
+          prerelease=""
+          if [[ "$core" == *-* ]]; then
+            prerelease=${core#*-}
+            core=${core%%-*}
+          fi
+          IFS=. read -r major minor patch <<<"$core"
+
+          case "$bump" in
+            major) major=$((major + 1)); minor=0; patch=0 ;;
+            minor) minor=$((minor + 1)); patch=0 ;;
+            patch)
+              # A pre-release (v0.1.0-alpha.1) is promoted to its base
+              # version (v0.1.0) rather than skipping past it.
+              if [ -z "$prerelease" ]; then
+                patch=$((patch + 1))
+              fi
+              ;;
+            *) echo "unknown bump '$bump'" >&2; exit 1 ;;
+          esac
+          next="v$major.$minor.$patch"
+
+          if git rev-parse -q --verify "refs/tags/$next" >/dev/null; then
+            echo "computed tag $next already exists" >&2
+            exit 1
+          fi
+
+          echo "latest=$latest bump=$bump next=$next"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$next" -m "Release $next"
+          git push origin "refs/tags/$next"
+          echo "tag=$next" >> "$GITHUB_OUTPUT"
+
+  goreleaser:
+    name: goreleaser
+    needs: version
+    if: needs.version.outputs.tag != ''
+    runs-on: windows-latest
+    env:
+      RELEASE_TAG: ${{ needs.version.outputs.tag }}
+      # Pin GoReleaser to the tag we just computed instead of letting it
+      # guess from `git describe`.
+      GORELEASER_CURRENT_TAG: ${{ needs.version.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.version.outputs.tag }}
+          fetch-depth: 0
+          fetch-tags: true
+
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
+
+      # Never publish a red build: the same gate CI runs, on the tagged commit.
+      - name: go vet
+        run: go vet ./...
+
+      - name: go test -race
+        run: go test -race ./...
 
       - name: Build release artifacts for version preflight
         uses: goreleaser/goreleaser-action@v6
@@ -33,8 +155,6 @@ jobs:
 
       - name: Verify the amd64 executable reports the release version
         shell: pwsh
-        env:
-          RELEASE_TAG: ${{ github.ref_name }}
         run: |
           $metadataFiles = @(Get-ChildItem -Path dist -Filter metadata.json -Recurse)
           $artifactFiles = @(Get-ChildItem -Path dist -Filter artifacts.json -Recurse)

@@ -336,8 +336,10 @@ go build -tags tray ./...      # tray build, as shipped
 go test -race ./...
 ```
 
-Releases are cut by pushing a `v*` tag; GoReleaser builds and publishes the
-archives. Open an issue first for anything beyond a rule tweak so the approach
+Every push to `main` is a release: the Release workflow computes the next
+semver tag (patch bump by default; `[minor]` / `[major]` in the commit message
+for a larger bump, `[skip release]` to publish nothing), pushes the tag, and
+GoReleaser builds and publishes the archives. Open an issue first for anything beyond a rule tweak so the approach
 can be agreed before you write code.
 
 ## FAQ / Troubleshooting
