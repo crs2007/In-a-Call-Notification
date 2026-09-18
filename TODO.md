@@ -378,10 +378,14 @@ Both are parsed, validated, documented, and never read. Pick per field:
       stateless and fixture-tested by ~15 call sites in `rules_test.go`,
       so the hysteresis memory (`wasActive bool`) lives on the long-lived
       `Detector` instance instead, which already wraps one `Evaluate` call
-      per poll. Once active, stays active until confidence drops *below*
-      `inactive_threshold`, not merely below `active_threshold`. This
-      directly addresses the Teams "generic title without mic" flicker
-      described in `rules.yaml`.
+      per poll. Once active, stays active while confidence is at or
+      above `inactive_threshold` *and* the app still holds the mic or
+      webcam (`DetectionResult.Signals.DeviceHeld()`). The device
+      condition was added for issue #2: every shipped rule's idle score
+      (Teams/Slack process + window = 0.60) sits above the floor, so a
+      confidence-only hold kept Teams `active` forever once the call
+      ended with any non-Chat tab open. The mid-call dip the hold was
+      built for (Meet tab switched away, mic held = 0.50) still holds.
 - [x] **Repro:** `TestDetect_HysteresisHoldsActiveBetweenThresholds` —
       confidence walks 0.85 → 0.60 → 0.25 (the 0.60 step isolated via a
       mic-only match, since a window match in this rule engine always

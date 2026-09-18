@@ -212,6 +212,16 @@ func TestTeamsInCall_IsActive(t *testing.T) {
 		if got.State != model.StateActive {
 			t.Errorf("snapshot %d: teams state = %v, confidence = %v, want active", i, got.State, got.Confidence)
 		}
+		// Signals must mirror Reasons one-for-one: the detector's hysteresis
+		// reads Signals, `diagnose` prints Reasons, and they must never
+		// disagree about what was matched.
+		want := model.MatchedSignals{Process: true, Window: true, Mic: true}
+		if got.Signals != want {
+			t.Errorf("snapshot %d: teams signals = %+v, want %+v (reasons %q)", i, got.Signals, want, got.Reasons)
+		}
+		if got.Signals.DeviceHeld() != true {
+			t.Errorf("snapshot %d: DeviceHeld() = false with mic matched", i)
+		}
 	}
 }
 

@@ -71,6 +71,10 @@ rules:
       mic: 0.25
       # process + window = 0.60, deliberately inactive for a title alone;
       # process + window + mic = 0.85 for a captured live call.
+      # 0.60 is above the 0.30 inactive floor, which is safe only because
+      # the detector's hold also requires the mic (or webcam) to still be
+      # held: the moment Teams releases it, an open Calendar/Activity tab
+      # reads inactive rather than pinning the light red (issue #2).
       # The bare "Meet | Microsoft Teams" utility window no longer matches
       # window_include_regex at all, so on its own it scores process-only
       # (0.20), well below the 0.70 active threshold.
@@ -161,8 +165,9 @@ rules:
   #
   #   lobby / in call (title + mic)      = 0.75  active
   #   in call, another tab in front      = 0.50  mic alone holds an active
-  #     (a browser shows only its active     call through hysteresis, but
-  #      tab's title)                        can never start one
+  #     (a browser shows only its active     call (above the floor and the
+  #      tab's title)                        device is still held), but can
+  #                                          never start one
   #   left the call (title lingers)      = 0.25  inactive: below the floor,
   #                                              so the light goes out on
   #                                              mic release, not tab close

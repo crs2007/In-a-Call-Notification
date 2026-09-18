@@ -205,9 +205,9 @@ rules:
 
 // TestDetect_HysteresisHoldsActiveBetweenThresholds walks one detector's
 // confidence 0.85 -> 0.60 -> 0.25 against a fixture rule crossing the
-// default active (0.70) and inactive (0.30) thresholds, and checks the
-// "Teams generic title without mic" flicker never reads Inactive until
-// confidence actually drops below inactiveThreshold.
+// default active (0.70) and inactive (0.30) thresholds, and checks that a
+// dip below activeThreshold while the mic is still held never reads
+// Inactive until confidence actually drops below inactiveThreshold.
 //
 // The middle step (0.60) uses a mic-only match rather than a window-only
 // one: in rules.go, hasWindowMatch requires the matching window's own
@@ -215,7 +215,8 @@ rules:
 // checks, so any observation that credits Window necessarily credits
 // Process too (0.25+0.60=0.85, never 0.60 alone). Mic evidence has no such
 // coupling (matchesAny only looks at the mic-in-use list), so it is what
-// isolates the middle confidence value here.
+// isolates the middle confidence value here - and, since issue #2, it is
+// also the signal the hold depends on.
 func TestDetect_HysteresisHoldsActiveBetweenThresholds(t *testing.T) {
 	const hysteresisRuleYAML = `
 rules:
@@ -371,4 +372,92 @@ func TestWindowsSnapshot_ReturnsCallablePlatformFunctions(t *testing.T) {
 	names := snap.ProcessNames()
 	_ = snap.AppsUsingMicrophone(names)
 	_ = snap.AppsUsingWebcam(names)
+}
+
+// TestDetect_HysteresisReleasesWhenDeviceReleased is the regression test
+// for issue #2 against the shipped rules and default thresholds: a Teams
+// call ends, the mic is released, but the main Teams window is left on a
+// tab whose title still matches the generic "| Microsoft Teams" include
+// pattern. That idle shape scores process 0.20 + window 0.40 = 0.60 -
+// above the 0.30 floor - and used to be held active forever, keeping the
+// light red until Teams was closed. The hold now also requires the app to
+// still hold a capture device, so the detector must read inactive on the
+// very first poll after the mic goes; the engine's exit debounce takes it
+// from there.
+//
+// The Meet half pins the behaviour the hold exists for: mid-call the user
+// switches the browser to another tab, the Meet title disappears, the mic
+// alone scores 0.50 - and that must still read active.
+func TestDetect_HysteresisReleasesWhenDeviceReleased(t *testing.T) {
+	cfg, err := rules.Default()
+	if err != nil {
+		t.Fatalf("load default rules: %v", err)
+	}
+
+	const (
+		teamsPID  = 10
+		chromePID = 20
+	)
+	procNames := map[uint32]string{teamsPID: "ms-teams.exe", chromePID: "chrome.exe"}
+	meeting := platformwindows.WindowInfo{PID: teamsPID, Title: "Meeting with Sharon Rimer | Microsoft Teams"}
+	calendar := platformwindows.WindowInfo{PID: teamsPID, Title: "Calendar | Contoso | Microsoft Teams"}
+	// Teams always keeps this excluded utility window open (see rules.yaml);
+	// it keeps the process visible without contributing window evidence.
+	meetUtility := platformwindows.WindowInfo{PID: teamsPID, Title: "Meet | Microsoft Teams"}
+	meetTab := platformwindows.WindowInfo{PID: chromePID, Title: "Meet - abc-defg-hij - Google Chrome"}
+	otherTab := platformwindows.WindowInfo{PID: chromePID, Title: "Inbox - Gmail - Google Chrome"}
+
+	teamsMic := []string{"MSTeams_8wekyb3d8bbwe"}
+	chromeMic := []string{`C:\Program Files (x86)\Google\Chrome\Application\chrome.exe`}
+
+	clock := time.Now()
+	now := func() time.Time { return clock }
+
+	byApp := map[string]*Detector{}
+	for _, det := range New(cfg, 0.70, 0.30, allEnabled, fakeSnapshot(nil, nil, nil, nil), now) {
+		d, ok := det.(*Detector)
+		if !ok {
+			t.Fatalf("detector is %T, want *Detector", det)
+		}
+		byApp[d.App()] = d
+	}
+	for _, app := range []string{"teams", "meet"} {
+		if byApp[app] == nil {
+			t.Fatalf("no %s detector built from the shipped rules", app)
+		}
+	}
+
+	steps := []struct {
+		name      string
+		app       string
+		snap      Snapshot
+		wantState model.CallState
+		wantConf  float64
+	}{
+		// Teams: in call, then leave with the client parked on Calendar.
+		{"teams in call", "teams", fakeSnapshot([]platformwindows.WindowInfo{meeting}, procNames, teamsMic, nil), model.StateActive, 0.85},
+		{"teams call ended, calendar tab open", "teams", fakeSnapshot([]platformwindows.WindowInfo{calendar}, procNames, nil, nil), model.StateInactive, 0.60},
+		{"teams still idle next poll", "teams", fakeSnapshot([]platformwindows.WindowInfo{calendar}, procNames, nil, nil), model.StateInactive, 0.60},
+		// Teams: a mid-call dip (window gone, mic held) must still hold.
+		{"teams back in call", "teams", fakeSnapshot([]platformwindows.WindowInfo{meeting}, procNames, teamsMic, nil), model.StateActive, 0.85},
+		{"teams meeting window hidden, mic held", "teams", fakeSnapshot([]platformwindows.WindowInfo{meetUtility}, procNames, teamsMic, nil), model.StateActive, 0.45},
+
+		// Meet: in call, switch tab (mic held), then leave (title lingers).
+		{"meet in call", "meet", fakeSnapshot([]platformwindows.WindowInfo{meetTab}, procNames, chromeMic, nil), model.StateActive, 0.75},
+		{"meet other tab in front, mic held", "meet", fakeSnapshot([]platformwindows.WindowInfo{otherTab}, procNames, chromeMic, nil), model.StateActive, 0.50},
+		{"meet left, title lingers, mic released", "meet", fakeSnapshot([]platformwindows.WindowInfo{meetTab}, procNames, nil, nil), model.StateInactive, 0.25},
+	}
+
+	for _, step := range steps {
+		clock = clock.Add(time.Second)
+		d := byApp[step.app]
+		d.snapshot = step.snap
+		got := d.Detect(context.Background())
+		if diff := got.Confidence - step.wantConf; diff > 1e-9 || diff < -1e-9 {
+			t.Errorf("%s: Confidence = %v, want %v", step.name, got.Confidence, step.wantConf)
+		}
+		if got.State != step.wantState {
+			t.Errorf("%s: State = %v, want %v (signals %+v)", step.name, got.State, step.wantState, got.Signals)
+		}
+	}
 }

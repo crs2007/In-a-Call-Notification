@@ -63,6 +63,10 @@ detection:
   # A signal must reach active_threshold to count as a call. Raise it if you
   # get false positives; a light that lies is worse than one that is late.
   active_threshold: 0.70
+  # Once active, a detector is held active while its confidence stays at or
+  # above inactive_threshold AND the app still holds the microphone or
+  # webcam. Releasing the device ends the hold whatever the confidence, so a
+  # client left open after a call never keeps the light on.
   inactive_threshold: 0.30
   # Deliberately asymmetric: quick to light up, slow to go dark, so muting or
   # toggling your camera never makes the light blink mid-call.

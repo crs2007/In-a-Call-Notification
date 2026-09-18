@@ -276,24 +276,28 @@ func matchesAny(patterns []*regexp.Regexp, entries []string) bool {
 func (r CompiledRule) Evaluate(obs Observation, activeThreshold float64, now time.Time) model.DetectionResult {
 	var score float64
 	var reasons []string
+	var signals model.MatchedSignals
 
-	processPresent := r.hasProcess(obs)
-	if processPresent {
+	if r.hasProcess(obs) {
+		signals.Process = true
 		score += r.Weights.Process
 		reasons = append(reasons, r.App+": process present")
 	}
 
 	if r.hasWindowMatch(obs) {
+		signals.Window = true
 		score += r.Weights.Window
 		reasons = append(reasons, r.App+": meeting window title matched")
 	}
 
 	if len(r.micRe) > 0 && matchesAny(r.micRe, obs.MicInUse) {
+		signals.Mic = true
 		score += r.Weights.Mic
 		reasons = append(reasons, r.App+": microphone in use")
 	}
 
 	if len(r.camRe) > 0 && matchesAny(r.camRe, obs.CamInUse) {
+		signals.Cam = true
 		score += r.Weights.Cam
 		reasons = append(reasons, r.App+": webcam in use")
 	}
@@ -312,6 +316,7 @@ func (r CompiledRule) Evaluate(obs Observation, activeThreshold float64, now tim
 		State:      state,
 		Confidence: confidence,
 		Reasons:    reasons,
+		Signals:    signals,
 		Timestamp:  now,
 	}
 }

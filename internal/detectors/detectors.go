@@ -128,10 +128,16 @@ type Detector struct {
 	inactiveThreshold float64
 	now               func() time.Time
 
-	// wasActive carries the previous Detect result across polls, so a rule
-	// that dipped below activeThreshold but not below inactiveThreshold (the
-	// "Teams generic title without mic" flicker) is still reported active
-	// instead of bouncing state every poll.
+	// wasActive carries the previous Detect result across polls: once a
+	// rule has crossed activeThreshold it is held active while its
+	// confidence stays at or above inactiveThreshold *and* the app still
+	// holds the microphone or webcam. The device condition is what tells
+	// "the title dipped mid-call" (Meet tab switched away, mic still held)
+	// apart from "the call ended and the client is just open" (Teams on
+	// its Calendar tab: process + window = 0.60, above the 0.30 floor, mic
+	// released). Confidence alone cannot make that distinction - every
+	// shipped rule's idle score sits above the floor - which is how the
+	// light used to stay red until Teams was closed (issue #2).
 	wasActive bool
 }
 
@@ -145,7 +151,8 @@ func (d *Detector) Detect(_ context.Context) model.DetectionResult {
 	obs := d.shared.observe(d.snapshot)
 	result := d.rule.Evaluate(obs, d.activeThreshold, d.now())
 
-	if d.wasActive && result.State == model.StateInactive && result.Confidence >= d.inactiveThreshold {
+	if d.wasActive && result.State == model.StateInactive &&
+		result.Confidence >= d.inactiveThreshold && result.Signals.DeviceHeld() {
 		result.State = model.StateActive
 	}
 	d.wasActive = result.State == model.StateActive

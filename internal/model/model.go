@@ -34,6 +34,24 @@ type Signal struct {
 	Weight float64
 }
 
+// MatchedSignals records which of a rule's signal categories contributed to
+// a DetectionResult's Confidence. It is the machine-readable twin of
+// Reasons: the detector's hysteresis needs to know whether the app still
+// holds a capture device, and matching Reasons strings for that would be
+// fragile. Like Reasons, it never carries a window title.
+type MatchedSignals struct {
+	Process bool
+	Window  bool
+	Mic     bool
+	Cam     bool
+}
+
+// DeviceHeld reports whether the app currently holds the microphone or the
+// webcam. These are the only signals the OS withdraws when a call ends —
+// the process keeps running and its windows keep their titles — so they
+// are what "still in the call" has to be judged by.
+func (m MatchedSignals) DeviceHeld() bool { return m.Mic || m.Cam }
+
 // DetectionResult is one detector's opinion about one application.
 //
 // Reasons carries the human-readable signal names that produced Confidence,
@@ -45,6 +63,7 @@ type DetectionResult struct {
 	State      CallState
 	Confidence float64
 	Reasons    []string
+	Signals    MatchedSignals
 	Timestamp  time.Time
 }
 

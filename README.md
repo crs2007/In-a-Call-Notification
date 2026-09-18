@@ -297,7 +297,7 @@ important ones and their defaults:
 | `topics.availability` | `desktop-presence/{device_id}/availability` | `online` / `offline`, with an MQTT last-will. |
 | `allowed_networks` | *(empty — publishes nothing)* | Rules matched by `ssids`, `bssids`, `cidrs` or `gateways`. **Only `cidrs` currently matches anything** — `ssids`/`bssids`/`gateways` are accepted by the schema but not yet implemented on any platform; a rule relying on them alone fails config validation. See [Privacy](#privacy). |
 | `detectors.<teams\|zoom\|slack\|meet>.enabled` | `true` | Turn individual app detectors on or off. `meet` is Google Meet in a browser; see [Google Meet](#google-meet). |
-| `detection.active_threshold` / `.inactive_threshold` | `0.70` / `0.30` | Confidence needed to enter / leave the `active` state. |
+| `detection.active_threshold` / `.inactive_threshold` | `0.70` / `0.30` | Confidence needed to enter the `active` state, and the floor it may dip to without leaving it. The hold also requires the app to still hold the microphone or webcam, so a client left open after a call (Teams on its Calendar tab scores 0.60) goes dark as soon as the mic is released. |
 | `detection.enter_debounce_seconds` / `.exit_debounce_seconds` | `2` / `8` | Asymmetric on purpose: quick to light up, slow to go dark. |
 | `poll.detect_seconds` / `.network_seconds` | `2` / `10` | How often signals and the current network are sampled. |
 | `poll.heartbeat_seconds` | `60` | State re-publish interval; Home Assistant expires the entity after 1.5× this. |
@@ -350,9 +350,11 @@ around two facts from live captures (`testdata/probe/meet-*.txt`):
   less than the 0.30 `inactive_threshold`.
 
 Switching to another tab in the same window mid-call hides the Meet title,
-but the mic (0.50) keeps the call active through hysteresis; the mic alone
-can never *start* one, so voice typing or a Discord web call does not light
-it up.
+but the call is held active: once above `active_threshold`, a detector stays
+active while its confidence is at least `inactive_threshold` *and* the app
+still holds the microphone or webcam — and the mic (0.50) satisfies both.
+The mic alone can never *start* a call, so voice typing or a Discord web call
+does not light it up.
 
 No `UIAutomation`, accessibility, or screen-recording permission is involved:
 window titles and the ConsentStore are readable by a normal user account. If
