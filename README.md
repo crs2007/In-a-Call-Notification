@@ -403,6 +403,15 @@ which Home Assistant marks the entity unavailable. The availability topic's
 last-will also flips to `offline` as soon as the broker notices the connection
 drop. Lower `heartbeat_seconds` if you need faster recovery.
 
+**The light stays red after Teams (or Zoom, Slack) crashed, with no call.**
+Windows records "microphone in use" in the registry and only clears it when
+the app releases the device cleanly; a crash, force-kill or power loss leaves
+the entry claiming the mic is still held. The agent detects this: a mic entry
+only counts if a running process of that app existed when the capture began,
+so a relaunched client is not credited with its predecessor's call. If you do
+see it stick, run `callmqtt --once` and check what is listed under
+`[microphone]`; starting and ending any call in that app rewrites the entry.
+
 **The log warns that my MQTT password is written in the config.**
 Set `mqtt.password: ${CALLMQTT_MQTT_PASSWORD}` and define that environment
 variable for your user instead of storing the secret in plain text.

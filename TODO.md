@@ -787,17 +787,22 @@ current state alongside `online`. **Done** — `go build`, `go vet`, and
     `names` map it already computed via `s.ProcessNames()` — free, per the
     TODO's own framing, since `observe()` already had that map in hand before
     calling either function.
-  - **Scoped gap, left deliberately unfiltered:** only `NonPackaged` entries
-    (real exe paths) are matched against the running-process set. Packaged
-    (MSIX) entries are keyed by package family name (e.g.
-    `MSTeams_8wekyb3d8bbwe`), which `golang.org/x/sys/windows` has no
-    `GetPackageFamilyName` wrapper for — resolving it would mean hand-rolling
-    a new `kernel32.dll` proc plus an `OpenProcess` call per running PID every
-    poll, materially more Win32 surface than this "smaller smell" item
-    warrants. Documented in `filterLiveConsentEntries`'s and `devicesInUse`'s
-    doc comments, in the same "heuristic, not a real classification, say so"
-    tone as `internal/network/local.go`'s `isVirtualAdapterName` comment —
-    this is a real, tracked gap, not a silently dropped one.
+  - **Packaged gap closed (issue #8).** Originally only `NonPackaged`
+    entries were matched against the running-process set, because packaged
+    (MSIX) entries are keyed by package family name and resolving that
+    needs `GetPackageFamilyName` on an `OpenProcess` handle per PID. That
+    gap left a stale `MSTeams_*` mic entry (Teams crashed mid-call, Windows
+    never wrote a Stop time) trusted for hours or days. Now
+    `runningProcesses` (consent.go) resolves exe name, package family name
+    and creation time per PID — hand-rolled `kernel32!GetPackageFamilyName`
+    plus `GetProcessTimes` — and `filterLiveConsentEntries` takes it as a
+    lazy resolver, invoked at most once per poll and only when some entry is
+    live, so idle polls pay nothing. A live entry is kept only if a running
+    owner (same exe / same family) was created no later than the entry's
+    `LastUsedTimeStart` (+10 s `consentStartSlack`): a relaunched client is
+    younger than the capture it would otherwise be credited with, which is
+    the one shape the process-name check alone could never catch, and it
+    now applies to NonPackaged apps (Zoom relaunched after a crash) too.
   - Downstream call-site fixes for the new signature: `platform/windows/
     stub_other.go`'s non-Windows stubs, and `cmd/probe/main.go` (already
     computed `names := platformwindows.ProcessNames()` a few lines above its
@@ -806,16 +811,19 @@ current state alongside `online`. **Done** — `go build`, `go vet`, and
     `TestFilterLiveConsentEntries_NonPackagedDroppedWhenProcessNotRunning`
     (the TODO's exact fixture: a Teams mic entry with `Stop=0` dropped when
     `ms-teams.exe` isn't running),
-    `TestFilterLiveConsentEntries_NonPackagedKeptWhenProcessRunning`, a
-    table-driven `TestFilterLiveConsentEntries` (not-live, case-insensitivity,
-    packaged passthrough, mixed cases), and `TestBaseExeNameLower` — all pure,
-    no registry access.
+    `TestFilterLiveConsentEntries_NonPackagedKeptWhenProcessRunning`,
+    `TestFilterLiveConsentEntries_PackagedStaleAfterRelaunch` (issue #8: the
+    relaunched-after-crash shape, the genuine-call shape, family mismatch,
+    the slack boundary, unknown times), its NonPackaged twin, the laziness
+    contract, a table-driven `TestFilterLiveConsentEntries` (not-live,
+    case-insensitivity, packaged kept/dropped by family, mixed cases), and
+    `TestBaseExeNameLower` — all pure, no registry access.
 
 **Done when:** `go build -tags windows ./... && go vet -tags windows ./...`
 and `go test -tags windows ./platform/windows/... ./internal/tray/...
 ./internal/detectors/...` (with and without `-tags tray`) pass. **Done** for
-7.2–7.4 — all clean; the packaged-app gap in 7.4 is a deliberate, tracked
-follow-up (see above), not an oversight.
+7.2–7.4 — all clean; the packaged-app gap 7.4 originally left open was
+closed for issue #8 (see above).
 
 - [x] **7.5** TLS: add `mqtt.tls.ca_file` (PEM) so self-signed brokers
       don't need `insecure_skip_verify`. Optional `cert_file`/`key_file`.

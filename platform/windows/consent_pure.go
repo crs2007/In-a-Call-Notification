@@ -1,6 +1,9 @@
 package windows
 
-import "strings"
+import (
+	"strings"
+	"time"
+)
 
 // unmangleNonPackagedKey turns a NonPackaged ConsentStore subkey name back
 // into the executable path it names. Windows stores these keys with "#" in
@@ -33,54 +36,103 @@ type consentEntry struct {
 	nonPackaged bool
 	// live is consentEntryIsLive's verdict on this entry's LastUsedTimeStop.
 	live bool
+	// start is the entry's LastUsedTimeStart as a FILETIME (100 ns ticks
+	// since 1601-01-01 UTC), the moment the app began using the device.
+	// Zero means the value was missing or unreadable, which disables the
+	// start-time check for this entry.
+	start uint64
 }
 
+// runningProcess is one running process described the two ways a
+// ConsentStore entry can name its owner: by base executable name (NonPackaged
+// entries) and by package family name (packaged entries).
+type runningProcess struct {
+	// exe is the lowercased base executable filename, e.g. "ms-teams.exe".
+	exe string
+	// family is the MSIX package family name, e.g. "MSTeams_8wekyb3d8bbwe",
+	// or "" when the process is not packaged or its family could not be read.
+	family string
+	// start is the process creation time as a FILETIME. Zero means unknown,
+	// which disables the start-time check against this process.
+	start uint64
+}
+
+// consentStartSlack is how far a ConsentStore LastUsedTimeStart may precede
+// the creation time of the process it is credited to and still count as
+// that process's own capture. It only exists to absorb a wall-clock step
+// (w32time correcting a large offset) landing between the app starting and
+// the capture starting; a capture genuinely cannot begin before the process
+// that owns it. Ten seconds is generous for that and still far smaller than
+// the time it takes to relaunch a crashed client.
+const consentStartSlack = uint64(10 * time.Second / 100)
+
 // filterLiveConsentEntries drops ConsentStore entries that claim to be live
-// but whose owning process is not in runningExeNames — a stale or orphaned
-// entry (the owning app crashed, or Windows never wrote a Stop time) must
-// not be reported as "in use" forever.
+// but cannot belong to any process running right now. A live entry is
+// trusted only if some running process (a) is the entry's owner - same base
+// exe name for NonPackaged entries, same package family name for packaged
+// ones - and (b) was created no later than the entry's LastUsedTimeStart
+// (within consentStartSlack).
 //
-// Only NonPackaged entries are checked this way: their name is an exe path,
-// directly comparable (by base filename, case-insensitively — Windows exe
-// matching is case-insensitive) to a running process's name.
+// (a) covers the app that exited or crashed without Windows ever writing a
+// Stop time. (b) covers the case (a) cannot: the app crashed mid-call and
+// was relaunched, so it *is* running, but the entry's start time predates
+// the relaunch - no current instance can have started that capture. That
+// stale entry otherwise reads as "microphone in use" for hours or days,
+// until the app's next real call overwrites it (issue #8).
 //
-// Packaged (MSIX) entries — e.g. New Teams — are keyed by package family
-// name (like "MSTeams_8wekyb3d8bbwe"), which process.go's Toolhelp32-based
-// ProcessNames has no way to produce: that would need GetPackageFamilyName
-// against an OpenProcess handle for every running PID, every poll, which is
-// materially more Win32 surface than this filtering step otherwise needs. So
-// packaged entries are passed through unfiltered here, same as before this
-// function existed — a live packaged entry is still trusted at face value.
-// This is a known, deliberate gap, not an oversight.
-//
-// runningExeNames must hold lowercased base executable filenames only (e.g.
-// "ms-teams.exe"), which is exactly what runningExeNameSet builds from
-// ProcessNames' output.
-func filterLiveConsentEntries(entries []consentEntry, runningExeNames map[string]struct{}) []string {
-	var inUse []string
+// running is invoked at most once, and only if some entry is live: resolving
+// creation times and package family names needs an OpenProcess handle per
+// PID (see runningProcesses in consent.go), which is not worth paying on the
+// idle polls that are the overwhelming majority. A nil running function, or
+// one returning no processes, keeps every live entry - the "no evidence"
+// posture consent.go takes for any unreadable platform source.
+func filterLiveConsentEntries(entries []consentEntry, running func() []runningProcess) []string {
+	var (
+		inUse    []string
+		procs    []runningProcess
+		resolved bool
+	)
 	for _, e := range entries {
 		if !e.live {
 			continue
 		}
-		if e.nonPackaged {
-			if _, ok := runningExeNames[baseExeNameLower(e.name)]; !ok {
-				continue
+		if !resolved {
+			resolved = true
+			if running != nil {
+				procs = running()
 			}
+		}
+		if len(procs) > 0 && !ownedByRunningProcess(e, procs) {
+			continue
 		}
 		inUse = append(inUse, e.name)
 	}
 	return inUse
 }
 
-// runningExeNameSet turns a PID->exe-name map (ProcessNames' shape) into a
-// lowercased set of base filenames, built once per devicesInUse call rather
-// than once per ConsentStore entry.
-func runningExeNameSet(procNames map[uint32]string) map[string]struct{} {
-	set := make(map[string]struct{}, len(procNames))
-	for _, name := range procNames {
-		set[baseExeNameLower(name)] = struct{}{}
+// ownedByRunningProcess reports whether some process in procs could have
+// started the capture that entry e records: it must be e's owner by name,
+// and must have existed when the capture began.
+func ownedByRunningProcess(e consentEntry, procs []runningProcess) bool {
+	owner := e.name
+	if e.nonPackaged {
+		owner = baseExeNameLower(e.name)
 	}
-	return set
+	for _, p := range procs {
+		var match bool
+		if e.nonPackaged {
+			match = p.exe == owner
+		} else {
+			match = p.family != "" && strings.EqualFold(p.family, owner)
+		}
+		if !match {
+			continue
+		}
+		if e.start == 0 || p.start == 0 || p.start <= e.start+consentStartSlack {
+			return true
+		}
+	}
+	return false
 }
 
 // baseExeNameLower returns the final path component of a Windows-style path
