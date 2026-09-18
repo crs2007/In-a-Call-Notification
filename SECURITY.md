@@ -3,6 +3,36 @@
 CallMQTT is a single-binary desktop agent; there is no supported-versions
 matrix to publish here — the latest release is the only one that gets fixes.
 
+## Threat model & known limitations
+
+**The network gate is weaker than its config schema implies.** `allowed_networks`
+rules can declare `ssids`, `bssids`, `cidrs` or `gateways`, and the docs have at
+times described these as interchangeable ("any one field matching is enough").
+That is only true of the schema, not the running agent:
+
+- The only implementation that actually determines the current network
+  (`internal/network/local.go`'s `LocalChecker`, the sole one used in
+  production) populates the local IP and subnet only. It never sets SSID,
+  BSSID or gateway, so a rule that matches solely on `ssids`, `bssids` or
+  `gateways` silently never matches anything — it is dead configuration. As of
+  this document, config validation rejects such a rule outright rather than
+  accepting it silently.
+- Matching is therefore by local subnet (CIDR) only. **A subnet is not a
+  unique identity.** `192.168.1.0/24` (and other factory-default ranges) is
+  common enough that someone else's home network, a neighbour's router, or a
+  coffee shop could plausibly hand out an address in the same range. If you
+  rely on `cidrs` to mean "I am physically at home", change your router's LAN
+  range away from its default so the subnet is actually distinguishing.
+- Stronger identity — pinning to a specific Wi-Fi SSID or a gateway's MAC
+  address (BSSID) — is planned but not implemented on any platform today.
+  Treat any config that lists `ssids`/`bssids`/`gateways` as documentation of
+  intent, not as something currently enforced; validation now requires those
+  rules to also carry a working `cidrs` entry.
+- Practical consequence: a device that's off an allowed subnet publishes
+  nothing (fail closed, by design). A device that's on a subnet with the same
+  range as your home network — even if it's not actually your home — is
+  treated as "home" (fail open on identity). Choose your subnet accordingly.
+
 ## Reporting a vulnerability
 
 Open a private report via

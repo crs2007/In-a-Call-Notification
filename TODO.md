@@ -481,15 +481,36 @@ Both are parsed, validated, documented, and never read. Pick per field:
       `platform/windows/network.go` and the `win-platform` agent's job.
       Do the denylist now, file the proper version as a follow-up.
 
-### [ ] 6.3 Document the honest threat model
+### [x] 6.3 Document the honest threat model
 
 **Touches:** `README.md`, `SECURITY.md` (via the `release-ci` agent).
 
-- [ ] State plainly: matching is by local subnet only; `192.168.1.0/24`
+- [x] State plainly: matching is by local subnet only; `192.168.1.0/24`
       is not a unique identity; recommend gateway MAC/BSSID once
       implemented and, until then, a non-default home subnet.
-- [ ] Remove or mark "planned" every mention of SSID/BSSID matching in
+- [x] Remove or mark "planned" every mention of SSID/BSSID matching in
       the design doc that reads as shipped.
+
+**Done when:** a reader of the README or SECURITY.md comes away knowing
+`cidrs` is the only matcher that works today and why a shared subnet is a
+weak identity claim. **Done** — README.md's Privacy section gained a
+paragraph stating CIDR-only matching, the shared-subnet risk, and a
+recommendation to move off the router's default LAN range; the
+`allowed_networks` row in the Configuration table now says `ssids`/`bssids`/
+`gateways` are accepted but not implemented and that an SSID/BSSID/gateway-only
+rule fails validation (matching 6.1's new behaviour, landing separately).
+SECURITY.md got a new "Threat model & known limitations" section spelling out
+the same gap plus the fail-closed/fail-open framing (off an allowed subnet:
+publishes nothing; on a subnet sharing a home network's default range: treated
+as home). `docs/In a call notification.md` — a 1472-line early design scrape,
+not touched line-by-line — got one prominent status callout at the top
+pointing to README.md/SECURITY.md as authoritative, plus fixes to its two most
+concretely misleading claims: the "MVP v0.1" `✅ Allowed SSID` checklist (now
+flagged not-shipped, CIDR-only) and the `callmqtt diagnose` sample output
+(now marked illustrative/never-shipped, since no `diagnose` command or macOS
+build exists). Validator run: `go run
+./.claude/skills/readme-standards/scripts/validate_readme.go` → PASS (all
+required and recommended sections present).
 
 ---
 
