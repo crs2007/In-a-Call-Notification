@@ -43,12 +43,6 @@ type Snapshot struct {
 	// hand by the time it calls these.
 	AppsUsingMicrophone func(procNames map[uint32]string) []string
 	AppsUsingWebcam     func(procNames map[uint32]string) []string
-	// AppsRenderingAudio takes the same map and reports which processes have
-	// an active audio playback stream (the signal that separates a joined
-	// browser call from its pre-join lobby, see rules.Weights.AudioOut). It
-	// is optional: nil means the platform has no such source, and the
-	// Observation simply carries no playback evidence.
-	AppsRenderingAudio func(procNames map[uint32]string) []string
 }
 
 // WindowsSnapshot returns a Snapshot backed by the real platform/windows
@@ -59,7 +53,6 @@ func WindowsSnapshot() Snapshot {
 		ProcessNames:        platformwindows.ProcessNames,
 		AppsUsingMicrophone: platformwindows.AppsUsingMicrophone,
 		AppsUsingWebcam:     platformwindows.AppsUsingWebcam,
-		AppsRenderingAudio:  platformwindows.AppsRenderingAudio,
 	}
 }
 
@@ -75,9 +68,6 @@ func (s Snapshot) observe() rules.Observation {
 		Windows:  make([]rules.WindowObservation, 0, len(wins)),
 		MicInUse: s.AppsUsingMicrophone(names),
 		CamInUse: s.AppsUsingWebcam(names),
-	}
-	if s.AppsRenderingAudio != nil {
-		obs.AudioOutInUse = s.AppsRenderingAudio(names)
 	}
 	for _, w := range wins {
 		obs.Windows = append(obs.Windows, rules.WindowObservation{

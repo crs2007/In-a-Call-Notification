@@ -19,12 +19,8 @@ import (
 // manager (IAudioSessionManager2 -> IAudioSessionEnumerator ->
 // IAudioSessionControl2::GetProcessId/GetState).
 //
-// Why CallMQTT needs it: a browser-based call (Google Meet) holds the mic in
-// its pre-join lobby exactly as it does once joined, and its tab title is
-// the same in both. What differs is that a joined WebRTC call keeps a render
-// stream open for the whole call, and the lobby does not. So "the browser
-// has an active render session" is the evidence that separates "looking at
-// the Ready-to-join screen" from "in the meeting".
+// It exists for cmd/probe captures (see AudioSessions for what the Google
+// Meet captures showed and why no rule consumes it yet).
 //
 // No CGO: the COM interfaces are driven through raw vtable calls, the same
 // way dialog.go drives user32 without a GUI toolkit.
@@ -36,10 +32,11 @@ var (
 
 // COM identifiers from mmdeviceapi.h and audiopolicy.h.
 var (
-	clsidMMDeviceEnumerator  = mustGUID("{BCDE0395-E52F-467C-8E3D-C4579291692E}")
-	iidIMMDeviceEnumerator   = mustGUID("{A95664D2-9614-4F35-A746-DE8DB63617E6}")
-	iidIAudioSessionManager2 = mustGUID("{77AA99A0-1BD6-484F-8BC7-2C654C9A9B6F}")
-	iidIAudioSessionControl2 = mustGUID("{BFB7FF88-7239-4FC9-8FA2-07C950BE9C6D}")
+	clsidMMDeviceEnumerator   = mustGUID("{BCDE0395-E52F-467C-8E3D-C4579291692E}")
+	iidIMMDeviceEnumerator    = mustGUID("{A95664D2-9614-4F35-A746-DE8DB63617E6}")
+	iidIAudioSessionManager2  = mustGUID("{77AA99A0-1BD6-484F-8BC7-2C654C9A9B6F}")
+	iidIAudioSessionControl2  = mustGUID("{BFB7FF88-7239-4FC9-8FA2-07C950BE9C6D}")
+	iidIAudioMeterInformation = mustGUID("{C02216F6-8C67-4B5B-9D00-D008E73E0064}")
 )
 
 func mustGUID(s string) windows.GUID {
@@ -67,6 +64,7 @@ const (
 	vtblSessionGetState       = 3 // IAudioSessionControl
 	vtblSession2GetProcessId  = 14
 	vtblSession2IsSystemSound = 15
+	vtblMeterGetPeakValue     = 3 // IAudioMeterInformation
 )
 
 // comObject is the minimal shape shared by every COM interface pointer: a
@@ -105,20 +103,25 @@ func (o *comObject) queryInterface(iid *windows.GUID) (*comObject, bool) {
 	return out, hr == 0 && out != nil
 }
 
-// AppsRenderingAudio reports the executable names of every process that has
-// an *active* playback stream on any active output device right now, as a
-// sorted, de-duplicated list (e.g. ["chrome.exe", "Spotify.exe"]).
+// AudioSessions reports every process that has an *active* playback stream
+// on any active output device right now, with the loudest instantaneous
+// peak (0..1) across its sessions at sample time, sorted by exe name.
 //
 // procNames is the PID->exe-name map ProcessNames returned this poll; a
 // session whose PID is not in it (the process has since exited, or it is
-// the pid-0 system-sounds session) is dropped. Like AppsUsingMicrophone,
-// any failure means "no evidence": this always returns a slice, never an
-// error, so a machine without an audio device just contributes nothing.
+// the pid-0 system-sounds session) is dropped. Any failure means "no
+// evidence": this returns an empty result, never an error.
 //
-// Cost: one COM activation and a walk of a handful of sessions, well under
-// a millisecond; it is called once per poll tick via the detectors'
-// shared observer, exactly like VisibleWindows.
-func AppsRenderingAudio(procNames map[uint32]string) []string {
+// Today this is capture instrumentation only, printed by cmd/probe as
+// [audio-out]; no detection rule scores it. It was added while looking for
+// a signal that separates Google Meet's "Ready to join?" lobby from a joined
+// call, and the captures (testdata/probe/meet-lobby.txt vs meet-in-call.txt)
+// showed that an *open* stream does not: Chrome opens one as soon as the
+// Meet page loads. The peak meter did differ (0.000 throughout the lobby,
+// brief spikes in the call) but a 2-second instantaneous sample is far too
+// sparse to score; a future "audible recently" rule would need a sampler.
+// Kept so that future captures record it.
+func AudioSessions(procNames map[uint32]string) []AudioSession {
 	// CoUninitialize must run on the thread that initialised COM, so pin
 	// this goroutine to its OS thread for the duration of the call.
 	runtime.LockOSThread()
@@ -133,7 +136,7 @@ func AppsRenderingAudio(procNames map[uint32]string) []string {
 		// but it is not ours to uninitialise.
 	default:
 		slog.Debug("audio: CoInitializeEx failed", "err", err)
-		return []string{}
+		return nil
 	}
 
 	var enumerator *comObject
@@ -142,21 +145,21 @@ func AppsRenderingAudio(procNames map[uint32]string) []string {
 		uintptr(unsafe.Pointer(&iidIMMDeviceEnumerator)), uintptr(unsafe.Pointer(&enumerator)))
 	if hr != 0 || enumerator == nil {
 		slog.Debug("audio: CoCreateInstance(MMDeviceEnumerator) failed", "hresult", hr)
-		return []string{}
+		return nil
 	}
 	defer enumerator.release()
 
 	var devices *comObject
 	if hr := enumerator.call(vtblEnumAudioEndpoints, eRender, deviceStateActive, uintptr(unsafe.Pointer(&devices))); hr != 0 || devices == nil {
 		slog.Debug("audio: EnumAudioEndpoints failed", "hresult", hr)
-		return []string{}
+		return nil
 	}
 	defer devices.release()
 
 	var deviceCount uint32
 	devices.call(vtblCollectionGetCount, uintptr(unsafe.Pointer(&deviceCount)))
 
-	seen := map[string]struct{}{}
+	seen := map[string]float32{}
 	for i := uint32(0); i < deviceCount; i++ {
 		var device *comObject
 		if hr := devices.call(vtblCollectionItem, uintptr(i), uintptr(unsafe.Pointer(&device))); hr != 0 || device == nil {
@@ -166,11 +169,11 @@ func AppsRenderingAudio(procNames map[uint32]string) []string {
 		device.release()
 	}
 
-	out := make([]string, 0, len(seen))
-	for name := range seen {
-		out = append(out, name)
+	out := make([]AudioSession, 0, len(seen))
+	for name, peak := range seen {
+		out = append(out, AudioSession{Exe: name, Peak: peak})
 	}
-	sort.Strings(out)
+	sort.Slice(out, func(i, j int) bool { return out[i].Exe < out[j].Exe })
 	return out
 }
 
@@ -179,7 +182,7 @@ func AppsRenderingAudio(procNames map[uint32]string) []string {
 // to seen. Inactive and expired sessions (a player that is open but paused,
 // or a stream that finished) are skipped: only a stream that is running
 // right now counts as playback.
-func collectActiveSessions(device *comObject, procNames map[uint32]string, seen map[string]struct{}) {
+func collectActiveSessions(device *comObject, procNames map[uint32]string, seen map[string]float32) {
 	var manager *comObject
 	if hr := device.call(vtblDeviceActivate,
 		uintptr(unsafe.Pointer(&iidIAudioSessionManager2)), clsctxAll, 0,
@@ -205,7 +208,9 @@ func collectActiveSessions(device *comObject, procNames map[uint32]string, seen 
 			continue
 		}
 		if name, ok := activeSessionOwner(control, procNames); ok {
-			seen[name] = struct{}{}
+			if peak := sessionPeak(control); peak > seen[name] || !hasKey(seen, name) {
+				seen[name] = peak
+			}
 		}
 		control.release()
 	}
@@ -241,4 +246,26 @@ func activeSessionOwner(control *comObject, procNames map[uint32]string) (string
 		return "", false
 	}
 	return name, true
+}
+
+func hasKey(m map[string]float32, k string) bool {
+	_, ok := m[k]
+	return ok
+}
+
+// sessionPeak returns the session's instantaneous peak sample value (0..1)
+// via IAudioMeterInformation, or 0 if the meter is unavailable. A stream
+// that is open but carrying silence (a browser tab with an idle WebRTC
+// pipeline) reads 0; speech or music reads well above it.
+func sessionPeak(control *comObject) float32 {
+	meter, ok := control.queryInterface(&iidIAudioMeterInformation)
+	if !ok {
+		return 0
+	}
+	defer meter.release()
+	var peak float32
+	if hr := meter.call(vtblMeterGetPeakValue, uintptr(unsafe.Pointer(&peak))); hr != 0 {
+		return 0
+	}
+	return peak
 }

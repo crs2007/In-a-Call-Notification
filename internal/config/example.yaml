@@ -48,9 +48,9 @@ detectors:
   slack:
     enabled: true
   # Google Meet in a browser (Chrome, Edge, Brave, Firefox, Vivaldi, Opera).
-  # Needs no extension: it reads the browser's window title, whether the
-  # browser holds the microphone, and whether it is playing audio. See the
-  # README's "Google Meet" section for what it can and cannot tell apart.
+  # Needs no extension: it reads the browser's window title and whether the
+  # browser holds the microphone. Note the light turns on at the "Ready to
+  # join?" screen, not at Join - see the README's "Google Meet" section.
   meet:
     enabled: true
 

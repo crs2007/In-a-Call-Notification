@@ -60,6 +60,8 @@ func loadFixture(t *testing.T, name string) []Observation {
 			section = "cam"
 			continue
 		case strings.HasPrefix(line, "[audio-out]"):
+			// Probe instrumentation only (see cmd/probe): no rule scores it,
+			// so its lines are skipped rather than carried into Observation.
 			section = "audio"
 			continue
 		case strings.TrimSpace(line) == "":
@@ -85,8 +87,6 @@ func loadFixture(t *testing.T, name string) []Observation {
 			cur.MicInUse = append(cur.MicInUse, strings.TrimSpace(line))
 		case "cam":
 			cur.CamInUse = append(cur.CamInUse, strings.TrimSpace(line))
-		case "audio":
-			cur.AudioOutInUse = append(cur.AudioOutInUse, strings.TrimSpace(line))
 		}
 	}
 	flush()
@@ -409,6 +409,7 @@ func TestReasons_NeverContainWindowTitles(t *testing.T) {
 	for _, fixture := range []string{
 		"teams-in-call.txt", "teams-in-call-muted.txt", "teams-in-call-generic-title.txt", "teams-open-no-call.txt",
 		"zoom-in-call.txt", "zoom-open-no-call.txt", "slack-huddle.txt",
+		"meet-landing-page.txt", "meet-lobby.txt", "meet-in-call.txt", "meet-left.txt",
 	} {
 		for _, obs := range loadFixture(t, fixture) {
 			for _, result := range cfg.Evaluate(obs, testThreshold, time.Now()) {

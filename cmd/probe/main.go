@@ -46,7 +46,9 @@ func snapshot(w *os.File) {
 	devices := map[string][]string{
 		"microphone": platformwindows.AppsUsingMicrophone(names),
 		"webcam":     platformwindows.AppsUsingWebcam(names),
-		"audio-out":  platformwindows.AppsRenderingAudio(names),
+	}
+	for _, s := range platformwindows.AudioSessions(names) {
+		devices["audio-out"] = append(devices["audio-out"], fmt.Sprintf("%s peak=%.3f", s.Exe, s.Peak))
 	}
 	for _, device := range []string{"microphone", "webcam", "audio-out"} {
 		apps := devices[device]

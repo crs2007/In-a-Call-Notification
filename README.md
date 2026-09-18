@@ -327,47 +327,37 @@ take effect on the next start.
 
 Google Meet runs in a browser tab, so there is no process to watch and no
 local API to ask. The `meet` detector needs **no browser extension** and no
-extra Windows permission: it combines three signals the agent already reads
-for the other apps, all from the OS side of the browser.
+extra Windows permission: it combines two signals the agent already reads for
+the other apps, both from the OS side of the browser.
 
 | Signal | Where it comes from | What it means for Meet |
 | --- | --- | --- |
-| Window title | `EnumWindows` on the browser's top-level windows (Chrome, Edge, Brave, Firefox, Vivaldi, Opera, and Chrome/Edge "installed app" windows) | A window whose *active tab* is titled `Meet – abc-defg-hij` or `Meet – <calendar event>`. |
-| Microphone | The same registry `ConsentStore` used for Teams/Zoom/Slack | The browser currently holds the microphone. |
-| Audio playback | WASAPI audio sessions (`IAudioSessionManager2`) | The browser has an audio output stream running right now. |
+| Window title (0.25) | `EnumWindows` on the browser's top-level windows (Chrome, Edge, Brave, Firefox, Vivaldi, Opera, and Chrome/Edge "installed app" windows) | A window whose *active tab* is titled `Meet - abc-defg-hij` (or `Meet - <calendar event>`). |
+| Microphone (0.50) | The same registry `ConsentStore` used for Teams/Zoom/Slack | The browser currently holds the microphone. |
 
-Each signal is worth 0.25. A joined call with the Meet tab in front shows all
-three (0.75, above the 0.70 threshold). The reason for the third signal is the
-**"Ready to join?" lobby**: its tab title is identical to the call's, and it
-holds the mic and camera for the self-view preview — but it plays no audio. A
-real WebRTC call keeps an output stream open for its whole duration, the lobby
-does not, so the lobby scores 0.50 and stays dark.
+Together they score 0.75, above the 0.70 threshold. The weights are chosen
+around two facts from live captures (`testdata/probe/meet-*.txt`):
 
-Once a call is active, switching to another tab in the same window (which
-hides the Meet title) does not drop it: mic + playback (0.50) stays above the
-0.30 `inactive_threshold`, so the light holds until the browser releases the
-microphone. No single signal is worth 0.30 on its own, which is what stops a
-lingering `Meet – …` tab after you leave, a YouTube tab, or a bare mic grant
-from keeping (or starting) a call.
+- **The light turns on at the "Ready to join?" screen, not at Join.** The
+  lobby has the same tab title as the call, holds the microphone for its
+  self-view preview, and even keeps an audio output stream open — at the OS
+  level it is indistinguishable from being in the meeting. Rather than guess,
+  the detector treats reaching the lobby as the start of the call; in practice
+  that is well under a minute early.
+- **The light goes out when the browser releases the microphone**, about ten
+  seconds after you click Leave — not when you close the tab. The post-call
+  page keeps the `Meet - …` title, so the title alone is deliberately worth
+  less than the 0.30 `inactive_threshold`.
 
-Known limits, by design:
-
-- Waiting in the lobby **while another tab of the same browser plays audio**
-  looks like a call (0.75) until you join or close the lobby.
-- **Alone in a meeting** nobody else has joined, the browser may have no
-  output stream yet, so the light can stay off until a second participant's
-  audio arrives. That is the accepted side of the under-trigger tuning.
-- The `meet` rule is not yet backed by a `testdata/probe/meet-*.txt` capture;
-  its title pattern comes from Meet's documented tab titles and the browser
-  window titles present in the other captures. If it misses your call, run
-  `go run ./cmd/probe` during a real Meet (see
-  [testdata/probe/README.md](testdata/probe/README.md)) and open an issue with
-  the capture — the fix is usually one line in `rules.yaml`.
+Switching to another tab in the same window mid-call hides the Meet title,
+but the mic (0.50) keeps the call active through hysteresis; the mic alone
+can never *start* one, so voice typing or a Discord web call does not light
+it up.
 
 No `UIAutomation`, accessibility, or screen-recording permission is involved:
-window titles, the ConsentStore and audio sessions are all readable by a
-normal user account. If Windows ever refuses one of them, that signal simply
-contributes nothing and the detector reports `inactive` rather than failing.
+window titles and the ConsentStore are readable by a normal user account. If
+Windows ever refuses one of them, that signal simply contributes nothing and
+the detector reports `inactive` rather than failing.
 
 ## Contributing
 
@@ -421,15 +411,16 @@ confirmed on a live call. Run with `--debug`, capture the process names and
 window titles it sees during a real call, and open an issue — the fix is
 usually a rule in `rules.yaml`.
 
-**Google Meet is not detected, or only once someone else joins.**
-See [Google Meet](#google-meet): the detector needs the browser's window
-title, its microphone grant *and* an audio output stream, and the last one
-only appears once there is remote audio to play. If you are the only
-participant the light may stay off; if it never turns on at all, run
-`go run ./cmd/probe --count 3` during a call and check that a browser window
-titled `Meet – …` is listed under `[windows]`, the browser under
-`[microphone]`, and the browser's exe under `[audio-out]`. Whichever is
-missing is the signal to report in an issue.
+**The light turns on while I'm still on Meet's "Ready to join?" screen.**
+Expected — see [Google Meet](#google-meet). The lobby is indistinguishable
+from the call at the OS level, so it counts as the start of the call.
+
+**Google Meet is not detected at all.**
+Run `go run ./cmd/probe --count 3` during a call and check that a browser
+window titled `Meet - …` is listed under `[windows]` and the browser's exe
+under `[microphone]`. Whichever is missing is the signal to report in an
+issue — a different browser or locale may title the tab differently, and the
+fix is usually one line in `rules.yaml`.
 
 ## License
 
