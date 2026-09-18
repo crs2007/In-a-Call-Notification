@@ -146,6 +146,14 @@ jobs:
       - name: go test -race
         run: go test -race ./...
 
+      # GoReleaser's before-hook runs `go mod tidy`; if that changes anything
+      # the publish pass refuses to run on a dirty tree. Fail here with a
+      # readable reason instead.
+      - name: go.mod / go.sum are tidy
+        run: |
+          go mod tidy
+          git diff --exit-code -- go.mod go.sum
+
       - name: Build release artifacts for version preflight
         uses: goreleaser/goreleaser-action@v6
         with:
