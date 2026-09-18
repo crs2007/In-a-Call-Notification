@@ -4,6 +4,11 @@
 [![Latest release](https://img.shields.io/github/v/release/crs2007/In-a-Call-Notification?include_prereleases)](https://github.com/crs2007/In-a-Call-Notification/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
+[![Home Assistant](https://img.shields.io/badge/Home_Assistant-MQTT_Discovery-41BDF5?logo=homeassistant&logoColor=white)](#home-assistant-integration)
+[![MQTT](https://img.shields.io/badge/MQTT-v5-660066?logo=mqtt&logoColor=white)](https://www.home-assistant.io/integrations/mqtt/)
+[![Windows](https://img.shields.io/badge/Windows-10%20%2F%2011-0078D4)](#installation)
+[![Go](https://img.shields.io/github/go-mod/go-version/crs2007/In-a-Call-Notification?logo=go&logoColor=white)](go.mod)
+
 Detect when you're in a Zoom, Microsoft Teams or Slack call — and publish that
 state to your local MQTT broker, so Home Assistant can turn on a "do not
 disturb" light for exactly as long as the call lasts.
@@ -17,6 +22,7 @@ fixtures but not yet live-confirmed the same way.
 - [Why](#why)
 - [Privacy](#privacy)
 - [What Home Assistant sees](#what-home-assistant-sees)
+- [Home Assistant Integration](#home-assistant-integration)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Configuration](#configuration)
@@ -79,12 +85,141 @@ With MQTT discovery enabled (the default) that becomes a
 `binary_sensor.callmqtt_<device_id>_call` entity in Home Assistant — `on`
 while `state` is `active`, with `app`, `confidence` and `network` as
 attributes — plus an availability topic so the sensor goes `unavailable`
-instead of lying if the machine dies mid-call.
+instead of lying if the machine dies mid-call. What to set up on the Home
+Assistant side, and an automation to drive a light from it, are in
+[Home Assistant Integration](#home-assistant-integration).
 
 On the desktop side the agent lives in the system tray: the menu shows the
 current state, the matched network and the broker connection, and lets you
 pause detection, allow the current network, edit broker settings, and enable
 start-at-login.
+
+## Home Assistant Integration
+
+[![Home Assistant](https://img.shields.io/badge/Home_Assistant-41BDF5?style=flat-square&logo=homeassistant&logoColor=white)](https://www.home-assistant.io/)
+[![Mosquitto](https://img.shields.io/badge/Mosquitto_broker-3C5280?style=flat-square&logo=eclipsemosquitto&logoColor=white)](https://www.home-assistant.io/integrations/mqtt/#broker-configuration)
+[![MQTT](https://img.shields.io/badge/MQTT_integration-660066?style=flat-square&logo=mqtt&logoColor=white)](https://www.home-assistant.io/integrations/mqtt/)
+
+The agent talks to Home Assistant only through MQTT, so the whole integration
+is: a broker, the MQTT integration, and one automation.
+
+### What you need
+
+1. **An MQTT broker** reachable from both the Windows PC and Home Assistant.
+   The easiest is the official **Mosquitto broker** add-on: *Settings →
+   Add-ons → Add-on Store → Mosquitto broker → Install → Start*. See
+   [Broker configuration](https://www.home-assistant.io/integrations/mqtt/#broker-configuration)
+   in the Home Assistant docs. Any other broker works too (standalone
+   Mosquitto, EMQX, …) as long as it supports MQTT v5, which the agent
+   requires — Mosquitto 1.6+ and the add-on both do.
+
+2. **A Home Assistant user for the agent.** The Mosquitto add-on
+   authenticates MQTT clients against Home Assistant users, so create one:
+   *Settings → People → Users → Add user*. It does not need to be an
+   administrator, and "can only log in from the local network" is fine.
+   Its username and password go into `mqtt.username` / `mqtt.password`.
+
+3. **The MQTT integration**: *Settings → Devices & services → Add
+   Integration → MQTT*. With the add-on installed, Home Assistant discovers
+   the broker and offers the connection automatically. Leave *Enable
+   discovery* on and the discovery prefix at its default `homeassistant` —
+   it must match `mqtt.discovery.prefix` in the agent config.
+
+4. **The agent**, pointed at the broker: `mqtt.host` is the Home Assistant
+   machine's IP (port `1883`), the credentials are the user from step 2, and
+   at least one `allowed_networks` rule is set — see
+   [Quick Start](#quick-start).
+
+### What appears
+
+Once the agent connects it publishes a retained discovery message to
+`homeassistant/binary_sensor/<device_id>/call/config`, and Home Assistant
+creates:
+
+| | |
+| --- | --- |
+| Device | **In a Call Notification `<device_id>`** (manufacturer *In a Call Notification*, model *Desktop call presence*) |
+| Entity | `binary_sensor.callmqtt_<device_id>_call`, device class `sound` — shown as **Detected** / **Clear** |
+| State | `on` while the payload's `state` is `active`, `off` while `inactive` |
+| Attributes | `app`, `confidence`, `network`, `device`, `timestamp` (from the same JSON payload) |
+| Availability | `online` / `offline` on the availability topic, with an MQTT last-will; the entity also expires to `unavailable` if no state arrives for 1.5 × `poll.heartbeat_seconds` (90 s by default) |
+
+The discovery message is re-sent on every reconnect, so if you delete the
+entity in Home Assistant, restarting the agent brings it back. Set
+`mqtt.discovery.enabled: false` if you would rather define the sensor
+yourself.
+
+### Automation template
+
+Paste this via *Settings → Automations & Scenes → Create Automation → Create
+new automation → ⋮ → Edit in YAML*, then replace `my_laptop` with your
+`device_id` and `light.office_busy` with your light. It uses two triggers so
+the light also goes off when the entity becomes `unavailable` (laptop asleep
+or dead), not only on a clean `off`:
+
+```yaml
+alias: Busy light follows calls
+description: Red light while binary_sensor.callmqtt_my_laptop_call is on
+mode: restart
+triggers:
+  - trigger: state
+    entity_id: binary_sensor.callmqtt_my_laptop_call
+    to: "on"
+    id: call_started
+  - trigger: state
+    entity_id: binary_sensor.callmqtt_my_laptop_call
+    to:
+      - "off"
+      - unavailable
+      - unknown
+    id: call_ended
+actions:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: call_started
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.office_busy
+            data:
+              color_name: red
+              brightness_pct: 100
+      - conditions:
+          - condition: trigger
+            id: call_ended
+        sequence:
+          - action: light.turn_off
+            target:
+              entity_id: light.office_busy
+```
+
+The attributes are available in templates. For example, add this to the
+`call_started` sequence to get a phone notification naming the app:
+
+```yaml
+          - action: notify.mobile_app_my_phone
+            data:
+              title: In a call
+              message: >-
+                {{ trigger.to_state.attributes.app | title }} call started
+                ({{ (trigger.to_state.attributes.confidence * 100) | round }}% confidence)
+```
+
+The syntax above needs Home Assistant 2024.10 or newer; on older versions
+use `trigger:` / `platform: state` / `service:` instead of `triggers:` /
+`trigger: state` / `action:`.
+
+### Checking it works
+
+- Run `.\callmqtt.exe --simulate` on the PC — it fakes a call every 30
+  seconds, so the entity and the automation can be tested without joining a
+  meeting.
+- In Home Assistant, open the MQTT integration → *Configure* → *Listen to a
+  topic* and subscribe to `desktop-presence/#` to see the raw JSON payloads,
+  or `homeassistant/binary_sensor/#` to see the discovery config.
+- If nothing arrives at all, it is almost always `allowed_networks` — see
+  [FAQ / Troubleshooting](#faq--troubleshooting).
 
 ## Installation
 
@@ -118,7 +253,7 @@ go build ./cmd/callmqtt               # headless console build, useful for debug
    mqtt:
      host: 192.168.1.10          # your MQTT broker
      username: homeassistant
-     password: ${MQTT_PASSWORD}  # reads the environment variable; avoids a literal secret
+     password: ${CALLMQTT_MQTT_PASSWORD}  # reads the environment variable; avoids a literal secret
 
    allowed_networks:
      - name: Home
@@ -133,19 +268,9 @@ go build ./cmd/callmqtt               # headless console build, useful for debug
    ```
 
 4. In Home Assistant, `binary_sensor.callmqtt_<device_id>_call` appears under
-   the MQTT integration automatically. A minimal automation:
-
-   ```yaml
-   automation:
-     - alias: Busy light follows calls
-       trigger:
-         - platform: state
-           entity_id: binary_sensor.callmqtt_my_laptop_call
-       action:
-         - service: "light.turn_{{ 'on' if trigger.to_state.state == 'on' else 'off' }}"
-           target:
-             entity_id: light.office_busy
-   ```
+   the MQTT integration automatically. Broker setup and a ready-made
+   automation are in
+   [Home Assistant Integration](#home-assistant-integration).
 
 5. To test the automation without joining a real call, run
    `.\callmqtt.exe --simulate` — it fakes a call every 30 seconds.
@@ -164,7 +289,7 @@ important ones and their defaults:
 | `mqtt.client_id` | `callmqtt-<device_id>` | MQTT client id. |
 | `mqtt.qos` / `mqtt.retain` | `1` / `true` | Publish options for state messages. |
 | `mqtt.tls.enabled` | `false` | Enable TLS to the broker (`insecure_skip_verify` also available). |
-| `mqtt.discovery.enabled` / `.prefix` | `true` / `homeassistant` | Auto-create the Home Assistant `binary_sensor`. |
+| `mqtt.discovery.enabled` / `.prefix` | `true` / `homeassistant` | Auto-create the Home Assistant `binary_sensor`; the prefix must match the MQTT integration's discovery prefix. See [Home Assistant Integration](#home-assistant-integration). |
 | `topics.state` | `desktop-presence/{device_id}/call` | Where the JSON state payload is published. |
 | `topics.availability` | `desktop-presence/{device_id}/availability` | `online` / `offline`, with an MQTT last-will. |
 | `allowed_networks` | *(empty — publishes nothing)* | Rules matched by `ssids`, `bssids`, `cidrs` or `gateways`. **Only `cidrs` currently matches anything** — `ssids`/`bssids`/`gateways` are accepted by the schema but not yet implemented on any platform; a rule relying on them alone fails config validation. See [Privacy](#privacy). |
@@ -219,7 +344,7 @@ can be agreed before you write code.
 
 **The light never turns on, but the tray shows a call.**
 Almost always `allowed_networks`. An empty list publishes nothing, and a
-mismatched CIDR/SSID does the same. The tray menu shows which network rule (if
+CIDR that doesn't match your current subnet does the same. The tray menu shows which network rule (if
 any) currently matches; `callmqtt --once` prints `publishing: true|false` and
 the reasons.
 
@@ -236,8 +361,8 @@ last-will also flips to `offline` as soon as the broker notices the connection
 drop. Lower `heartbeat_seconds` if you need faster recovery.
 
 **The log warns that my MQTT password is written in the config.**
-Set `mqtt.password: ${MQTT_PASSWORD}` and define that environment variable for
-your user instead of storing the secret in plain text.
+Set `mqtt.password: ${CALLMQTT_MQTT_PASSWORD}` and define that environment
+variable for your user instead of storing the secret in plain text.
 
 **Zoom or Slack calls are not detected.**
 Those detectors are validated against recorded fixtures but have not yet been
