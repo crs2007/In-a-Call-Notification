@@ -131,3 +131,76 @@ rules:
       mic: 0.25
       # process + window = 0.60 (deliberately inactive on the marker alone);
       # process + window + mic = 0.85 (active).
+
+  # Google Meet, in a browser (chrome.exe, msedge.exe, brave.exe,
+  # firefox.exe, vivaldi.exe, opera.exe - including Chrome/Edge "installed
+  # app" (PWA) windows, which are still owned by the browser process).
+  #
+  # Captured live on 2026-09-18 in Chrome (meet-landing-page.txt,
+  # meet-lobby.txt, meet-in-call.txt, meet-left.txt; the real meeting code
+  # is replaced by abc-defg-hij, nothing else is edited):
+  #
+  #   landing page   title="Google Meet - Google Chrome"        mic idle
+  #   "Ready to      title="Meet - abc-defg-hij - Google Chrome" mic held
+  #    join?" lobby
+  #   joined call    title="Meet - abc-defg-hij - Google Chrome" mic held
+  #                  (briefly "Meet - abc-defg-hij" with no browser suffix)
+  #   left the call  title="Meet - abc-defg-hij - Google Chrome" mic idle
+  #                  (the tab lingers; Chrome releases the mic ~10 s after
+  #                  Leave, meet-left.txt snapshot 15)
+  #
+  # What this means, and it is the honest limit of OS-level detection: the
+  # lobby and the call are indistinguishable. Same title, same mic grant,
+  # and (probe [audio-out]) the browser opens an audio output stream as soon
+  # as the Meet page loads, so an active render session tells them apart
+  # no better than the mic does. So this rule treats "Ready to join?" as the
+  # start of the call - the light turns on when you reach the lobby, which
+  # in practice is under a minute before you are in. Documented in README.
+  #
+  # Weights, against the default thresholds (active 0.70, inactive 0.30):
+  #
+  #   lobby / in call (title + mic)      = 0.75  active
+  #   in call, another tab in front      = 0.50  mic alone holds an active
+  #     (a browser shows only its active     call through hysteresis, but
+  #      tab's title)                        can never start one
+  #   left the call (title lingers)      = 0.25  inactive: below the floor,
+  #                                              so the light goes out on
+  #                                              mic release, not tab close
+  #   landing page, any browser open     = 0     process is weighted 0 - a
+  #                                              browser is always open
+  - app: meet
+    process_names:
+      - chrome.exe
+      - msedge.exe
+      - brave.exe
+      - firefox.exe
+      - vivaldi.exe
+      - opera.exe
+    # Captured (meet-lobby.txt, meet-in-call.txt, meet-left.txt):
+    #   title="\u202aMeet - abc-defg-hij - Google Chrome\u202c"
+    #   title="\u202aMeet - abc-defg-hij\u202c"
+    # The \u202a/\u202c are Unicode bidi controls (\p{Cf}) Chrome wraps
+    # titles in on this Hebrew-locale machine. Meet used a plain hyphen
+    # here; the en/em dash alternatives and the optional "(1) " tab badge
+    # are allowed for other locales and browsers but are not yet captured.
+    # The subject after the separator must start with a real character, and
+    # the "Google Meet" landing page never matches (it does not start with
+    # "Meet ").
+    window_include_regex:
+      - '^\p{Cf}*(\(\d+\) )?Meet [-\x{2013}\x{2014}] [^\s\-\x{2013}\x{2014}]'
+    # Captured transition page while the lobby loads (meet-lobby.txt
+    # snapshot 32, mic not yet granted):
+    #   title="‪Meet - Google Chrome‬"
+    # That is a tab titled just "Meet" plus the browser suffix, so the
+    # include regex reads "Google Chrome" as the meeting subject. Vetoed
+    # explicitly, per browser, so a bare "Meet" tab never counts.
+    window_exclude_regex:
+      - '^\p{Cf}*(\(\d+\) )?Meet [-\x{2013}\x{2014}] (Google Chrome|Microsoft Edge|Brave|Mozilla Firefox|Vivaldi|Opera)\p{Cf}*$'
+    # Captured mic-in-use entry (meet-lobby.txt, meet-in-call.txt):
+    #   C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+    mic_process_regex:
+      - '(?i)(^|\\)(chrome|msedge|brave|firefox|vivaldi|opera)\.exe$'
+    weights:
+      process: 0.0
+      window: 0.25
+      mic: 0.50
