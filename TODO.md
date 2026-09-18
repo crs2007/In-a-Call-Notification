@@ -954,6 +954,572 @@ changes landed together and were verified together, not just individually).
 
 ---
 
+## Phase 8 — macOS support
+
+### Why it doesn't work today
+
+Every real signal lives in `platform/windows/`. The non-Windows half of
+that package (`stub_other.go`) is a no-op stub that returns "no evidence"
+for all four signals — it exists only so `cmd/probe` cross-compiles. A
+`GOOS=darwin` build therefore launches, shows a menu-bar icon, connects to
+the broker, and then publishes `inactive` **forever, with full
+confidence** — a false negative Home Assistant would trust. On top of
+that, `.goreleaser.yaml` builds `goos: [windows]` only, so no darwin
+asset exists. This is not a missing-docs problem; the darwin adapter has
+to be written. The original design doc (`docs/In a call notification.md`,
+"platform/darwin/") always intended it.
+
+### Requirements for the target machine
+
+The target is a **managed work Mac**, which fixes these requirements:
+
+- **Install = copy one file.** A single Mach-O binary, no installer, no
+  `.pkg`, no `sudo`. It lives in the user's home folder at a stable path
+  and is launched at login via a user LaunchAgent
+  (`~/Library/LaunchAgents/`). Nothing in install, autostart, permission
+  grant, or uninstall may require admin rights.
+- **The permission ask is exactly one:** Screen Recording, for window
+  titles. **Accessibility is not required** and the design below must
+  not drift into needing it (`CGWindowListCopyWindowInfo` is
+  Screen-Recording-gated; the AXUIElement route the old design doc
+  sketched is what would need Accessibility, and it is out of scope).
+- **Degrade, don't fail.** Without Screen Recording the app must still
+  run on process evidence alone and say so in the tray, never crash or
+  log-spam.
+
+### The four obstacles, and why they gate the whole phase
+
+None of these is a Go problem. All four are properties of the target
+machine's management policy, and every one can be tested **before any
+darwin code exists** (8.0):
+
+1. **Gatekeeper.** An unsigned binary downloaded by a browser is
+   quarantined. On macOS 15+ the right-click → Open bypass no longer
+   exists; the only path is System Settings → Privacy & Security →
+   "Open Anyway", and MDM can disable that override outright. On a
+   managed machine this may be a hard wall without IT involvement.
+2. **Privacy permissions (TCC).** Window titles need Screen Recording.
+   MDM **cannot** silently grant it — it can only *deny* it for
+   everyone, or leave it for the standard user to grant. If the org's
+   PPPC profile denies it, titles are unobtainable and only
+   process-presence evidence remains (which the rules deliberately cap
+   below the `active` threshold — see Phase 6). TCC grants for an
+   *unsigned* binary are keyed to its path and code hash, so moving or
+   rebuilding the binary silently revokes the grant.
+3. **EDR.** An unsigned binary that enumerates processes and windows,
+   persists via LaunchAgent, and opens an outbound connection on 1883 to
+   a non-corporate host is the textbook "persistence + beaconing"
+   pattern EDR products flag. Being open source helps only if someone
+   at IT reads it.
+4. **Policy.** Independently of whether it *can* run, running
+   self-built monitoring software on a managed machine may violate an
+   acceptable-use policy. That is a conversation, not a config option.
+
+Hard constraints carried over from the Windows build, none negotiable
+without a separate decision:
+
+- **No cgo.** Releases build with `CGO_ENABLED=0`. The vendored
+  `third_party/systray` already talks to AppKit through
+  `github.com/go-webgpu/goffi` (dlopen + ffi, no cgo); every darwin
+  syscall below must use the same mechanism or `golang.org/x/sys/unix`.
+- **Titles never logged above Debug.** Same privacy contract as
+  `platform/windows.WindowInfo`.
+- **Absent signal reports "no evidence", never an error.** Same contract
+  as `stub_other.go`.
+
+Ordered so that 8.0 costs nothing and can kill the phase; 8.2–8.3 then
+produce something a Mac user can run (`cmd/probe`) before any rule,
+packaging, or docs work starts — darwin rules cannot be authored without
+real captures, exactly as Phase 6's Windows rules were.
+
+### [ ] 8.0 Go / no-go on the target machine — no code, ~30 minutes
+
+Do this on the **actual work Mac**, not a personal one. Every check
+below uses tools that already exist. If any check is a hard "no", stop
+and either get IT involved or shelve the phase; do not start 8.1.
+
+- [ ] **Policy first.** Ask IT (or read the acceptable-use policy)
+      whether running a self-built, open-source, unsigned utility that
+      reads window titles and publishes a boolean to a home MQTT broker
+      is acceptable. Offer them the repo link and the SECURITY.md threat
+      model. Record the answer here.
+- [ ] **Is the machine MDM-managed, and what does the profile say?**
+      `system_profiler SPConfigurationProfileDataType` (no admin needed)
+      lists installed profiles. Look for a `com.apple.systempolicy.control`
+      payload (Gatekeeper: `DisableOverride`, `AllowIdentifiedDevelopers`)
+      and a `com.apple.TCC.configuration-profile-policy` payload with a
+      `ScreenCapture` entry (`Allowed: false` = hard no for titles).
+- [ ] **Gatekeeper canary.** Cross-compile today's probe from Windows —
+      `GOOS=darwin GOARCH=arm64 go build -o probe-darwin ./cmd/probe`
+      (use `amd64` for an Intel Mac) — transfer it via a browser download
+      (so it gets the quarantine attribute; `curl`/AirDrop/`scp` don't,
+      which would make the test meaningless), `chmod +x`, and run it. It
+      will print empty results (that's the stub) but it exercises
+      Gatekeeper exactly as the real binary would. Note which of these
+      worked: ran outright / "Open Anyway" in Settings / `xattr -d
+      com.apple.quarantine` / nothing.
+- [ ] **Screen Recording canary.** System Settings → Privacy & Security →
+      Screen Recording. If the list is editable and the `+` button is
+      enabled, a standard user can grant it. If it's greyed out or shows
+      "managed by your organisation", titles are off the table and the
+      phase is worth doing only if process-only evidence is acceptable
+      (it isn't, per the Phase 6 thresholds — so that's a no-go).
+- [ ] **EDR presence.** `ls /Library/SystemExtensions /Applications |
+      grep -iE 'crowdstrike|falcon|sentinel|carbon|defender|jamf'` and
+      `systemextensionsctl list`. If an EDR is present, expect the probe
+      canary above to be flagged or quietly killed; check whether it was.
+      An EDR that tolerates the canary is a good sign, not a guarantee.
+- [ ] **Network path.** The whole point is publishing from the *home*
+      network. Confirm the work Mac actually joins the home Wi-Fi (not
+      always-on VPN with no split tunnelling) and can reach the broker
+      on 1883. `allowed_networks` will keep it silent on corporate
+      networks; VPN `utun*` interfaces are excluded in 8.5.
+
+**Done when:** each bullet has a recorded result pasted under it, and the
+signing decision in 8.1 has been made *from* those results rather than
+from preference.
+
+### [ ] 8.1 Decide the three things only the maintainer can decide
+
+Decide these on the issue before writing code; each one changes the
+shape of items below.
+
+- [ ] **Code signing — decided by the 8.0 Gatekeeper canary.**
+      Notarization requires an Apple Developer ID (paid, yearly) and a
+      signing step in CI. Two outcomes:
+      - *Canary ran (outright, via "Open Anyway", or via `xattr`) and IT
+        is fine with that path:* ship unsigned in this phase, document
+        the exact path that worked, and keep signing as 8.11.
+      - *Canary blocked and override disabled by MDM:* notarization moves
+        into this phase as a prerequisite of 8.9, and even then IT may
+        need to allow-list the Team ID. Budget for both the account and
+        the IT ticket.
+      Either way, **never ad-hoc sign in CI**: an ad-hoc signature
+      changes every build, and TCC keys the Screen Recording grant to the
+      code signature, so the user would be re-prompted on every upgrade.
+- [ ] **Mic/camera attribution.** On Windows the ConsentStore names the
+      *process* holding the mic, which is what `mic_process_regex` and
+      `cam_process_regex` match. macOS exposes only a device-wide boolean
+      from user space: CoreAudio `kAudioDevicePropertyDeviceIsRunningSomewhere`
+      on the default input device, and CoreMediaIO
+      `kCMIODevicePropertyDeviceIsRunningSomewhere` for cameras. Per-process
+      attribution needs private APIs or parsing `log stream`, neither of
+      which is acceptable. **Recommendation:** extend
+      `rules.Observation` with `MicActive bool` / `CamActive bool`
+      (unattributed), and let a rule's `mic_process_regex` match against
+      the unattributed flag *only when the rule's `process_names` is
+      also running* — i.e. "the mic is on and Teams is the only call app
+      open" counts as Teams-mic. Two call apps open at once becomes
+      ambiguous evidence and scores as neither, which is the same
+      conservative bias the Windows rules already take (false `active`
+      is worse than a missed call).
+      The same decision covers the newer **audio-out** signal
+      (`Snapshot.AppsRenderingAudio`, added for browser-based Meet to
+      tell a joined call from its pre-join lobby). macOS can answer "is
+      the default output device running" via the same CoreAudio property
+      on the output device, again without naming the process. Since
+      `AppsRenderingAudio` is already optional (`nil` = no source), the
+      darwin adapter may leave it `nil` in the first release and accept
+      that Meet-in-a-browser detection is weaker on macOS; say so in the
+      FAQ (8.10).
+- [ ] **Window-title permission.** `CGWindowListCopyWindowInfo` returns
+      owner PID and owner name without any permission, but `kCGWindowName`
+      (the title) is empty unless the app has **Screen Recording**. There
+      is no narrower entitlement, and Accessibility does not substitute
+      for it. **Recommendation:** accept it, prompt once via
+      `CGRequestScreenCaptureAccess` on first tray launch, and document
+      plainly in README's Privacy section that the permission is used only
+      to read window *titles* (the app never captures pixels). Without the
+      grant the darwin adapter still returns windows with empty titles, so
+      process-only evidence keeps working.
+
+**Done when:** all three are answered on the tracking issue and the
+answers are pasted into this section.
+
+### [ ] 8.2 Make the platform seam OS-neutral
+
+`internal/detectors.Snapshot` already injects the four platform calls as
+functions, so the detectors and engine don't change. What's wrong is the
+naming: `platformwindows.WindowInfo` is the type every caller uses, and
+`detectors.WindowsSnapshot()` / `cmd/probe` import `platform/windows`
+unconditionally.
+
+- [ ] New package `platform` (root, pure Go, no build tags) holding
+      `type WindowInfo struct{ PID uint32; Title string }`. Keep the
+      "never log above Debug" comment with it.
+- [ ] `platform/windows.WindowInfo` becomes a type alias for
+      `platform.WindowInfo` so nothing else has to change in that package.
+- [ ] Rename `detectors.WindowsSnapshot()` → `detectors.PlatformSnapshot()`
+      and split its body into `snapshot_windows.go`, `snapshot_darwin.go`
+      (8.3) and `snapshot_other.go` (returns the current stub behaviour).
+      Delete `platform/windows/stub_other.go`: once no non-Windows file
+      imports `platform/windows`, the stub has no reason to exist.
+- [ ] `cmd/probe` and `cmd/callmqtt` import only `detectors.PlatformSnapshot`,
+      never a `platform/<os>` package directly.
+
+**Repro:** `GOOS=darwin go build ./...` and `GOOS=linux go build ./...`
+still succeed *and* `grep -rn 'platform/windows' --include=*.go cmd/
+internal/` returns only files with a `//go:build windows` line.
+
+**Done when:** the repro holds, `go test ./...` is unchanged on Windows,
+and `detectors_test.go` compiles on every GOOS (it fakes `Snapshot`, so
+it should already).
+
+**Touches:** `platform/platform.go` (new), `platform/windows/windows.go`,
+`platform/windows/stub_other.go` (deleted), `internal/detectors/`,
+`cmd/probe/main.go`.
+
+### [ ] 8.3 `platform/darwin`: process names and window list
+
+The two signals that need no permission (process list) or exactly one
+(titles). Same four-function contract as `platform/windows`, same "no
+evidence, no error" behaviour.
+
+- [ ] `process.go` — `ProcessNames() map[uint32]string` via
+      `unix.SysctlKinfoProcSlice("kern.proc.all")` from `golang.org/x/sys/unix`
+      (already a dependency). Report `kp_proc.p_comm`, which is the
+      executable's basename truncated to 16 bytes — so `"Microsoft Teams"`
+      arrives as `"Microsoft Teams"` but longer names are cut. Decide and
+      document whether to use `proc_pidpath` (via ffi, full path) instead;
+      the 5.2 comment on why one snapshot per tick matters applies here
+      verbatim.
+- [ ] `windows.go` — `VisibleWindows() []platform.WindowInfo` via
+      `CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly |
+      kCGWindowListExcludeDesktopElements, kCGNullWindowID)` through
+      goffi, reading `kCGWindowOwnerPID`, `kCGWindowName` and
+      `kCGWindowLayer` (keep layer 0 only: menu-bar extras, the Dock and
+      Control Center overlays all live on other layers and would be
+      noise). Release the CFArray. Serialise with a mutex for the same
+      reason `platform/windows.enumMu` exists. **No AXUIElement calls in
+      this package, ever** — see Requirements.
+- [ ] `permissions.go` — `ScreenRecordingGranted() bool` via
+      `CGPreflightScreenCaptureAccess`, and `RequestScreenRecording()` via
+      `CGRequestScreenCaptureAccess`. Nothing in this package calls
+      Request itself; the tray does (8.6).
+- [ ] `consent.go` — `AppsUsingMicrophone` / `AppsUsingWebcam` per the
+      8.1 decision. If the decision is "unattributed boolean", these two
+      return `nil` and the booleans go through the new `Observation`
+      fields instead; either way the file carries a comment explaining
+      why macOS cannot name the process.
+- [ ] `audio.go` — `AppsRenderingAudio` per the 8.1 decision: either
+      `nil` (no source; Meet lobby vs call is then indistinguishable on
+      macOS) or the unattributed CoreAudio output-device boolean routed
+      the same way as mic/cam. The contract is now five functions, not
+      four — keep `snapshot_darwin.go` in step with whatever
+      `snapshot_windows.go` exposes.
+- [ ] `snapshot_darwin.go` in `internal/detectors` wires it up.
+
+**Repro:** on a real Mac, `go run ./cmd/probe` prints the same shape of
+output as on Windows: a PID→name map, a window list with titles once
+Screen Recording is granted (and with empty titles, not an error, before
+it is), and the mic/cam section.
+
+**Done when:** the repro holds; `go vet` is clean under `GOOS=darwin`;
+the ffi call sites are covered by a `_test.go` that at least exercises
+them once on `macos-latest` in CI (8.8) so a broken dlopen symbol name
+fails CI rather than a user's first launch.
+
+**Touches:** `platform/darwin/` (new), `internal/detectors/snapshot_darwin.go`
+(new), `go.mod` (goffi moves from indirect to direct).
+
+### [ ] 8.4 Capture real fixtures on a Mac and author the darwin rules
+
+`internal/rules/rules.yaml` is written entirely against Windows process
+names (`ms-teams.exe`, `Zoom.exe`, `Slack.exe`) and Windows title
+formats. None of that can be assumed to hold on macOS: the Teams
+executable is `MSTeams` inside `Microsoft Teams.app`, Zoom's is
+`zoom.us`, Slack's is `Slack`, and the window title conventions have to
+be observed, not guessed.
+
+- [ ] Run `cmd/probe` on a Mac through the same scenario list Phase 6
+      used (`testdata/probe/*.txt`): app open no call, in call, generic
+      meeting title, huddle, call ended but window still open. Store
+      them as `testdata/probe/darwin-*.txt`.
+- [ ] Extend the rule schema so a rule can carry per-OS process names:
+      either `process_names` gains a nested `darwin:`/`windows:` form, or
+      the simpler option, both names in one list (a `.exe` name can never
+      match on macOS and vice versa, so a combined list is harmless).
+      **Recommendation:** the combined list — fewer schema changes, and
+      the rules-file validator from 4.2 needs no new cases.
+- [ ] Add darwin title regexes with the same captured-title comments the
+      Windows rules have, and the same veto style for known idle windows.
+- [ ] If a capture shows an app whose call state is *not* visible in any
+      window title (Slack huddles are the likely case), record that as a
+      known gap in README's FAQ rather than reaching for Accessibility.
+- [ ] Fixture-driven regression tests in `rules_test.go` for each darwin
+      capture, mirroring the existing `teams-idle-meet-window-only` test.
+      Use the `detector-rules` subagent for this item — it owns
+      `rules.yaml` and the fixture tests.
+
+**Repro:** the new fixture tests fail against today's `rules.yaml`
+(nothing matches a darwin process name) and pass after.
+
+**Done when:** every darwin fixture has a test, every Windows fixture
+still passes, and no darwin rule can reach the `active` threshold on
+process presence alone (same 0.70 bar as Windows).
+
+**Touches:** `internal/rules/rules.yaml`, `internal/rules/rules_test.go`,
+`testdata/probe/darwin-*.txt`, possibly `internal/rules/rules.go` if the
+schema changes.
+
+### [ ] 8.5 Network gate: darwin interface names
+
+`internal/network/local.go`'s `virtualAdapterNames` list is Windows
+vocabulary (`vEthernet`, `Hyper-V`, `WSL`). On macOS the interfaces that
+must never count as evidence are `lo0`, `utun*` (VPN / iCloud Private
+Relay — and on a work Mac, the corporate VPN), `awdl*` and `llw*`
+(AirDrop / Wi-Fi Aware), `bridge*`, `vmnet*`, `anpi*`, `ap1`, and
+`gif*`/`stf*`. `en0` is usually Wi-Fi and `en1`+ can be Thunderbolt/USB
+Ethernet, but that isn't guaranteed, so don't special-case `en*`.
+
+- [ ] Add the darwin prefixes to the skip list, either by splitting the
+      list per GOOS or by keeping one list (a name like `utun3` cannot
+      collide with anything on Windows). Prefix match, not substring —
+      `ap1` as a substring would hit real names.
+- [ ] Re-read the 6.2 comment about "the proper fix is classifying by
+      IfType" and note that on darwin the equivalent is
+      `SCNetworkInterfaceGetInterfaceType` via SystemConfiguration; file
+      it under the same follow-up, don't do it here.
+
+**Repro:** table test in `local_test.go` with `utun3`, `awdl0`, `en0`,
+`bridge100` — the first three skipped, `en0` kept.
+
+**Done when:** the repro passes on every GOOS (the code is pure Go, so
+run it on Windows too).
+
+**Touches:** `internal/network/local.go`, `internal/network/local_test.go`.
+
+### [ ] 8.6 Tray, startup, dialogs and file-open on darwin
+
+Everything the tray needs that is currently a `!windows` stub. All of it
+must work as a standard (non-admin) user — that is the Requirements
+section, restated as an acceptance criterion.
+
+- [ ] **Verify the vendored systray darwin backend actually works** with
+      the menu this app builds — checkbox items, icon swaps on state
+      change, the Quit item — before touching anything else. AppKit
+      requires `systray.Run` on the main OS thread; confirm
+      `tray.Run` is reached from `main` without an intervening goroutine
+      on darwin, or add `runtime.LockOSThread` in an `init()` in
+      `cmd/callmqtt` under `//go:build darwin`. If the backend is broken,
+      fixing it lives in `third_party/systray/` and gets its own item.
+- [ ] `cmd/callmqtt/startup_darwin.go` — `IsEnabled`/`Enable`/`Disable`
+      by writing/removing
+      `~/Library/LaunchAgents/com.crs2007.callmqtt.plist` (`RunAtLoad`,
+      `ProgramArguments` = the absolute path of the running binary, as
+      the Windows registry entry does). User domain only — never
+      `/Library/LaunchAgents` or `LaunchDaemons`, which need admin. Don't
+      call `launchctl load` on Enable — the plist is picked up at next
+      login, which is what "start at login" means; do call `launchctl
+      bootout gui/$UID/com.crs2007.callmqtt` on Disable so a stale job
+      isn't left loaded. Narrow `startup_stub.go` to `!windows && !darwin`.
+- [ ] `cmd/callmqtt/dialog_darwin.go` — `reportError` via `osascript -e
+      'display alert ...'` (a subprocess is fine for a fatal-error path
+      that runs once). `brokerDialog` stays the stub: the tray's
+      nil-Dialog fallback already opens the config file, and building an
+      NSAlert-with-text-fields through ffi is not worth it for a first
+      release. Narrow `dialog_stub.go` to `!windows && !darwin`.
+- [ ] `internal/tray/openfile_darwin.go` — `openFileOS` runs
+      `open <path>`; and remove the `runtime.GOOS == "windows"` gate in
+      `openFile` so darwin reaches it. Narrow `openfile_other.go` to
+      `!windows && !darwin && tray`.
+- [ ] On first tray launch on darwin, if `ScreenRecordingGranted()` is
+      false, call `RequestScreenRecording()` once (it opens the system
+      prompt) and add a persistent, disabled menu line
+      "Window titles: permission needed" whose click opens the Privacy
+      pane (`open x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture`).
+      Never re-prompt on a timer. If the pane is MDM-locked the line
+      still tells the user *why* detection is weak, which is the honest
+      outcome.
+- [ ] Log a one-line warning at startup if the binary's path differs
+      from the one recorded in the LaunchAgent plist: the user moved it,
+      and the TCC grant (keyed to path + hash for unsigned binaries) is
+      now gone. Point at the FAQ entry from 8.10.
+
+**Repro:** manual, on a Mac, as a standard user — toggle every checkbox,
+Enable start-at-login and confirm the plist appears and survives a
+logout/login, Quit publishes `offline`.
+
+**Done when:** the manual repro passes and `go build -tags tray ./...`
+under `GOOS=darwin` succeeds with no `!windows` stub compiled in for a
+feature that now has a darwin file. Keep the `tray_test.go` fakes working
+on all three GOOS values.
+
+**Touches:** `cmd/callmqtt/{startup,dialog}_darwin.go` (new),
+`cmd/callmqtt/{startup,dialog}_stub.go`, `internal/tray/openfile_darwin.go`
+(new), `internal/tray/openfile_other.go`, `internal/tray/tray.go`,
+possibly `third_party/systray/`.
+
+### [ ] 8.7 Config, log and install paths on darwin
+
+`os.UserConfigDir()` already resolves to
+`~/Library/Application Support/callmqtt/` on darwin and `save.go`
+already documents the 0600 mode, so the code needs little. What's
+missing is the log location, the install location, and the docs.
+
+- [ ] Pick **one documented install path** for the binary and use it
+      everywhere (README, LaunchAgent example, FAQ). Recommendation:
+      `~/Library/Application Support/callmqtt/callmqtt` — beside the
+      config, user-writable, and stable, which matters because an
+      unsigned binary's TCC grant dies when it moves. `~/Applications/`
+      is the alternative if a Finder-visible location is preferred.
+- [ ] Confirm the log path (`logPath` in `main.go`) lands somewhere
+      sensible on darwin — `~/Library/Logs/callmqtt/callmqtt.log` is the
+      platform convention; next to the config is acceptable. Pick one and
+      make `--help` say so.
+- [ ] `config init` must print the darwin path in its "edit this file"
+      message, not `%APPDATA%`.
+
+**Repro:** `go test ./cmd/callmqtt/... ./internal/config/...` with a
+table case per GOOS for the path-printing helper.
+
+**Done when:** running `callmqtt init` on a Mac prints a path the user
+can copy into `open`.
+
+**Touches:** `cmd/callmqtt/main.go`, `internal/config/config.go`.
+
+### [ ] 8.8 CI: a real macOS job
+
+- [ ] Add `test-macos` on `macos-latest` to `.github/workflows/ci.yml`:
+      `go vet ./...`, `go build ./...`, `go build -tags tray ./...`,
+      `go test -race ./...`. The hosted runner has no Teams and grants no
+      TCC permissions, so every darwin unit test must pass with "no
+      evidence" results — that is the contract 8.3 promises, and this job
+      is what enforces it.
+- [ ] Also cross-compile `darwin/amd64` (the runner is arm64) as a build
+      check, mirroring the existing `windows/arm64` step.
+- [ ] Delete the `cross-compile-darwin` ubuntu job; a real runner
+      supersedes it. Update its comment's reasoning where it's referenced.
+- [ ] Keep `windows-latest` as the required check; add `macos-latest`
+      as required only after it has been green for a full release cycle.
+
+**Done when:** CI is green on a PR that touches `platform/darwin/`, and
+a deliberately misspelled ffi symbol name in a scratch branch makes the
+macOS job red.
+
+**Touches:** `.github/workflows/ci.yml`. Use the `release-ci` subagent.
+
+### [ ] 8.9 Release packaging
+
+- [ ] Second build id in `.goreleaser.yaml`, `goos: [darwin]`,
+      `goarch: [amd64, arm64]`, same `tray` tag, same `-s -w -X
+      main.version`, **without** `-H=windowsgui` (that flag is rejected by
+      the darwin linker). Keep `CGO_ENABLED=0`.
+- [ ] `universal_binaries:` with `replace: true` so one
+      `callmqtt_<version>_darwin_all.zip` ships instead of two; users
+      should not have to know whether they have Apple silicon.
+- [ ] Archive as `.zip` for darwin too (keeps one README sentence for
+      both platforms; `zip` preserves the executable bit). Same `files:`
+      list as the Windows archive.
+- [ ] **Bare binary, not a `.app` bundle.** This is the Requirements
+      section's "single file, no installer". A bare Mach-O works from a
+      terminal and from a LaunchAgent, and systray sets the accessory
+      activation policy so there is no Dock icon. A `.app` is only needed
+      for Finder double-click, a custom icon and a stable TCC identity —
+      all of which come with signing (8.11). Note the trade-off in README.
+- [ ] If 8.1 concluded signing is a prerequisite: add a
+      `signs:`/`notarize:` step using `APPLE_*` secrets, on a
+      `macos-latest` job (notarization needs `xcrun notarytool`, which
+      the Windows runner doesn't have). Otherwise `release.yml` stays on
+      `windows-latest`; goreleaser cross-compiles darwin from there
+      without issue since there is no cgo.
+
+**Done when:** a `v*-rc.N` tag publishes
+`callmqtt_<version>_windows_amd64.zip`,
+`callmqtt_<version>_windows_arm64.zip`,
+`callmqtt_<version>_darwin_all.zip` and `checksums.txt`; the darwin
+archive runs on both an Intel and an Apple-silicon Mac via whichever
+Gatekeeper path 8.0 established.
+
+**Touches:** `.goreleaser.yaml`, `.github/workflows/release.yml`. Use the
+`release-ci` subagent, and do 8.10 in the same change per the CLAUDE.md
+release checklist.
+
+### [ ] 8.10 Documentation
+
+This is a change in the *shape* of the release, so CLAUDE.md requires the
+README update to land with 8.9, not after it.
+
+- [ ] README badge (`Windows 10 / 11` → `Windows 10 / 11 · macOS 13+`;
+      pick the floor from what `CGRequestScreenCaptureAccess` and the
+      goffi backend actually need, and state it once).
+- [ ] README **Installation**: darwin archive name, the documented
+      install path from 8.7, the Gatekeeper path — on macOS 15+ it is
+      Settings → Privacy & Security → "Open Anyway"; the older
+      right-click → Open no longer works and must not be documented as
+      if it does — plus the `xattr -d com.apple.quarantine` command as
+      the terminal alternative, and `Go 1.27+` build-from-source lines
+      for zsh.
+- [ ] README **Quick Start**: config path on macOS, first-launch Screen
+      Recording prompt and what happens if it is declined.
+- [ ] README **Privacy**: one paragraph on the Screen Recording
+      permission — why it is needed (window titles are gated behind it),
+      what it is *not* used for (no pixels are ever read, no
+      Accessibility access is requested), and that titles are never sent
+      to the broker or logged above Debug.
+- [ ] README **FAQ**: "titles are empty on macOS" → permission; "the
+      permission was granted but stopped working" → the binary moved or
+      was upgraded (unsigned TCC grants are path+hash keyed); "developer
+      cannot be verified" → Gatekeeper; "mic shows in-use but state stays
+      inactive" → the 8.1 attribution rule; "Slack huddles aren't
+      detected" if 8.4 found that gap.
+- [ ] README **Running on a managed work Mac** (new subsection or FAQ
+      cluster): the four obstacles in plain words, the 8.0 canary steps
+      the user can run themselves, and "ask IT first" stated once
+      without moralising.
+- [ ] **Home Assistant Integration**: no change expected — the MQTT
+      contract is OS-independent. Verify and say so in the PR.
+- [ ] `SECURITY.md` threat model (6.3): add the macOS-specific
+      assumptions — TCC grants are per-path+hash when unsigned, the
+      LaunchAgent plist is user-writable — and a short **"For IT
+      reviewers"** paragraph: exactly which APIs are called
+      (`sysctl kern.proc.all`, `CGWindowListCopyWindowInfo`, CoreAudio /
+      CoreMediaIO "running somewhere" queries), what leaves the machine
+      (one boolean + heartbeat over MQTT, only on `allowed_networks`),
+      what never does (titles, process lists), and where the build comes
+      from (tagged GitHub release, reproducible via goreleaser). This is
+      what turns an EDR alert into an allow-list entry.
+- [ ] `CLAUDE.md` release checklist: the asset list now has three
+      archives; the "cross-compile darwin" note in `ci.yml` is gone.
+- [ ] Run `go run ./.claude/skills/readme-standards/scripts/validate_readme.go --strict`.
+
+**Done when:** the validator passes and a reader who owns only a Mac can
+get from the README to `active` in Home Assistant without asking a
+question the README already should have answered — including the
+question "will this get me in trouble at work".
+
+**Touches:** `README.md`, `SECURITY.md`, `CLAUDE.md`. Use the
+`release-ci` subagent.
+
+### [ ] 8.11 Follow-ups, explicitly out of scope for the first darwin release
+
+Listed so they aren't re-argued on every PR. The first one is promoted
+into the phase itself if 8.0/8.1 say so.
+
+- [ ] Developer ID signing + notarization in `release.yml` (needs an Apple
+      Developer account and secrets; makes TCC grants survive upgrades and
+      is the only fix for MDM-disabled Gatekeeper overrides). Even
+      notarized, IT may still need to allow-list the Team ID in the PPPC
+      or EDR console.
+- [ ] `.app` bundle with `Info.plist` (`LSUIElement`, custom icon),
+      probably via goreleaser's `dmg`/custom publisher — only worth it
+      with signing.
+- [ ] Homebrew cask (`brew install --cask callmqtt`) — needs a stable,
+      signed artifact first.
+- [ ] Per-process mic/camera attribution if Apple ever exposes it, or
+      if the unattributed heuristic from 8.1 proves too weak in practice.
+- [ ] Accessibility-based detection for apps whose call state isn't in
+      any window title — deliberately excluded because it doubles the
+      permission ask on a managed machine.
+- [ ] Native NSAlert broker dialog through ffi, replacing the "open the
+      config file" fallback.
+- [ ] `SCNetworkInterfaceGetInterfaceType` classification, shared with the
+      Windows `GetAdaptersAddresses` follow-up from 6.2.
+- [ ] Linux: 8.2 makes it a matter of adding `platform/linux/` (X11 /
+      Wayland titles are a much bigger problem than darwin's); not planned.
+
+---
+
 ## Verification checklist for the whole series
 
 Run before tagging the next release:
@@ -972,4 +1538,4 @@ Run before tagging the next release:
         reasserted within one heartbeat
 - [ ] `grep -rn 'mqcommunicator' .` returns nothing.
 - [ ] README Installation section still matches `.goreleaser.yaml`
-      (nothing here changes the release shape, so no edit expected).
+      (Phases 0–7 don't change the release shape; Phase 8 does — see 8.9/8.10).
