@@ -287,7 +287,10 @@ func (e *Engine) evaluate(ctx context.Context, now time.Time) {
 	// still holding whatever was published before — possibly "active" from a
 	// call that ended while the agent was down. Announcing "unknown" at once
 	// clears that, instead of leaving the light red for a whole exit debounce
-	// every time the agent restarts.
+	// every time the agent restarts. That only works because the discovery
+	// value_template (internal/mqtt/discovery.go) maps "unknown" to Home
+	// Assistant's "None": a binary_sensor drops any payload it wasn't told
+	// about, so an unmapped "unknown" would leave the stale "on" in place.
 	startupAnnouncement := !e.published
 	if startupAnnouncement {
 		e.pending = true

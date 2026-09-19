@@ -140,14 +140,18 @@ creates:
 | --- | --- |
 | Device | **In a Call Notification `<device_id>`** (manufacturer *In a Call Notification*, model *Desktop call presence*) |
 | Entity | `binary_sensor.callmqtt_<device_id>_call`, device class `sound` — shown as **Detected** / **Clear** |
-| State | `on` while the payload's `state` is `active`, `off` while `inactive` |
+| State | `on` while the payload's `state` is `active`, `off` while `inactive`, `unknown` while it is `unknown` (the agent has just started and not decided yet — at most one exit debounce, about 8 s) |
 | Attributes | `app`, `confidence`, `network`, `device`, `timestamp` (from the same JSON payload) |
 | Availability | `online` / `offline` on the availability topic, with an MQTT last-will; the entity also expires to `unavailable` if no state arrives for 1.5 × `poll.heartbeat_seconds` (90 s by default) |
 
 The discovery message is re-sent on every reconnect, so if you delete the
 entity in Home Assistant, restarting the agent brings it back. Set
 `mqtt.discovery.enabled: false` if you would rather define the sensor
-yourself.
+yourself — if you do, keep the `unknown` → `None` mapping in the
+`value_template` (`{{ 'None' if value_json.state == 'unknown' else value_json.state }}`),
+or Home Assistant will ignore the agent's startup announcement and a
+retained `active` left by a crash mid-call will keep the entity `on` until
+the agent decides otherwise.
 
 ### Automation template
 

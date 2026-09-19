@@ -106,14 +106,15 @@ type fakeConnectionPublisher struct {
 
 	published  []*paho.Publish
 	calls      int
-	failFirstN int // the first N calls fail, to simulate one publish in the chain erroring
+	failFirstN int    // the first N calls fail, to simulate one publish in the chain erroring
+	failTopic  string // every publish to this topic fails, to simulate one specific step erroring
 }
 
 func (f *fakeConnectionPublisher) Publish(_ context.Context, p *paho.Publish) (*paho.PublishResponse, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.calls++
-	if f.calls <= f.failFirstN {
+	if f.calls <= f.failFirstN || (f.failTopic != "" && p.Topic == f.failTopic) {
 		return nil, errors.New("fake broker: publish failed")
 	}
 	f.published = append(f.published, p)
@@ -128,12 +129,15 @@ func newTestClient(t *testing.T) *Client {
 	return &Client{cfg: testConfig(t), log: slog.New(slog.NewTextHandler(io.Discard, nil))}
 }
 
-// TestRepublishPublishesOnlineDiscoveryThenState is the 7.1 repro: on a
-// (re)connect, republish (onConnectionUp's actual body) must publish, in
-// order, retained "online", the discovery config, and — because a state
+// TestRepublishPublishesDiscoveryStateThenOnline is the 7.1 repro plus the
+// issue #5 ordering: on a (re)connect, republish (onConnectionUp's actual
+// body) must publish, in order, the discovery config, then — because a state
 // source is wired — the payload SetStateSource's func returned, verbatim and
-// with the same retain setting PublishState itself would use.
-func TestRepublishPublishesOnlineDiscoveryThenState(t *testing.T) {
+// with the same retain setting PublishState itself would use, and only then
+// retained "online". Availability last is the point: Home Assistant keeps an
+// entity's last state across "offline", so "online" ahead of the state would
+// briefly re-expose a stale "on".
+func TestRepublishPublishesDiscoveryStateThenOnline(t *testing.T) {
 	c := newTestClient(t)
 	want := Payload{
 		Device:     "sharon-pc",
@@ -150,22 +154,22 @@ func TestRepublishPublishesOnlineDiscoveryThenState(t *testing.T) {
 	c.republish(context.Background(), fake)
 
 	if len(fake.published) != 3 {
-		t.Fatalf("published %d messages, want 3 (online, discovery, state): %+v", len(fake.published), fake.published)
+		t.Fatalf("published %d messages, want 3 (discovery, state, online): %+v", len(fake.published), fake.published)
 	}
 
-	avail := fake.published[0]
-	if avail.Topic != c.cfg.Topics.Availability || string(avail.Payload) != Online || !avail.Retain {
-		t.Errorf("availability publish = %+v, want retained %q on %s", avail, Online, c.cfg.Topics.Availability)
-	}
-
-	disc := fake.published[1]
+	disc := fake.published[0]
 	if disc.Topic != DiscoveryTopic(c.cfg) {
 		t.Errorf("discovery publish topic = %q, want %q", disc.Topic, DiscoveryTopic(c.cfg))
 	}
 
-	state := fake.published[2]
+	state := fake.published[1]
 	if state.Topic != c.cfg.Topics.State {
 		t.Errorf("state publish topic = %q, want %q", state.Topic, c.cfg.Topics.State)
+	}
+
+	avail := fake.published[2]
+	if avail.Topic != c.cfg.Topics.Availability || string(avail.Payload) != Online || !avail.Retain {
+		t.Errorf("availability publish = %+v, want retained %q on %s, and it must come last", avail, Online, c.cfg.Topics.Availability)
 	}
 	if state.Retain != c.cfg.MQTT.Retain {
 		t.Errorf("republished state retain = %v, want %v (must match mqtt.retain)", state.Retain, c.cfg.MQTT.Retain)
@@ -196,7 +200,7 @@ func TestRepublishSkipsStateWhenSourceReportsNotOK(t *testing.T) {
 		}
 	}
 	if len(fake.published) != 2 {
-		t.Errorf("published %d messages, want 2 (online, discovery only): %+v", len(fake.published), fake.published)
+		t.Errorf("published %d messages, want 2 (discovery, online only): %+v", len(fake.published), fake.published)
 	}
 }
 
@@ -210,32 +214,53 @@ func TestRepublishSkipsStateWhenNoSourceIsWired(t *testing.T) {
 	c.republish(context.Background(), fake)
 
 	if len(fake.published) != 2 {
-		t.Errorf("published %d messages, want 2 (online, discovery only, no state source wired): %+v", len(fake.published), fake.published)
+		t.Errorf("published %d messages, want 2 (discovery, online only, no state source wired): %+v", len(fake.published), fake.published)
 	}
 }
 
-// TestRepublishContinuesAfterAvailabilityFailure pins the ordering contract
+// TestRepublishContinuesAfterDiscoveryFailure pins the independence contract
 // in republish's doc comment: a failure on one publish must not skip the
-// rest, since discovery and state each still help Home Assistant catch up as
-// much as they can from a broker that just forgot everything.
-func TestRepublishContinuesAfterAvailabilityFailure(t *testing.T) {
+// rest, since state and availability each still help Home Assistant catch up
+// as much as they can from a broker that just forgot everything.
+func TestRepublishContinuesAfterDiscoveryFailure(t *testing.T) {
 	c := newTestClient(t)
 	c.SetStateSource(func() (Payload, bool) { return Payload{State: "active"}, true })
 
-	fake := &fakeConnectionPublisher{failFirstN: 1} // the availability publish fails
+	fake := &fakeConnectionPublisher{failFirstN: 1} // the discovery publish, now first, fails
 	c.republish(context.Background(), fake)
 
-	var sawDiscovery, sawState bool
+	var sawState, sawOnline bool
 	for _, p := range fake.published {
 		switch p.Topic {
-		case DiscoveryTopic(c.cfg):
-			sawDiscovery = true
 		case c.cfg.Topics.State:
 			sawState = true
+		case c.cfg.Topics.Availability:
+			sawOnline = true
 		}
 	}
-	if !sawDiscovery || !sawState {
-		t.Errorf("a failed availability publish must not skip discovery or state: discovery=%v state=%v", sawDiscovery, sawState)
+	if !sawState || !sawOnline {
+		t.Errorf("a failed discovery publish must not skip state or availability: state=%v online=%v", sawState, sawOnline)
+	}
+}
+
+// TestRepublishStillGoesOnlineAfterStateFailure covers the one step that
+// sits between the others: with state published before "online" (issue #5),
+// a failed state publish must not take availability down with it, or a
+// flaky first publish after a reconnect would leave the entity `unavailable`
+// until the next heartbeat despite a perfectly live connection.
+func TestRepublishStillGoesOnlineAfterStateFailure(t *testing.T) {
+	c := newTestClient(t)
+	c.SetStateSource(func() (Payload, bool) { return Payload{State: "active"}, true })
+
+	fake := &fakeConnectionPublisher{failTopic: c.cfg.Topics.State}
+	c.republish(context.Background(), fake)
+
+	if len(fake.published) != 2 {
+		t.Fatalf("published %d messages, want 2 (discovery, online; state failed): %+v", len(fake.published), fake.published)
+	}
+	last := fake.published[len(fake.published)-1]
+	if last.Topic != c.cfg.Topics.Availability || string(last.Payload) != Online {
+		t.Errorf("last publish = %+v, want %q on %s even though the state publish failed", last, Online, c.cfg.Topics.Availability)
 	}
 }
 
