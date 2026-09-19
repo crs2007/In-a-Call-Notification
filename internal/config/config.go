@@ -378,6 +378,25 @@ func slugify(s string) string {
 	return strings.Trim(b.String(), "-")
 }
 
+// validateMQTTHost rejects values that would build a broken broker URL: a
+// bracketed or unbracketed IPv6 literal is fine (net.JoinHostPort brackets it
+// as needed), but a scheme, path, port, whitespace or query/fragment marker
+// means the user pasted a URL instead of a bare host.
+func validateMQTTHost(host string) error {
+	badFormat := errors.New("host name or IP only, no scheme or port")
+	if strings.ContainsAny(host, " \t\r\n#?") || strings.Contains(host, "://") {
+		return badFormat
+	}
+	trimmed := strings.TrimPrefix(strings.TrimSuffix(host, "]"), "[")
+	if _, err := netip.ParseAddr(trimmed); err == nil {
+		return nil // IPv6 (or IPv4) literal, bracketed or not
+	}
+	if strings.ContainsAny(host, "/:") {
+		return badFormat
+	}
+	return nil
+}
+
 // Validate reports every problem with the configuration at once.
 func (c *Config) Validate() error {
 	var problems []error
@@ -391,6 +410,8 @@ func (c *Config) Validate() error {
 
 	if c.MQTT.Host == "" {
 		add("mqtt.host is required")
+	} else if err := validateMQTTHost(c.MQTT.Host); err != nil {
+		add("mqtt.host %q: %s", c.MQTT.Host, err)
 	}
 	if c.MQTT.Port < 1 || c.MQTT.Port > 65535 {
 		add("mqtt.port %d is out of range 1-65535", c.MQTT.Port)
