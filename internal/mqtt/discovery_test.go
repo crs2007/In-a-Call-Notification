@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/crs2007/callmqtt/internal/config"
+	"github.com/crs2007/callmqtt/internal/model"
 )
 
 func testConfig(t *testing.T) *config.Config {
@@ -49,7 +50,7 @@ func TestDiscoveryPayloadIsStable(t *testing.T) {
   "object_id": "callmqtt_sharon-pc_call",
   "device_class": "sound",
   "state_topic": "desktop-presence/sharon-pc/call",
-  "value_template": "{{ value_json.state }}",
+  "value_template": "{{ 'None' if value_json.state == 'unknown' else value_json.state }}",
   "payload_on": "active",
   "payload_off": "inactive",
   "availability_topic": "desktop-presence/sharon-pc/availability",
@@ -98,6 +99,38 @@ func TestExpireAfterOutlastsHeartbeat(t *testing.T) {
 		if got <= heartbeat {
 			t.Errorf("heartbeat %ds gives expire_after %ds, which would mark a healthy agent unavailable", heartbeat, got)
 		}
+	}
+}
+
+// TestValueTemplateDeclaresEveryStateTheAgentPublishes is the issue #5
+// guard. Home Assistant's binary_sensor drops any templated payload that is
+// not payload_on, payload_off or the literal "None" — so every value of
+// model.CallState the agent can put on the wire must come out of the
+// value_template as one of those three, or the startup "unknown" that is
+// supposed to clear a stale retained "active" is silently ignored.
+func TestValueTemplateDeclaresEveryStateTheAgentPublishes(t *testing.T) {
+	d := BuildDiscovery(testConfig(t), "test")
+
+	// The mapped-to literal must be exactly HA's PAYLOAD_NONE.
+	if haPayloadNone != "None" {
+		t.Fatalf("haPayloadNone = %q, want Home Assistant's PAYLOAD_NONE \"None\"", haPayloadNone)
+	}
+
+	// active/inactive pass straight through and match payload_on/off; the
+	// template must therefore still read value_json.state and the declared
+	// on/off payloads must be the wire values themselves.
+	if d.PayloadOn != string(model.StateActive) || d.PayloadOff != string(model.StateInactive) {
+		t.Errorf("payload_on/off = %q/%q, want %q/%q", d.PayloadOn, d.PayloadOff, model.StateActive, model.StateInactive)
+	}
+	if !strings.Contains(d.ValueTemplate, "value_json.state") {
+		t.Errorf("value_template %q does not read value_json.state", d.ValueTemplate)
+	}
+
+	// unknown must be rewritten to "None", not passed through: a raw
+	// "unknown" is neither payload_on nor payload_off and would be dropped.
+	wantMapping := "'" + haPayloadNone + "' if value_json.state == '" + string(model.StateUnknown) + "'"
+	if !strings.Contains(d.ValueTemplate, wantMapping) {
+		t.Errorf("value_template %q does not map %q to %q; Home Assistant would ignore the startup announcement", d.ValueTemplate, model.StateUnknown, haPayloadNone)
 	}
 }
 

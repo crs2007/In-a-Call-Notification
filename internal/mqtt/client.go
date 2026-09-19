@@ -234,8 +234,9 @@ type connectionPublisher interface {
 	Publish(ctx context.Context, p *paho.Publish) (*paho.PublishResponse, error)
 }
 
-// SetStateSource registers the function republish calls, after "online" and
-// the discovery config, to find out what state to republish on a (re)connect.
+// SetStateSource registers the function republish calls, after the discovery
+// config and before "online", to find out what state to republish on a
+// (re)connect.
 // It is meant to be called once, at wiring time, after both the engine and
 // this Client exist — typically the engine's own Status() turned into a
 // Payload — but onConnectionUp can run concurrently with that call on a later
@@ -279,21 +280,35 @@ func (c *Client) onConnectionUp(cm *autopaho.ConnectionManager, _ *paho.Connack)
 	}()
 }
 
-// republish is onConnectionUp's detached body: publish retained "online",
-// the discovery config, and — if a state source has been wired and has
-// something to report — the current state, in that order. Each step is
-// attempted and logged independently: a failure publishing availability
-// (say) must not skip discovery or state, since each of those still helps
+// republish is onConnectionUp's detached body: publish the discovery
+// config, then — if a state source has been wired and has something to
+// report — the current state, and only then retained "online". Each step is
+// attempted and logged independently: a failure publishing discovery (say)
+// must not skip state or availability, since each of those still helps
 // Home Assistant catch up as much as it can from a broker that just forgot
 // everything.
+//
+// Availability goes last on purpose. Home Assistant remembers an entity's
+// last state across "offline": if the agent died mid-call, the entity is
+// `unavailable` but still `on` underneath, and the moment "online" lands it
+// is `on` again — the light goes red for a call that may have ended while
+// the agent was down. Publishing the current state first means that by the
+// time the entity becomes available, it is already showing the truth
+// (issue #5).
 func (c *Client) republish(ctx context.Context, cm connectionPublisher) {
-	if err := c.publish(ctx, cm, c.cfg.Topics.Availability, []byte(Online), true); err != nil {
-		c.log.Error("publish availability", "error", err)
-	}
 	if err := c.publishDiscovery(ctx, cm); err != nil {
 		c.log.Error("publish home assistant discovery", "error", err)
 	}
+	c.republishState(ctx, cm)
+	if err := c.publish(ctx, cm, c.cfg.Topics.Availability, []byte(Online), true); err != nil {
+		c.log.Error("publish availability", "error", err)
+	}
+}
 
+// republishState is republish's middle step, split out only so the early
+// returns for "no source" and "nothing known yet" don't skip the
+// availability publish that has to follow them.
+func (c *Client) republishState(ctx context.Context, cm connectionPublisher) {
 	src := c.stateSource.Load()
 	if src == nil {
 		return
@@ -301,9 +316,11 @@ func (c *Client) republish(ctx context.Context, cm connectionPublisher) {
 	payload, ok := (*src)()
 	if !ok {
 		// Nothing evaluated yet — e.g. connecting before the engine's first
-		// poll. There is no stale value to worry about here: startup's own
-		// "unknown" announcement (see engine.go) will follow shortly from the
-		// normal publish path.
+		// poll. There is no known state to put ahead of "online" here; the
+		// engine's own startup "unknown" announcement (see engine.go) is
+		// already queued behind autopaho's connection wait and lands within
+		// moments of it, and the discovery value_template makes Home
+		// Assistant read that as `unknown` rather than ignore it.
 		return
 	}
 	if err := c.publishPayload(ctx, cm, payload, c.cfg.MQTT.Retain); err != nil {
