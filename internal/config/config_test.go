@@ -212,6 +212,35 @@ func TestValidationRejects(t *testing.T) {
 			wantError: "poll.detect_seconds must be at least 1",
 		},
 		{
+			// Regression test for #10: an interval above ~9.2e9 overflows the
+			// int64 nanosecond count time.Duration multiplies into, wrapping
+			// negative and panicking time.NewTicker. maxPollSeconds (one day)
+			// rejects it long before it gets near that overflow.
+			name:      "detect interval above the daily cap",
+			yaml:      minimal + "poll:\n  detect_seconds: 86401\n",
+			wantError: "poll.detect_seconds must be at most 86400",
+		},
+		{
+			name:      "network interval above the daily cap",
+			yaml:      minimal + "poll:\n  network_seconds: 86401\n",
+			wantError: "poll.network_seconds must be at most 86400",
+		},
+		{
+			name:      "heartbeat interval above the daily cap",
+			yaml:      minimal + "poll:\n  heartbeat_seconds: 86401\n",
+			wantError: "poll.heartbeat_seconds must be at most 86400",
+		},
+		{
+			name:      "enter debounce above the hourly cap",
+			yaml:      minimal + "detection:\n  enter_debounce_seconds: 3601\n",
+			wantError: "detection.enter_debounce_seconds must be at most 3600",
+		},
+		{
+			name:      "exit debounce above the hourly cap",
+			yaml:      minimal + "detection:\n  exit_debounce_seconds: 3601\n",
+			wantError: "detection.exit_debounce_seconds must be at most 3600",
+		},
+		{
 			name:      "unknown log level",
 			yaml:      minimal + "logging:\n  level: chatty\n",
 			wantError: "logging.level",
@@ -287,6 +316,35 @@ func TestHeartbeatDetectBoundaryAccepted(t *testing.T) {
 		t.Fatal("Defaults() alone is missing required fields and should fail Validate for other reasons")
 	} else if strings.Contains(err.Error(), "too low relative to") {
 		t.Errorf("default poll settings must not trip the heartbeat/detect invariant: %v", err)
+	}
+}
+
+// TestUpperBoundsAcceptedAtExactMax pins the #10 fix's upper bounds at their
+// exact max: maxPollSeconds/maxDebounceSeconds must reject one second above
+// but accept the max itself. poll.detect_seconds is deliberately not
+// exercised at its own max here: with poll.heartbeat_seconds also capped at
+// maxPollSeconds, the pre-existing heartbeat/detect ratio invariant
+// (heartbeat_seconds*1.5 >= detect_seconds*minDetectCyclesBeforeExpire)
+// caps the usable detect_seconds well below maxPollSeconds, so no config
+// exists that is simultaneously "detect_seconds at its cap" and "ratio
+// satisfied". The rejection test above already covers detect_seconds'
+// overflow-safety cap.
+func TestUpperBoundsAcceptedAtExactMax(t *testing.T) {
+	cases := []struct {
+		name string
+		yaml string
+	}{
+		{"network_seconds at max", minimal + "poll:\n  network_seconds: 86400\n"},
+		{"heartbeat_seconds at max", minimal + "poll:\n  heartbeat_seconds: 86400\n"},
+		{"enter_debounce_seconds at max", minimal + "detection:\n  enter_debounce_seconds: 3600\n"},
+		{"exit_debounce_seconds at max", minimal + "detection:\n  exit_debounce_seconds: 3600\n"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if _, err := Parse([]byte(tc.yaml)); err != nil {
+				t.Fatalf("value exactly at the max was rejected: %v", err)
+			}
+		})
 	}
 }
 

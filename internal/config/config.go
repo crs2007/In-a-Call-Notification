@@ -91,6 +91,23 @@ const HeartbeatExpireSafetyFactor = 1.5
 // Used only by Validate's cross-field check below.
 const minDetectCyclesBeforeExpire = 2
 
+// maxPollSeconds bounds poll.detect_seconds, poll.network_seconds and
+// poll.heartbeat_seconds at one day. Without an upper bound, a value near
+// math.MaxInt64/time.Second (about 9.22e9 seconds) overflows the int64
+// nanosecond count Poll.Detect/Network/Heartbeat multiply into a
+// time.Duration, producing a negative duration that panics time.NewTicker in
+// internal/engine/engine.go. One day is far beyond any sane poll interval,
+// so it costs no legitimate configuration.
+const maxPollSeconds = 86400
+
+// maxDebounceSeconds bounds detection.enter_debounce_seconds and
+// detection.exit_debounce_seconds at one hour, for the same overflow reason
+// as maxPollSeconds: Detection.EnterDebounce/ExitDebounce multiply the
+// configured seconds into a time.Duration with no overflow check. An hour is
+// already far longer than any debounce a user would want — it exists purely
+// as a backstop, not a usability limit.
+const maxDebounceSeconds = 3600
+
 // Detection holds the thresholds that turn a confidence score into a state.
 //
 // The debounces are deliberately asymmetric: entering a call should feel
@@ -455,18 +472,33 @@ func (c *Config) Validate() error {
 	if c.Detection.EnterDebounceSeconds < 0 {
 		add("detection.enter_debounce_seconds must not be negative")
 	}
+	if c.Detection.EnterDebounceSeconds > maxDebounceSeconds {
+		add("detection.enter_debounce_seconds must be at most %d", maxDebounceSeconds)
+	}
 	if c.Detection.ExitDebounceSeconds < 0 {
 		add("detection.exit_debounce_seconds must not be negative")
+	}
+	if c.Detection.ExitDebounceSeconds > maxDebounceSeconds {
+		add("detection.exit_debounce_seconds must be at most %d", maxDebounceSeconds)
 	}
 
 	if c.Poll.DetectSeconds < 1 {
 		add("poll.detect_seconds must be at least 1")
 	}
+	if c.Poll.DetectSeconds > maxPollSeconds {
+		add("poll.detect_seconds must be at most %d", maxPollSeconds)
+	}
 	if c.Poll.NetworkSeconds < 1 {
 		add("poll.network_seconds must be at least 1")
 	}
+	if c.Poll.NetworkSeconds > maxPollSeconds {
+		add("poll.network_seconds must be at most %d", maxPollSeconds)
+	}
 	if c.Poll.HeartbeatSeconds < 1 {
 		add("poll.heartbeat_seconds must be at least 1")
+	}
+	if c.Poll.HeartbeatSeconds > maxPollSeconds {
+		add("poll.heartbeat_seconds must be at most %d", maxPollSeconds)
 	}
 	// Cross-field, on top of the per-field minimums above: not currently
 	// reachable with the defaults or their individual minimums alone, but
