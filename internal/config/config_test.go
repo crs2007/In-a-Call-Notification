@@ -252,6 +252,46 @@ func TestValidationRejects(t *testing.T) {
 				"allowed_networks:\n  - {name: Home, cidrs: [\"10.0.0.0/8\"]}\n",
 			wantError: "mqtt.tls.cert_file and mqtt.tls.key_file must both be set, or both left empty",
 		},
+		{
+			name:      "detect_seconds above its max",
+			yaml:      minimal + "poll:\n  detect_seconds: 86401\n",
+			wantError: "poll.detect_seconds must be at most 86400",
+		},
+		{
+			name:      "network_seconds above its max",
+			yaml:      minimal + "poll:\n  network_seconds: 86401\n",
+			wantError: "poll.network_seconds must be at most 86400",
+		},
+		{
+			name:      "heartbeat_seconds above its max",
+			yaml:      minimal + "poll:\n  heartbeat_seconds: 86401\n",
+			wantError: "poll.heartbeat_seconds must be at most 86400",
+		},
+		{
+			name:      "enter_debounce_seconds above its max",
+			yaml:      minimal + "detection:\n  enter_debounce_seconds: 3601\n",
+			wantError: "detection.enter_debounce_seconds must be at most 3600",
+		},
+		{
+			name:      "exit_debounce_seconds above its max",
+			yaml:      minimal + "detection:\n  exit_debounce_seconds: 3601\n",
+			wantError: "detection.exit_debounce_seconds must be at most 3600",
+		},
+		{
+			// The exact repro from GitHub issue #10: a detect_seconds this
+			// large overflows time.Duration nanoseconds when multiplied by
+			// time.Second in Poll.Detect(), which used to panic
+			// time.NewTicker in engine.Run instead of failing validation.
+			name:      "issue 10 repro: detect_seconds overflows time.Duration",
+			yaml:      minimal + "poll:\n  detect_seconds: 10000000000\n",
+			wantError: "poll.detect_seconds must be at most 86400",
+		},
+		{
+			// Same overflow class as above, for heartbeat_seconds.
+			name:      "issue 10 repro: heartbeat_seconds overflows time.Duration",
+			yaml:      minimal + "poll:\n  heartbeat_seconds: 20000000000\n",
+			wantError: "poll.heartbeat_seconds must be at most 86400",
+		},
 	}
 
 	for _, tt := range tests {
@@ -310,6 +350,111 @@ func TestLiteralPasswordIsFlagged(t *testing.T) {
 	}
 	if !cfg.PasswordIsLiteral() {
 		t.Error("a password written into the file should be reported as literal")
+	}
+}
+
+// TestPollAndDebounceMaxBoundariesAccepted is the accept-side counterpart to
+// the "above its max" rejections in TestValidationRejects: a value at or just
+// below each field's new upper bound must still be accepted.
+func TestPollAndDebounceMaxBoundariesAccepted(t *testing.T) {
+	tests := []struct {
+		name string
+		yaml string
+		// check is given the parsed config to confirm the field under test
+		// actually carried the value through, rather than merely not erroring.
+		check func(t *testing.T, cfg *Config)
+	}{
+		{
+			name: "network_seconds at its max",
+			yaml: minimal + "poll:\n  network_seconds: 86400\n",
+			check: func(t *testing.T, cfg *Config) {
+				if cfg.Poll.NetworkSeconds != 86400 {
+					t.Errorf("network_seconds = %d, want 86400", cfg.Poll.NetworkSeconds)
+				}
+			},
+		},
+		{
+			name: "heartbeat_seconds at its max",
+			// detect_seconds stays at its default (2): the heartbeat/detect
+			// cross-field ratio check (7.6) only rejects a heartbeat that is
+			// too *low* relative to detect, so a huge heartbeat next to a
+			// tiny detect interval is comfortably valid.
+			yaml: minimal + "poll:\n  heartbeat_seconds: 86400\n",
+			check: func(t *testing.T, cfg *Config) {
+				if cfg.Poll.HeartbeatSeconds != 86400 {
+					t.Errorf("heartbeat_seconds = %d, want 86400", cfg.Poll.HeartbeatSeconds)
+				}
+			},
+		},
+		{
+			name: "detect_seconds at the highest value the heartbeat ratio allows",
+			// detect_seconds's own cap is 86400, but the heartbeat/detect
+			// ratio check requires heartbeat_seconds >= detect_seconds *
+			// 2/1.5, and heartbeat_seconds shares the same 86400 cap. The two
+			// bounds together mean the largest detect_seconds that can ever
+			// pass validation is 86400*0.75 = 64800, paired with
+			// heartbeat_seconds at its own max of 86400 (129600 == 129600,
+			// satisfying the non-strict ratio check). This still exercises
+			// detect_seconds's upper-bound check without tripping it, which
+			// is the point of this test.
+			yaml: minimal + "poll:\n  detect_seconds: 64800\n  heartbeat_seconds: 86400\n",
+			check: func(t *testing.T, cfg *Config) {
+				if cfg.Poll.DetectSeconds != 64800 {
+					t.Errorf("detect_seconds = %d, want 64800", cfg.Poll.DetectSeconds)
+				}
+			},
+		},
+		{
+			name: "enter_debounce_seconds at its max",
+			yaml: minimal + "detection:\n  enter_debounce_seconds: 3600\n",
+			check: func(t *testing.T, cfg *Config) {
+				if cfg.Detection.EnterDebounceSeconds != 3600 {
+					t.Errorf("enter_debounce_seconds = %d, want 3600", cfg.Detection.EnterDebounceSeconds)
+				}
+			},
+		},
+		{
+			name: "exit_debounce_seconds at its max",
+			yaml: minimal + "detection:\n  exit_debounce_seconds: 3600\n",
+			check: func(t *testing.T, cfg *Config) {
+				if cfg.Detection.ExitDebounceSeconds != 3600 {
+					t.Errorf("exit_debounce_seconds = %d, want 3600", cfg.Detection.ExitDebounceSeconds)
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg, err := Parse([]byte(tt.yaml))
+			if err != nil {
+				t.Fatalf("expected acceptance, got: %v", err)
+			}
+			tt.check(t, cfg)
+		})
+	}
+}
+
+// TestDefaultsStayWithinNewPollAndDebounceMaxima is a regression guard for
+// the maxPollSeconds/maxDebounceSeconds bounds added for GitHub issue #10:
+// the shipped defaults (well under either bound) must never trip the new
+// "must be at most" checks, only the unrelated missing-fields errors that
+// Defaults() alone always has.
+func TestDefaultsStayWithinNewPollAndDebounceMaxima(t *testing.T) {
+	err := Defaults().Validate()
+	if err == nil {
+		t.Fatal("Defaults() alone is missing required fields and should fail Validate for other reasons")
+	}
+	for _, unwanted := range []string{
+		"poll.detect_seconds must be at most",
+		"poll.network_seconds must be at most",
+		"poll.heartbeat_seconds must be at most",
+		"detection.enter_debounce_seconds must be at most",
+		"detection.exit_debounce_seconds must be at most",
+	} {
+		if strings.Contains(err.Error(), unwanted) {
+			t.Errorf("Defaults() unexpectedly tripped a new upper bound: %q in %v", unwanted, err)
+		}
 	}
 }
 
