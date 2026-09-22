@@ -198,9 +198,27 @@ func marshalDocument(doc *yaml.Node) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// writeAtomic writes via a temporary file in the same directory, so an
-// interrupted save cannot leave a half-written config behind. The agent may be
-// restarted at any moment; a truncated config would strand it.
+// backupSuffix names the one prior generation writeAtomic keeps, so a save
+// that lands mid-write (or a config that turns out unreadable for any other
+// reason) still leaves the previous, known-good file one rename away. Load's
+// error mentions it by this exact name.
+const backupSuffix = ".bak"
+
+// writeAtomic writes via a temporary file in the same directory, then renames
+// it over path.
+//
+// The rename makes the replace atomic against a crash of this process: at no
+// point does path point at a half-written file. tmp.Sync() before the rename
+// additionally makes it durable against power loss or a hard reset — without
+// it, NTFS can journal the rename before the temp file's data has actually
+// reached disk, so a power cut in that window could leave path empty even
+// though the process itself was never interrupted. This is not a full
+// guarantee against every kind of storage failure (the rename itself is not
+// fsync'd, and neither is the directory entry it produces), but it closes the
+// gap that mattered here.
+//
+// Before the rename, any existing file at path is kept as path+backupSuffix,
+// so one prior generation always survives a bad write.
 func writeAtomic(path string, body []byte) error {
 	dir := filepath.Dir(path)
 	tmp, err := os.CreateTemp(dir, ".callmqtt-*.yaml")
@@ -218,6 +236,10 @@ func writeAtomic(path string, body []byte) error {
 		tmp.Close()
 		return fmt.Errorf("write temporary config: %w", err)
 	}
+	if err := tmp.Sync(); err != nil {
+		tmp.Close()
+		return fmt.Errorf("flush temporary config: %w", err)
+	}
 	// Owner-only, because the file now holds a plaintext broker password.
 	//
 	// On Windows this is close to a no-op: Chmod there only toggles the
@@ -232,6 +254,12 @@ func writeAtomic(path string, body []byte) error {
 	if err := tmp.Close(); err != nil {
 		return fmt.Errorf("close temporary config: %w", err)
 	}
+
+	// Best-effort and silent: the common failure is that path does not exist
+	// yet (the very first save), and any other failure to back up must not
+	// block replacing the config either, since the new file is already
+	// durably written and is strictly better than what is there now.
+	_ = os.Rename(path, path+backupSuffix)
 
 	if err := os.Rename(tmpName, path); err != nil {
 		return fmt.Errorf("replace config %s: %w", path, err)

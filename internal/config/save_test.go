@@ -337,6 +337,81 @@ func TestSaveWritesPasswordWhenChanged(t *testing.T) {
 	}
 }
 
+// Every save keeps the file it replaced as path+".bak", so a config that
+// turns out unreadable after a save (truncated by a power loss, or just a
+// bad hand-edit made before the tray was reopened) is not the user's only
+// copy.
+func TestSaveKeepsBackupOfPreviousGeneration(t *testing.T) {
+	path := writeTemp(t, Example)
+	original, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read seed: %v", err)
+	}
+
+	cfg, err := Load(path)
+	if err != nil {
+		t.Fatalf("load: %v", err)
+	}
+	s := cfg.Settings()
+	s.BrokerHost = "10.0.0.5"
+	if err := Save(path, s); err != nil {
+		t.Fatalf("save: %v", err)
+	}
+
+	backup, err := os.ReadFile(path + backupSuffix)
+	if err != nil {
+		t.Fatalf("read backup: %v", err)
+	}
+	if string(backup) != string(original) {
+		t.Error("backup does not match the file that was in place before the save")
+	}
+
+	// A second save must roll the backup forward to the first save's result,
+	// not keep piling up generations.
+	afterFirstSave, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read after first save: %v", err)
+	}
+	s.BrokerHost = "10.0.0.6"
+	if err := Save(path, s); err != nil {
+		t.Fatalf("second save: %v", err)
+	}
+	backup, err = os.ReadFile(path + backupSuffix)
+	if err != nil {
+		t.Fatalf("read backup after second save: %v", err)
+	}
+	if string(backup) != string(afterFirstSave) {
+		t.Error("backup after the second save should be the first save's result")
+	}
+}
+
+// The repro for issue #15: a config truncated to empty by a power loss right
+// after a save (the exact failure a missing fsync used to allow) must not
+// strand the user without knowing a previous version still exists.
+func TestLoadMentionsBackupWhenPrimaryFailsToParse(t *testing.T) {
+	path := writeTemp(t, Example)
+	cfg, err := Load(path)
+	if err != nil {
+		t.Fatalf("load: %v", err)
+	}
+	s := cfg.Settings()
+	if err := Save(path, s); err != nil {
+		t.Fatalf("save (creates the backup): %v", err)
+	}
+
+	if err := os.WriteFile(path, nil, 0o600); err != nil {
+		t.Fatalf("simulate a power-loss truncation: %v", err)
+	}
+
+	_, err = Load(path)
+	if err == nil {
+		t.Fatal("expected an empty config to be rejected")
+	}
+	if !strings.Contains(err.Error(), path+backupSuffix) {
+		t.Errorf("error %q does not point at the backup %s", err, path+backupSuffix)
+	}
+}
+
 // The saved file holds a plaintext password, so it must not be world-readable.
 //
 // Windows is exempt because it does not model Unix permission bits at all:

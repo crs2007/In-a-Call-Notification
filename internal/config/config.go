@@ -238,6 +238,14 @@ func Load(path string) (*Config, error) {
 	}
 	cfg, err := Parse(raw)
 	if err != nil {
+		// Save keeps the previous generation at path+backupSuffix, so a
+		// config that fails to parse here — e.g. left empty or truncated by
+		// a power loss mid-write — is not necessarily the user's only copy.
+		// Only mention it when it actually exists; most parse failures are
+		// just a hand-edit typo with no backup involved at all.
+		if _, statErr := os.Stat(path + backupSuffix); statErr == nil {
+			return nil, fmt.Errorf("%w (a previous version is available at %s)", err, path+backupSuffix)
+		}
 		return nil, err
 	}
 
