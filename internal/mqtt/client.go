@@ -23,6 +23,7 @@ import (
 	"log/slog"
 	"net/url"
 	"os"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -88,6 +89,12 @@ type Client struct {
 	// autopaho's own goroutine and may fire (on a reconnect) concurrently
 	// with anything else touching the Client.
 	stateSource atomic.Pointer[func() (Payload, bool)]
+
+	// connectErrMu guards connectErrState, which OnConnectError updates from
+	// autopaho's connection goroutine while onConnectionUp reads and resets
+	// it from that same goroutine on a later reconnect.
+	connectErrMu    sync.Mutex
+	connectErrState connectErrorState
 }
 
 // New dials the broker and starts autopaho's reconnect loop. It returns as
@@ -132,8 +139,19 @@ func New(ctx context.Context, opts Options) (*Client, error) {
 		OnConnectionDown: c.onConnectionDown,
 		OnConnectError: func(err error) {
 			// Reconnecting is normal operation, not a fault: the broker may
-			// simply not be up yet.
-			c.log.Warn("mqtt connection attempt failed", "error", err)
+			// simply not be up yet. But logging every retry unconditionally
+			// grows the log without bound over a long outage (autopaho's
+			// default ConnectRetryDelay is 10s), so this is rate-limited the
+			// same way the engine's publishFailing latch limits publish
+			// warnings: log the first failure, then at most one line per
+			// connectErrorLogInterval.
+			c.connectErrMu.Lock()
+			next, shouldLog, count := recordConnectError(c.connectErrState, time.Now())
+			c.connectErrState = next
+			c.connectErrMu.Unlock()
+			if shouldLog {
+				c.log.Warn("mqtt connection attempt failed", "error", err, "failures", count)
+			}
 		},
 
 		ClientConfig: paho.ClientConfig{
@@ -272,6 +290,14 @@ func (c *Client) SetStateSource(f func() (Payload, bool)) {
 func (c *Client) onConnectionUp(cm *autopaho.ConnectionManager, _ *paho.Connack) {
 	c.log.Info("mqtt connected", "broker", c.cfg.MQTT.Host, "client_id", c.cfg.MQTT.ClientID)
 	c.connected.Store(true)
+
+	c.connectErrMu.Lock()
+	next, wasFailing, failures := recordConnectRecovery(c.connectErrState)
+	c.connectErrState = next
+	c.connectErrMu.Unlock()
+	if wasFailing {
+		c.log.Info("mqtt connection recovered", "failures", failures)
+	}
 
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

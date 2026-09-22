@@ -91,3 +91,53 @@ func TestRotateLogIfLarge(t *testing.T) {
 		}
 	})
 }
+
+func TestRotatingWriter(t *testing.T) {
+	t.Run("rotates mid-process without a restart", func(t *testing.T) {
+		path := filepath.Join(t.TempDir(), "callmqtt.log")
+		w, err := newRotatingWriter(path)
+		if err != nil {
+			t.Fatalf("newRotatingWriter: %v", err)
+		}
+		defer w.Close()
+
+		chunk := []byte(strings.Repeat("x", 1024*1024))
+		for i := 0; i < 6; i++ {
+			if _, err := w.Write(chunk); err != nil {
+				t.Fatalf("write %d: %v", i, err)
+			}
+		}
+
+		if _, err := os.Stat(path + ".1"); err != nil {
+			t.Fatalf("expected rotated generation to exist: %v", err)
+		}
+		info, err := os.Stat(path)
+		if err != nil {
+			t.Fatalf("stat current log: %v", err)
+		}
+		if info.Size() >= maxLogSize {
+			t.Fatalf("current log is %d bytes, want it rotated back below maxLogSize", info.Size())
+		}
+	})
+
+	t.Run("seeds size from an existing file", func(t *testing.T) {
+		path := filepath.Join(t.TempDir(), "callmqtt.log")
+		existing := strings.Repeat("x", maxLogSize-10)
+		if err := os.WriteFile(path, []byte(existing), 0o644); err != nil {
+			t.Fatalf("write log: %v", err)
+		}
+		w, err := newRotatingWriter(path)
+		if err != nil {
+			t.Fatalf("newRotatingWriter: %v", err)
+		}
+		defer w.Close()
+
+		if _, err := w.Write([]byte(strings.Repeat("y", 20))); err != nil {
+			t.Fatalf("write: %v", err)
+		}
+
+		if _, err := os.Stat(path + ".1"); err != nil {
+			t.Fatalf("expected rotation once the seeded size plus the new write crossed maxLogSize: %v", err)
+		}
+	})
+}
