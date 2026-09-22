@@ -1,0 +1,2084 @@
+=== 2026-09-18T13:40:33+03:00 ===
+[windows] 27 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Swirling treehouse imple… - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (958)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Meet - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+[microphone] 0 in use
+[webcam] 0 in use
+[audio-out] 0 in use
+
+=== 2026-09-18T13:40:35+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Swirling treehouse imple… - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=79160  proc=SearchApp.exe                title="News and interests"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (958)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Meet - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+[microphone] 0 in use
+[webcam] 0 in use
+[audio-out] 0 in use
+
+=== 2026-09-18T13:40:37+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Swirling treehouse imple… - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (958)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Meet - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 0 in use
+[webcam] 0 in use
+[audio-out] 1 in use
+  theeye-tray.exe
+
+=== 2026-09-18T13:40:39+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Swirling treehouse imple… - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (958)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Meet - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 0 in use
+[webcam] 0 in use
+[audio-out] 0 in use
+
+=== 2026-09-18T13:40:41+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Swirling treehouse imple… - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (958)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Meet - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 0 in use
+[webcam] 0 in use
+[audio-out] 0 in use
+
+=== 2026-09-18T13:40:43+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Swirling treehouse imple… - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (958)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Meet - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 0 in use
+[webcam] 0 in use
+[audio-out] 1 in use
+  wallpaper32.exe
+
+=== 2026-09-18T13:40:45+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Swirling treehouse imple… - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (958)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Meet - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 0 in use
+[webcam] 0 in use
+[audio-out] 0 in use
+
+=== 2026-09-18T13:40:47+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (958)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Meet - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 0 in use
+[webcam] 0 in use
+[audio-out] 0 in use
+
+=== 2026-09-18T13:40:49+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (958)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Meet - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 0 in use
+[webcam] 0 in use
+[audio-out] 0 in use
+
+=== 2026-09-18T13:40:51+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (958)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Meet - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 0 in use
+[webcam] 0 in use
+[audio-out] 0 in use
+
+=== 2026-09-18T13:40:53+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (958)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Meet - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 0 in use
+[webcam] 0 in use
+[audio-out] 0 in use
+
+=== 2026-09-18T13:40:56+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (958)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Meet - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 0 in use
+[webcam] 0 in use
+[audio-out] 0 in use
+
+=== 2026-09-18T13:40:58+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (958)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Meet - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 0 in use
+[webcam] 0 in use
+[audio-out] 0 in use
+
+=== 2026-09-18T13:41:00+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (958)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Meet - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 0 in use
+[webcam] 0 in use
+[audio-out] 0 in use
+
+=== 2026-09-18T13:41:02+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (959)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Meet - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 0 in use
+[webcam] 0 in use
+[audio-out] 0 in use
+
+=== 2026-09-18T13:41:04+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (959)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Meet - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 0 in use
+[webcam] 0 in use
+[audio-out] 0 in use
+
+=== 2026-09-18T13:41:06+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (959)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Meet - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 0 in use
+[webcam] 0 in use
+[audio-out] 0 in use
+
+=== 2026-09-18T13:41:08+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (959)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Meet - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 0 in use
+[webcam] 0 in use
+[audio-out] 0 in use
+
+=== 2026-09-18T13:41:10+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (959)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Meet - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 0 in use
+[webcam] 0 in use
+[audio-out] 0 in use
+
+=== 2026-09-18T13:41:12+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (959)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Meet - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 0 in use
+[webcam] 0 in use
+[audio-out] 0 in use
+
+=== 2026-09-18T13:41:14+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (959)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Meet - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 0 in use
+[webcam] 0 in use
+[audio-out] 0 in use
+
+=== 2026-09-18T13:41:16+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (959)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Meet - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 0 in use
+[webcam] 0 in use
+[audio-out] 0 in use
+
+=== 2026-09-18T13:41:18+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (959)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Meet - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 0 in use
+[webcam] 0 in use
+[audio-out] 0 in use
+
+=== 2026-09-18T13:41:20+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (959)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202bכרטיסייה חדשה - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 0 in use
+[webcam] 0 in use
+[audio-out] 0 in use
+
+=== 2026-09-18T13:41:22+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (959)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202bכרטיסייה חדשה - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 0 in use
+[webcam] 0 in use
+[audio-out] 0 in use
+
+=== 2026-09-18T13:41:24+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (959)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202bכרטיסייה חדשה - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 0 in use
+[webcam] 0 in use
+[audio-out] 0 in use
+
+=== 2026-09-18T13:41:26+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (959)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202bכרטיסייה חדשה - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 0 in use
+[webcam] 0 in use
+[audio-out] 0 in use
+
+=== 2026-09-18T13:41:28+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (959)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202bכרטיסייה חדשה - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 0 in use
+[webcam] 0 in use
+[audio-out] 0 in use
+
+=== 2026-09-18T13:41:30+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (959)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202bכרטיסייה חדשה - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 0 in use
+[webcam] 0 in use
+[audio-out] 0 in use
+
+=== 2026-09-18T13:41:33+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (959)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202bכרטיסייה חדשה - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 0 in use
+[webcam] 0 in use
+[audio-out] 0 in use
+
+=== 2026-09-18T13:41:35+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (959)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202bכרטיסייה חדשה - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 0 in use
+[webcam] 0 in use
+[audio-out] 0 in use
+
+=== 2026-09-18T13:41:37+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (959)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202bכרטיסייה חדשה - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 0 in use
+[webcam] 0 in use
+[audio-out] 0 in use
+
+=== 2026-09-18T13:41:39+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (959)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aMeet - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 0 in use
+[webcam] 0 in use
+[audio-out] 1 in use
+  chrome.exe
+
+=== 2026-09-18T13:41:41+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (959)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aMeet - abc-defg-hij - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 1 in use
+  C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+[webcam] 0 in use
+[audio-out] 1 in use
+  chrome.exe
+
+=== 2026-09-18T13:41:43+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (959)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aMeet - abc-defg-hij - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 1 in use
+  C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+[webcam] 0 in use
+[audio-out] 1 in use
+  chrome.exe
+
+=== 2026-09-18T13:41:45+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (959)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aMeet - abc-defg-hij - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 1 in use
+  C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+[webcam] 0 in use
+[audio-out] 1 in use
+  chrome.exe
+
+=== 2026-09-18T13:41:47+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (959)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aMeet - abc-defg-hij - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 1 in use
+  C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+[webcam] 0 in use
+[audio-out] 1 in use
+  chrome.exe
+
+=== 2026-09-18T13:41:49+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (959)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aMeet - abc-defg-hij - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 1 in use
+  C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+[webcam] 0 in use
+[audio-out] 1 in use
+  chrome.exe
+
+=== 2026-09-18T13:41:51+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (959)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aMeet - abc-defg-hij - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 1 in use
+  C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+[webcam] 0 in use
+[audio-out] 1 in use
+  chrome.exe
+
+=== 2026-09-18T13:41:53+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (959)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aMeet - abc-defg-hij - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 1 in use
+  C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+[webcam] 0 in use
+[audio-out] 1 in use
+  chrome.exe
+
+=== 2026-09-18T13:41:55+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (959)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aMeet - abc-defg-hij - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 1 in use
+  C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+[webcam] 0 in use
+[audio-out] 1 in use
+  chrome.exe
+
+=== 2026-09-18T13:41:57+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (959)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aMeet - abc-defg-hij - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 1 in use
+  C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+[webcam] 0 in use
+[audio-out] 1 in use
+  chrome.exe
+
+=== 2026-09-18T13:41:59+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (959)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aMeet - abc-defg-hij - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 1 in use
+  C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+[webcam] 0 in use
+[audio-out] 1 in use
+  chrome.exe
+
+=== 2026-09-18T13:42:01+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (961)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aMeet - abc-defg-hij - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 1 in use
+  C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+[webcam] 0 in use
+[audio-out] 1 in use
+  chrome.exe
+
+=== 2026-09-18T13:42:03+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (961)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aMeet - abc-defg-hij - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 1 in use
+  C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+[webcam] 0 in use
+[audio-out] 1 in use
+  chrome.exe
+
+=== 2026-09-18T13:42:05+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (961)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aMeet - abc-defg-hij - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 1 in use
+  C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+[webcam] 0 in use
+[audio-out] 1 in use
+  chrome.exe
+
+=== 2026-09-18T13:42:07+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (961)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aMeet - abc-defg-hij - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 1 in use
+  C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+[webcam] 0 in use
+[audio-out] 1 in use
+  chrome.exe
+
+=== 2026-09-18T13:42:09+03:00 ===
+[windows] 28 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (961)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aMeet - abc-defg-hij - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+  pid=26768  proc=theeye-tray.exe              title="The Eye"
+[microphone] 1 in use
+  C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+[webcam] 0 in use
+[audio-out] 1 in use
+  chrome.exe
+
+=== 2026-09-18T13:42:12+03:00 ===
+[windows] 27 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (962)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aMeet - abc-defg-hij - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+[microphone] 1 in use
+  C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+[webcam] 0 in use
+[audio-out] 1 in use
+  chrome.exe
+
+=== 2026-09-18T13:42:14+03:00 ===
+[windows] 27 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (962)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aMeet - abc-defg-hij - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+[microphone] 1 in use
+  C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+[webcam] 0 in use
+[audio-out] 1 in use
+  chrome.exe
+
+=== 2026-09-18T13:42:16+03:00 ===
+[windows] 27 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (962)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aMeet - abc-defg-hij - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+[microphone] 1 in use
+  C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+[webcam] 0 in use
+[audio-out] 1 in use
+  chrome.exe
+
+=== 2026-09-18T13:42:18+03:00 ===
+[windows] 27 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (962)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aMeet - abc-defg-hij - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+[microphone] 1 in use
+  C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+[webcam] 0 in use
+[audio-out] 1 in use
+  chrome.exe
+
+=== 2026-09-18T13:42:20+03:00 ===
+[windows] 27 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (962)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aMeet - abc-defg-hij - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+[microphone] 1 in use
+  C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+[webcam] 0 in use
+[audio-out] 1 in use
+  chrome.exe
+
+=== 2026-09-18T13:42:22+03:00 ===
+[windows] 27 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (962)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aMeet - abc-defg-hij - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+[microphone] 1 in use
+  C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+[webcam] 0 in use
+[audio-out] 1 in use
+  chrome.exe
+
+=== 2026-09-18T13:42:24+03:00 ===
+[windows] 27 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (962)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aMeet - abc-defg-hij - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+[microphone] 1 in use
+  C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+[webcam] 0 in use
+[audio-out] 1 in use
+  chrome.exe
+
+=== 2026-09-18T13:42:26+03:00 ===
+[windows] 27 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (962)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aMeet - abc-defg-hij - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+[microphone] 1 in use
+  C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+[webcam] 0 in use
+[audio-out] 1 in use
+  chrome.exe
+
+=== 2026-09-18T13:42:28+03:00 ===
+[windows] 27 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (962)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aMeet - abc-defg-hij - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+[microphone] 1 in use
+  C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+[webcam] 0 in use
+[audio-out] 1 in use
+  chrome.exe
+
+=== 2026-09-18T13:42:30+03:00 ===
+[windows] 27 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (962)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aMeet - abc-defg-hij - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+[microphone] 1 in use
+  C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+[webcam] 0 in use
+[audio-out] 1 in use
+  chrome.exe
+
+=== 2026-09-18T13:42:32+03:00 ===
+[windows] 27 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (962)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aMeet - abc-defg-hij - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+[microphone] 1 in use
+  C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+[webcam] 0 in use
+[audio-out] 1 in use
+  chrome.exe
+
+=== 2026-09-18T13:42:34+03:00 ===
+[windows] 27 visible
+  pid=56836  proc=ApplicationFrameHost.exe     title="Media Player"
+  pid=56836  proc=ApplicationFrameHost.exe     title="Settings"
+  pid=24088  proc=AsPowerBar.exe               title="AsPowerBar"
+  pid=45140  proc=Code.exe                     title="Character art orientatio… - StreetFighter - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Claude Code - School_Hours_Schedule - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Debug Smart Announcement… - HA_Agent - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Google Meet call detecti… - In-a-Call-Notification - Visual Studio Code"
+  pid=45140  proc=Code.exe                     title="Test-driven development … - Hebrew Handwriting Preservation and Digital Cookbook - Visual Studio Code"
+  pid=31144  proc=Docker Desktop.exe           title="Dashboard - Docker Desktop"
+  pid=53160  proc=Microsoft.Media.Player.exe   title="Media Player"
+  pid=7016   proc=NVIDIA Overlay.exe           title="NVIDIA GeForce Overlay"
+  pid=34876  proc=SoftwareUpdateNotificationService.exe title="_SoftwareUpdateNotificationService_Window"
+  pid=33916  proc=Spotify.exe                  title="Spotify Premium"
+  pid=56780  proc=SystemSettings.exe           title="Settings"
+  pid=51340  proc=Telegram.exe                 title="(15) \u200eהמומלצים של מאור – (962)"
+  pid=22656  proc=TextInputHost.exe            title="Microsoft Text Input Application"
+  pid=9868   proc=WhatsApp.Root.exe            title="WhatsApp"
+  pid=39928  proc=chrome.exe                   title="\u202aGoogle Gemini - Comprehensive Component Failure Analysis Prompt - Google Gemini\u202c"
+  pid=39928  proc=chrome.exe                   title="\u202aMeet - abc-defg-hij - Google Chrome\u202c"
+  pid=13100  proc=explorer.exe                 title="Downloads"
+  pid=13100  proc=explorer.exe                 title="File Explorer"
+  pid=13100  proc=explorer.exe                 title="Program Manager"
+  pid=13100  proc=explorer.exe                 title="docs"
+  pid=29320  proc=msedgewebview2.exe           title="WhatsApp"
+  pid=52632  proc=notepad++.exe                title="E:\\GitHub\\HA_Agent\\_bmad-output\\scripts\\Debug Smart Announcement.yml - Notepad++"
+  pid=67244  proc=stremio.exe                  title="Stremio - Application Error"
+  pid=67244  proc=stremio.exe                  title="Stremio - Freedom to Stream"
+[microphone] 1 in use
+  C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+[webcam] 0 in use
+[audio-out] 1 in use
+  chrome.exe
+

@@ -46,8 +46,8 @@ func TestParseMinimalConfigAppliesDefaults(t *testing.T) {
 		}
 	}
 
-	if len(cfg.EnabledDetectors()) != 3 {
-		t.Errorf("expected teams, zoom and slack enabled by default, got %v", cfg.EnabledDetectors())
+	if len(cfg.EnabledDetectors()) != 4 {
+		t.Errorf("expected teams, zoom, slack and meet enabled by default, got %v", cfg.EnabledDetectors())
 	}
 }
 
@@ -252,7 +252,7 @@ func TestValidationRejects(t *testing.T) {
 		},
 		{
 			name:      "every detector disabled",
-			yaml:      minimal + "detectors:\n  teams: {enabled: false}\n  zoom: {enabled: false}\n  slack: {enabled: false}\n",
+			yaml:      minimal + "detectors:\n  teams: {enabled: false}\n  zoom: {enabled: false}\n  slack: {enabled: false}\n  meet: {enabled: false}\n",
 			wantError: "no detectors are enabled",
 		},
 		{

@@ -59,6 +59,11 @@ func loadFixture(t *testing.T, name string) []Observation {
 		case strings.HasPrefix(line, "[webcam]"):
 			section = "cam"
 			continue
+		case strings.HasPrefix(line, "[audio-out]"):
+			// Probe instrumentation only (see cmd/probe): no rule scores it,
+			// so its lines are skipped rather than carried into Observation.
+			section = "audio"
+			continue
 		case strings.TrimSpace(line) == "":
 			continue
 		}
@@ -141,14 +146,14 @@ func TestDefault_MatchesShippedFile(t *testing.T) {
 
 func TestLoad_ShippedRulesFile(t *testing.T) {
 	cfg := liveConfig(t)
-	if len(cfg.Rules) != 3 {
-		t.Fatalf("got %d rules, want 3", len(cfg.Rules))
+	if len(cfg.Rules) != 4 {
+		t.Fatalf("got %d rules, want 4", len(cfg.Rules))
 	}
 	apps := map[string]bool{}
 	for _, r := range cfg.Rules {
 		apps[r.App] = true
 	}
-	for _, want := range []string{"teams", "zoom", "slack"} {
+	for _, want := range []string{"teams", "zoom", "slack", "meet"} {
 		if !apps[want] {
 			t.Errorf("missing rule for app %q", want)
 		}
@@ -404,6 +409,7 @@ func TestReasons_NeverContainWindowTitles(t *testing.T) {
 	for _, fixture := range []string{
 		"teams-in-call.txt", "teams-in-call-muted.txt", "teams-in-call-generic-title.txt", "teams-open-no-call.txt",
 		"zoom-in-call.txt", "zoom-open-no-call.txt", "slack-huddle.txt",
+		"meet-landing-page.txt", "meet-lobby.txt", "meet-in-call.txt", "meet-left.txt",
 	} {
 		for _, obs := range loadFixture(t, fixture) {
 			for _, result := range cfg.Evaluate(obs, testThreshold, time.Now()) {
