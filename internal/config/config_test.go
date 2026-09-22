@@ -212,6 +212,40 @@ func TestValidationRejects(t *testing.T) {
 			wantError: "poll.detect_seconds must be at least 1",
 		},
 		{
+			name:      "poll interval above the upper bound",
+			yaml:      minimal + "poll:\n  detect_seconds: 86401\n",
+			wantError: "poll.detect_seconds must be at most 86400",
+		},
+		{
+			name:      "network interval above the upper bound",
+			yaml:      minimal + "poll:\n  network_seconds: 86401\n",
+			wantError: "poll.network_seconds must be at most 86400",
+		},
+		{
+			name:      "heartbeat interval above the upper bound",
+			yaml:      minimal + "poll:\n  heartbeat_seconds: 86401\n",
+			wantError: "poll.heartbeat_seconds must be at most 86400",
+		},
+		{
+			// The issue #10 repro: seconds values this large overflow the
+			// time.Duration multiplication in Poll.Detect/Heartbeat, which
+			// used to pass validation (only a lower bound was enforced) and
+			// then panic in time.NewTicker at startup.
+			name:      "poll seconds large enough to overflow time.Duration",
+			yaml:      minimal + "poll:\n  detect_seconds: 10000000000\n  heartbeat_seconds: 20000000000\n",
+			wantError: "poll.detect_seconds must be at most 86400",
+		},
+		{
+			name:      "enter debounce above the upper bound",
+			yaml:      minimal + "detection:\n  enter_debounce_seconds: 3601\n",
+			wantError: "detection.enter_debounce_seconds must be at most 3600",
+		},
+		{
+			name:      "exit debounce above the upper bound",
+			yaml:      minimal + "detection:\n  exit_debounce_seconds: 3601\n",
+			wantError: "detection.exit_debounce_seconds must be at most 3600",
+		},
+		{
 			name:      "unknown log level",
 			yaml:      minimal + "logging:\n  level: chatty\n",
 			wantError: "logging.level",
