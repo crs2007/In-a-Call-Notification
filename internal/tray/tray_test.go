@@ -152,6 +152,72 @@ func newTestApp(t *testing.T, sup supervisorAPI, cfgPath string, pollInterval ti
 	return a
 }
 
+// TestConcurrentApplyChangesBothPersist is the issue #4.2 repro: toggling two
+// different detectors back-to-back must leave both changes in the saved
+// config and the reloaded engine, not just whichever click's applyChange
+// happened to read Supervisor.Config() last. Before applyMu serialised
+// applyChange, the second goroutine derived its settings from the same
+// pre-toggle config the first one started from, so its Save silently wrote
+// back the first toggle's field as if it had never changed.
+func TestConcurrentApplyChangesBothPersist(t *testing.T) {
+	t.Setenv("CALLMQTT_MQTT_PASSWORD", "unused-test-password")
+
+	dir := t.TempDir()
+	cfgPath := filepath.Join(dir, "config.yaml")
+	if err := os.WriteFile(cfgPath, config.Example, 0o600); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+	cfg, err := config.Load(cfgPath)
+	if err != nil {
+		t.Fatalf("load config: %v", err)
+	}
+	if !cfg.Detectors["teams"].Enabled || !cfg.Detectors["zoom"].Enabled {
+		t.Fatal("test config must start with both teams and zoom enabled")
+	}
+
+	sup := &fakeSupervisor{cfg: cfg}
+	a := newTestApp(t, sup, cfgPath, time.Millisecond)
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() { defer wg.Done(); a.toggleDetector("teams") }()
+	go func() { defer wg.Done(); a.toggleDetector("zoom") }()
+	wg.Wait()
+
+	deadline := time.Now().Add(2 * time.Second)
+	for {
+		sup.mu.Lock()
+		reloads := sup.reloads
+		sup.mu.Unlock()
+		if reloads >= 2 {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("only %d of 2 expected reloads landed", reloads)
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+
+	final := sup.Config()
+	if final.Detectors["teams"].Enabled {
+		t.Error("teams should have been toggled off, but the reloaded config still has it enabled (lost update)")
+	}
+	if final.Detectors["zoom"].Enabled {
+		t.Error("zoom should have been toggled off, but the reloaded config still has it enabled (lost update)")
+	}
+
+	onDisk, err := config.Load(cfgPath)
+	if err != nil {
+		t.Fatalf("load saved config: %v", err)
+	}
+	if onDisk.Detectors["teams"].Enabled {
+		t.Error("saved config still has teams enabled (lost update)")
+	}
+	if onDisk.Detectors["zoom"].Enabled {
+		t.Error("saved config still has zoom enabled (lost update)")
+	}
+}
+
 // TestRefreshIsRaceFreeUnderConcurrentApplyChangeAndTogglePause is the repro
 // for TODO.md 3.4: before the fix, applyChange and togglePause each called
 // a.refresh() directly from their own goroutines, racing with refreshLoop's

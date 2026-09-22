@@ -59,6 +59,17 @@ type Supervisor struct {
 	cfg *config.Config
 	gen *generation
 
+	// reloadMu serialises Reload and Close over their whole stop/build/swap
+	// bodies, not just the field reads mu guards. Without it, two concurrent
+	// Reload calls both read the same old generation, both stop it, and both
+	// build a new one — the loser's generation never gets torn down and its
+	// broker connection fights the winner's for the same ClientID forever
+	// (see the package doc and issue #4). Close takes it too and cancels s.ctx
+	// while still holding it, so a Reload that was queued behind Close always
+	// observes s.ctx.Err() != nil once it gets the lock, instead of racing
+	// Close to build one more generation nothing will ever stop.
+	reloadMu sync.Mutex
+
 	// ctx is the root of every generation's publisher connection. It is
 	// independent of any ctx a caller passes to Start/Reload, so a caller's
 	// deadline (e.g. the tray's 15s "apply this setting" timeout) bounds only
@@ -124,6 +135,13 @@ func (s *Supervisor) Reload(ctx context.Context, cfg *config.Config) error {
 	detectors, err := s.validate(cfg)
 	if err != nil {
 		return fmt.Errorf("reload: %w", err)
+	}
+
+	s.reloadMu.Lock()
+	defer s.reloadMu.Unlock()
+
+	if s.ctx.Err() != nil {
+		return fmt.Errorf("reload: supervisor is closed")
 	}
 
 	s.mu.Lock()
@@ -214,7 +232,14 @@ func (s *Supervisor) BrokerConnected() bool {
 // Close stops the running generation. Its publisher's Close is responsible
 // for releasing the light (e.g. publishing "offline") before returning.
 func (s *Supervisor) Close(ctx context.Context) error {
-	defer s.cancel()
+	s.reloadMu.Lock()
+	defer s.reloadMu.Unlock()
+
+	// Cancelled before the gen swap below, and still under reloadMu: a Reload
+	// that was blocked waiting for this lock must see s.ctx already cancelled
+	// once it acquires it, so it bails out instead of building a generation
+	// that stop's swap here has no way to ever find and close (see reloadMu).
+	s.cancel()
 
 	s.mu.Lock()
 	gen := s.gen

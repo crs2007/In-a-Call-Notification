@@ -21,6 +21,7 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gogpu/systray"
@@ -125,6 +126,15 @@ type app struct {
 	refreshNow chan struct{}
 
 	lastIcon trayIconState
+
+	// applyMu serialises applyChange's read-mutate-save-load-reload sequence.
+	// Every toggle spawns its own goroutine (so the systray callback never
+	// blocks on a broker dial), but two of those running unsynchronised both
+	// derive settings from the same stale Supervisor.Config() and the second
+	// save silently reverts whatever the first one just changed. Holding this
+	// for the whole sequence — including the Config() read — means the second
+	// goroutine always starts from what the first one actually applied.
+	applyMu sync.Mutex
 }
 
 func (a *app) log() *slog.Logger { return a.opts.Logger }
@@ -317,6 +327,9 @@ func title(s string) string {
 // block the message loop.
 func (a *app) applyChange(mutate func(*config.Settings), item *systray.MenuItem, revert bool) {
 	go func() {
+		a.applyMu.Lock()
+		defer a.applyMu.Unlock()
+
 		cfg := a.opts.Supervisor.Config()
 		settings := cfg.Settings()
 		mutate(&settings)

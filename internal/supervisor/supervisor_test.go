@@ -6,6 +6,7 @@ import (
 	"io"
 	"log/slog"
 	"net/netip"
+	"sync"
 	"testing"
 	"time"
 
@@ -434,6 +435,128 @@ func TestStopBoundsTotalShutdownTime(t *testing.T) {
 
 	if elapsed := time.Since(start); elapsed > 3*testStopTimeout {
 		t.Errorf("stop took %v, want at most ~%v (testStopTimeout plus slack, not testStopTimeout+closeDelay)", elapsed, 3*testStopTimeout)
+	}
+}
+
+// TestConcurrentReloadsSerialize is the 4.1/4.3 repro: two tray clicks in
+// quick succession must not both read the same old generation and both stop
+// and build off it — reloadMu must force one Reload to fully finish (stop old,
+// build new, swap, run) before the other starts its own stop, or the loser's
+// generation is never stopped and fights the winner for the same ClientID
+// forever (see the package doc).
+func TestConcurrentReloadsSerialize(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var mu sync.Mutex
+	var events []string
+	var built []*fakePublisher
+	sup := New(Options{
+		Logger:       testLogger(),
+		Version:      "test",
+		Checker:      fakeChecker{},
+		NewDetectors: fakeDetectorsFactory(),
+		NewPublisher: func(ctx context.Context, _ *config.Config, _ *slog.Logger, _ string) (Publisher, error) {
+			mu.Lock()
+			defer mu.Unlock()
+			p := newFakePublisher(ctx, &events)
+			built = append(built, p)
+			return p, nil
+		},
+	})
+
+	if err := sup.Start(ctx, testConfig(t, "teams")); err != nil {
+		t.Fatalf("Start: %v", err)
+	}
+	time.Sleep(20 * time.Millisecond)
+
+	const n = 5
+	var wg sync.WaitGroup
+	for i := 0; i < n; i++ {
+		app := "teams"
+		if i%2 == 0 {
+			app = "zoom"
+		}
+		wg.Add(1)
+		go func(app string) {
+			defer wg.Done()
+			_ = sup.Reload(ctx, testConfig(t, app))
+		}(app)
+	}
+	wg.Wait()
+
+	mu.Lock()
+	gotEvents := append([]string(nil), events...)
+	gotBuilt := append([]*fakePublisher(nil), built...)
+	mu.Unlock()
+
+	// One build for Start plus one per successful Reload; every build but the
+	// very last must have a matching close, and — the property serialisation
+	// guarantees — no build ever appears before the previous one's close, i.e.
+	// the log strictly alternates "built", "closed", "built", "closed", ...
+	if len(gotEvents) == 0 || gotEvents[0] != "built" {
+		t.Fatalf("event log = %v, want to start with \"built\"", gotEvents)
+	}
+	for i := 0; i < len(gotEvents)-1; i++ {
+		want := "closed"
+		if i%2 == 1 {
+			want = "built"
+		}
+		if gotEvents[i+1] != want {
+			t.Fatalf("event log = %v, not strictly alternating built/closed at index %d (a Reload started before the previous one's stop finished)", gotEvents, i+1)
+		}
+	}
+
+	live := 0
+	for _, p := range gotBuilt {
+		select {
+		case <-p.closed:
+		default:
+			live++
+		}
+	}
+	if live != 1 {
+		t.Fatalf("exactly one generation should be live after concurrent reloads settle, got %d live publisher(s)", live)
+	}
+
+	if err := sup.Close(ctx); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+}
+
+// TestReloadAfterCloseFails is the 4.3 repro: a Reload that was queued behind
+// Close acquiring reloadMu must see the supervisor already closed and return
+// an error instead of building a generation nothing will ever stop.
+func TestReloadAfterCloseFails(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var built []*fakePublisher
+	sup := New(Options{
+		Logger:       testLogger(),
+		Version:      "test",
+		Checker:      fakeChecker{},
+		NewDetectors: fakeDetectorsFactory(),
+		NewPublisher: func(ctx context.Context, _ *config.Config, _ *slog.Logger, _ string) (Publisher, error) {
+			p := newFakePublisher(ctx, nil)
+			built = append(built, p)
+			return p, nil
+		},
+	})
+
+	if err := sup.Start(ctx, testConfig(t, "teams")); err != nil {
+		t.Fatalf("Start: %v", err)
+	}
+	if err := sup.Close(ctx); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+
+	builtBefore := len(built)
+	if err := sup.Reload(ctx, testConfig(t, "zoom")); err == nil {
+		t.Fatal("expected Reload after Close to fail")
+	}
+	if len(built) != builtBefore {
+		t.Fatalf("Reload after Close built a new publisher (%d -> %d) that Close will never stop", builtBefore, len(built))
 	}
 }
 
