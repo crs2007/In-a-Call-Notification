@@ -13,8 +13,8 @@ var errStartupUnsupported = errors.New("start-at-login is not supported on this 
 // handling), and the CLI subcommand reports the same error to the user.
 type stubStartup struct{}
 
-func (stubStartup) IsEnabled() (bool, error) { return false, errStartupUnsupported }
-func (stubStartup) Enable() error            { return errStartupUnsupported }
-func (stubStartup) Disable() error           { return errStartupUnsupported }
+func (stubStartup) IsEnabled() (bool, error)       { return false, errStartupUnsupported }
+func (stubStartup) Enable(configPath string) error { return errStartupUnsupported }
+func (stubStartup) Disable() error                 { return errStartupUnsupported }
 
 var startup = stubStartup{}
