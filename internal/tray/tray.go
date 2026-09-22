@@ -229,15 +229,8 @@ func (a *app) refresh() {
 	a.brokerItem.SetLabel(brokerLabel(brokerConnected))
 	a.tray.SetTooltip(statusTooltip(status, brokerConnected))
 
-	if status.Network.Prefix.IsValid() {
-		a.allowNetItem.SetLabel(fmt.Sprintf("Allow current network (%s)", status.Network.Prefix))
-		// Already matching a rule is the common "nothing to do" case, not an
-		// error, so the item just goes inert rather than showing a message.
-		a.allowNetItem.SetDisabled(status.NetworkRule != "")
-	} else {
-		a.allowNetItem.SetLabel("Allow current network")
-		a.allowNetItem.SetDisabled(true)
-	}
+	a.allowNetItem.SetLabel(allowNetLabel(status))
+	a.allowNetItem.SetDisabled(allowNetDisabled(status))
 
 	if status.Paused {
 		a.pauseItem.SetLabel("Resume detection")
@@ -268,6 +261,25 @@ func stateLabel(s engine.Status) string {
 	default:
 		return "● Starting…"
 	}
+}
+
+// allowNetLabel is the "Allow current network" item's label. It names the
+// subnet whenever the engine has one to show, whether or not that subnet
+// matched a rule — engine.refreshNetwork keeps a connected candidate even
+// when nothing matches, precisely so this label has something to offer.
+func allowNetLabel(s engine.Status) string {
+	if !s.Network.Prefix.IsValid() {
+		return "Allow current network"
+	}
+	return fmt.Sprintf("Allow current network (%s)", s.Network.Prefix)
+}
+
+// allowNetDisabled reports whether the "Allow current network" item should
+// be greyed out: either there is no candidate network to describe, or the
+// current one already matches a rule (the common "nothing to do" case, not
+// an error, so the item just goes inert rather than showing a message).
+func allowNetDisabled(s engine.Status) bool {
+	return !s.Network.Prefix.IsValid() || s.NetworkRule != ""
 }
 
 func networkLabel(s engine.Status) string {

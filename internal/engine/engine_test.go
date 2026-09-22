@@ -363,6 +363,29 @@ func TestVPNDoesNotHideAllowedPhysicalNetwork(t *testing.T) {
 	}
 }
 
+// When nothing in the allow-list matches, Status().Network must still
+// describe the connected candidate — the tray's "Allow current network" item
+// and `--once` both depend on it to tell the user which subnet to add.
+func TestUnmatchedNetworkKeepsCandidateForTray(t *testing.T) {
+	h := newHarness(t)
+	candidate := hotspot()
+	candidate.Prefix = netip.MustParsePrefix("172.20.10.0/28")
+	h.checker.infos = []network.Info{candidate}
+
+	h.tick(0)
+
+	status := h.engine.Status()
+	if status.Allowed || status.NetworkRule != "" {
+		t.Fatalf("network decision = (%q, %v), want (\"\", false)", status.NetworkRule, status.Allowed)
+	}
+	if !status.Network.Prefix.IsValid() {
+		t.Fatal("Status().Network.Prefix should be valid so the tray/--once can show which subnet to allow")
+	}
+	if status.Network.Interface != candidate.Interface {
+		t.Fatalf("Status().Network = %+v, want the connected candidate %+v", status.Network, candidate)
+	}
+}
+
 // A network that cannot be read denies. Not knowing where the machine is
 // connected is not a reason to assume it is somewhere safe.
 func TestNetworkErrorSuspendsPublishing(t *testing.T) {

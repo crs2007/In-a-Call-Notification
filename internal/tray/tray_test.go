@@ -9,6 +9,7 @@ import (
 	"image/png"
 	"io"
 	"log/slog"
+	"net/netip"
 	"os"
 	"path/filepath"
 	"sync"
@@ -20,6 +21,7 @@ import (
 	"github.com/crs2007/callmqtt/internal/config"
 	"github.com/crs2007/callmqtt/internal/engine"
 	"github.com/crs2007/callmqtt/internal/model"
+	"github.com/crs2007/callmqtt/internal/network"
 )
 
 func TestIconPNG(t *testing.T) {
@@ -70,6 +72,49 @@ func TestStatusTooltip(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := statusTooltip(tt.status, tt.connected); got != tt.want {
 				t.Fatalf("statusTooltip() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestAllowNetLabelAndDisabled(t *testing.T) {
+	home := netip.MustParsePrefix("192.168.1.0/24")
+	tests := []struct {
+		name         string
+		status       engine.Status
+		wantLabel    string
+		wantDisabled bool
+	}{
+		{
+			name:         "no candidate network disables the item",
+			status:       engine.Status{},
+			wantLabel:    "Allow current network",
+			wantDisabled: true,
+		},
+		{
+			name:         "candidate matching a rule already, item is inert",
+			status:       engine.Status{Network: network.Info{Prefix: home}, NetworkRule: "Home", Allowed: true},
+			wantLabel:    "Allow current network (192.168.1.0/24)",
+			wantDisabled: true,
+		},
+		{
+			// This is the issue #3 repro: no rule matches, but the engine
+			// still reports the connected candidate so the item is
+			// enabled and names the subnet the user would need to add.
+			name:         "no rule matches a connected candidate, item is enabled with its prefix",
+			status:       engine.Status{Network: network.Info{Prefix: home}, NetworkRule: "", Allowed: false},
+			wantLabel:    "Allow current network (192.168.1.0/24)",
+			wantDisabled: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := allowNetLabel(tt.status); got != tt.wantLabel {
+				t.Errorf("allowNetLabel() = %q, want %q", got, tt.wantLabel)
+			}
+			if got := allowNetDisabled(tt.status); got != tt.wantDisabled {
+				t.Errorf("allowNetDisabled() = %v, want %v", got, tt.wantDisabled)
 			}
 		})
 	}
@@ -150,6 +195,41 @@ func newTestApp(t *testing.T, sup supervisorAPI, cfgPath string, pollInterval ti
 	}
 	a.buildMenu()
 	return a
+}
+
+// fixedStatusSupervisor is a supervisorAPI stub that always reports the same
+// Status, for tests that check what a.refresh() does with one specific
+// snapshot rather than fakeSupervisor's ticking state.
+type fixedStatusSupervisor struct {
+	status engine.Status
+}
+
+func (f fixedStatusSupervisor) Config() *config.Config                       { return &config.Config{} }
+func (f fixedStatusSupervisor) Status() engine.Status                        { return f.status }
+func (f fixedStatusSupervisor) Reload(context.Context, *config.Config) error { return nil }
+func (f fixedStatusSupervisor) SetPaused(bool)                               {}
+func (f fixedStatusSupervisor) Paused() bool                                 { return false }
+func (f fixedStatusSupervisor) BrokerConnected() bool                        { return false }
+
+// TestRefreshEnablesAllowCurrentNetworkForUnmatchedCandidate is the issue #3
+// repro: on a network that matches no allow-list rule, the tray's "Allow
+// current network" item used to be disabled precisely in the one situation
+// it exists for, because engine.Status().Network was the zero value whenever
+// nothing matched. It must now be enabled and name the candidate's subnet.
+func TestRefreshEnablesAllowCurrentNetworkForUnmatchedCandidate(t *testing.T) {
+	prefix := netip.MustParsePrefix("192.168.68.0/24")
+	sup := fixedStatusSupervisor{status: engine.Status{
+		Network:     network.Info{Interface: "Wi-Fi", Prefix: prefix},
+		NetworkRule: "",
+		Allowed:     false,
+	}}
+	a := newTestApp(t, sup, "", time.Second)
+
+	a.refresh()
+
+	if a.allowNetItem.IsDisabled() {
+		t.Fatal("Allow current network should be enabled when a connected candidate matches no rule")
+	}
 }
 
 // TestConcurrentApplyChangesBothPersist is the issue #4.2 repro: toggling two

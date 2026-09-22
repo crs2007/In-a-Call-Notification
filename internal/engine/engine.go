@@ -337,9 +337,29 @@ func (e *Engine) refreshNetwork(ctx context.Context, now time.Time) {
 	}
 
 	info, rule, allowed := e.matcher.MatchAny(infos)
+	if !allowed {
+		// No rule matched, but the tray and `--once` still need to tell the
+		// user where they are so they can add that network — otherwise
+		// "Allow current network" has nothing to show and is permanently
+		// disabled. This never affects the allow/deny decision itself.
+		if fallback, ok := firstConnected(infos); ok {
+			info = fallback
+		}
+	}
 	if allowed != e.netAllowed || rule != e.netRule {
 		e.log.Info("network changed",
 			"interface", info.Interface, "rule", rule, "allowed", allowed)
 	}
 	e.netInfo, e.netRule, e.netAllowed = info, rule, allowed
+}
+
+// firstConnected returns the first connected candidate, if any, so the UI has
+// something to describe even when nothing in the allow-list matches it.
+func firstConnected(infos []network.Info) (network.Info, bool) {
+	for _, info := range infos {
+		if info.Connected {
+			return info, true
+		}
+	}
+	return network.Info{}, false
 }
