@@ -65,15 +65,15 @@ func run() error {
 		return nil
 	}
 
-	if flag.Arg(0) == "startup" {
-		return startupCommand(flag.Arg(1))
-	}
-
 	configPath, err := absolutePath(f.configPath)
 	if err != nil {
 		return err
 	}
 	f.configPath = configPath
+
+	if flag.Arg(0) == "startup" {
+		return startupCommand(flag.Arg(1), f.configPath)
+	}
 
 	if flag.Arg(0) == "init" {
 		return initConfig(f.configPath)
@@ -225,10 +225,10 @@ Flags:
 // startupCommand implements `callmqtt startup enable|disable|status`. It
 // talks to the same build-tag-selected adapter the tray uses, so the CLI and
 // the tray checkbox can never disagree about how autostart is wired up.
-func startupCommand(action string) error {
+func startupCommand(action, configPath string) error {
 	switch action {
 	case "enable":
-		if err := startup.Enable(); err != nil {
+		if err := startup.Enable(configPath); err != nil {
 			return fmt.Errorf("enable start at login: %w", err)
 		}
 		fmt.Println("start at login: enabled")
@@ -332,9 +332,10 @@ func loadRules(cfg *config.Config, f flags) (*rules.Config, error) {
 const maxLogSize = 5 * 1024 * 1024
 
 // rotateLogIfLarge renames path to path+".1" (overwriting any previous
-// generation) when it has grown past maxLogSize. Without this, a broker
-// outage that keeps 3.1's retry warning firing every poll — or just a long
-// enough uptime — would grow the log file without bound.
+// generation) when it has grown past maxLogSize. This only covers a file
+// left oversized from before the process started (e.g. an upgrade from a
+// build that only rotated at startup); rotatingWriter below covers growth
+// during the run itself.
 func rotateLogIfLarge(path string) error {
 	info, err := os.Stat(path)
 	if err != nil {
@@ -349,10 +350,72 @@ func rotateLogIfLarge(path string) error {
 	return os.Rename(path, path+".1")
 }
 
+// rotatingWriter wraps an open log file and rotates it (path -> path+".1",
+// then reopens) as soon as a write would push it past maxLogSize, so a
+// process that runs for weeks — the normal case for a start-at-login tray
+// app — still rotates, instead of only once at startup.
+type rotatingWriter struct {
+	path string
+	file *os.File
+	size int64
+}
+
+// newRotatingWriter opens path for appending and seeds size from its current
+// length, so a writer created against an existing file rotates at the right
+// point rather than treating the file as empty.
+func newRotatingWriter(path string) (*rotatingWriter, error) {
+	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	if err != nil {
+		return nil, err
+	}
+	info, err := file.Stat()
+	if err != nil {
+		_ = file.Close()
+		return nil, err
+	}
+	return &rotatingWriter{path: path, file: file, size: info.Size()}, nil
+}
+
+func (w *rotatingWriter) Write(p []byte) (int, error) {
+	if w.size+int64(len(p)) > maxLogSize {
+		if err := w.rotate(); err != nil {
+			return 0, err
+		}
+	}
+	n, err := w.file.Write(p)
+	w.size += int64(n)
+	return n, err
+}
+
+// rotate closes the current file, renames it to path+".1" (overwriting any
+// previous generation — one generation of history is kept; anything older
+// is simply lost, which is an acceptable tradeoff for a desktop agent's log
+// and avoids pulling in a rotation dependency for something this simple),
+// and reopens path fresh.
+func (w *rotatingWriter) rotate() error {
+	if err := w.file.Close(); err != nil {
+		return err
+	}
+	if err := os.Rename(w.path, w.path+".1"); err != nil {
+		return err
+	}
+	file, err := os.OpenFile(w.path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	if err != nil {
+		return err
+	}
+	w.file = file
+	w.size = 0
+	return nil
+}
+
+func (w *rotatingWriter) Close() error { return w.file.Close() }
+
 // newLogger writes human-readable output to stderr and, when configured, JSON
 // to a log file. Info level records state transitions only, so the log stays
-// readable across a full working day. The file is rotated (see
-// rotateLogIfLarge) before each open, so it never grows without bound.
+// readable across a full working day. The file is rotated on open (see
+// rotateLogIfLarge) and again on any write that would push it past
+// maxLogSize (see rotatingWriter), so it never grows without bound even
+// across a run that never restarts.
 func newLogger(cfg *config.Config, debug bool) (*slog.Logger, func(), error) {
 	level := slog.LevelInfo
 	if debug {
@@ -380,7 +443,7 @@ func newLogger(cfg *config.Config, debug bool) (*slog.Logger, func(), error) {
 		if err := rotateLogIfLarge(cfg.Logging.File); err != nil {
 			return nil, nil, fmt.Errorf("rotate log file: %w", err)
 		}
-		file, err := os.OpenFile(cfg.Logging.File, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+		file, err := newRotatingWriter(cfg.Logging.File)
 		if err != nil {
 			return nil, nil, fmt.Errorf("open log file: %w", err)
 		}

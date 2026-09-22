@@ -35,7 +35,7 @@ import (
 // showing a control that does nothing.
 type Startup interface {
 	IsEnabled() (bool, error)
-	Enable() error
+	Enable(configPath string) error
 	Disable() error
 }
 
@@ -376,7 +376,7 @@ func (a *app) toggleStartup() {
 	go func() {
 		var err error
 		if next {
-			err = a.opts.Startup.Enable()
+			err = a.opts.Startup.Enable(a.opts.ConfigPath)
 		} else {
 			err = a.opts.Startup.Disable()
 		}

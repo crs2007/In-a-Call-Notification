@@ -13,7 +13,9 @@ import (
 type winStartup struct{}
 
 func (winStartup) IsEnabled() (bool, error) { return platformwindows.StartupEnabled() }
-func (winStartup) Enable() error            { return platformwindows.EnableStartup() }
-func (winStartup) Disable() error           { return platformwindows.DisableStartup() }
+func (winStartup) Enable(configPath string) error {
+	return platformwindows.EnableStartup(configPath, defaultConfigPath())
+}
+func (winStartup) Disable() error { return platformwindows.DisableStartup() }
 
 var startup = winStartup{}
