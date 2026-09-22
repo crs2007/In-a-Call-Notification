@@ -264,6 +264,42 @@ func TestRepublishStillGoesOnlineAfterStateFailure(t *testing.T) {
 	}
 }
 
+// --- issue 11: buildServerURL -----------------------------------------------
+
+// TestBuildServerURLBracketsIPv6Literals is the regression test for issue
+// #11: net.JoinHostPort must bracket an IPv6 literal so the result is
+// something net.Dial accepts, rather than the "fd00::1:1883" that
+// fmt.Sprintf("%s:%d", ...) used to produce (rejected as "too many colons in
+// address").
+func TestBuildServerURLBracketsIPv6Literals(t *testing.T) {
+	tests := []struct {
+		name string
+		host string
+		want string
+	}{
+		{"ipv6 unbracketed", "fd00::1", "[fd00::1]:1883"},
+		{"ipv6 loopback", "::1", "[::1]:1883"},
+		{"ipv6 global", "2001:db8::10", "[2001:db8::10]:1883"},
+		{"hostname", "broker.local", "broker.local:1883"},
+		{"ipv4", "192.168.1.10", "192.168.1.10:1883"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := testConfig(t)
+			cfg.MQTT.Host = tt.host
+			cfg.MQTT.Port = 1883
+
+			got := buildServerURL(cfg)
+			if got.Host != tt.want {
+				t.Errorf("buildServerURL(%q).Host = %q, want %q", tt.host, got.Host, tt.want)
+			}
+			if got.Scheme != "mqtt" {
+				t.Errorf("buildServerURL(%q).Scheme = %q, want mqtt", tt.host, got.Scheme)
+			}
+		})
+	}
+}
+
 // --- 7.5: buildTLSConfig -----------------------------------------------------
 
 // generateSelfSignedCert returns a throwaway self-signed certificate and its

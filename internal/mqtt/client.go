@@ -21,8 +21,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/url"
 	"os"
+	"strconv"
 	"sync/atomic"
 	"time"
 
@@ -98,17 +100,26 @@ type Client struct {
 // outlive whatever operation happened to trigger this call (a request
 // timeout, a settings-dialog deadline) and live as long as the client
 // itself should stay connected.
-func New(ctx context.Context, opts Options) (*Client, error) {
-	cfg := opts.Config
-
+// buildServerURL turns the configured host and port into the URL autopaho
+// dials. It uses net.JoinHostPort rather than string concatenation so an
+// IPv6 literal (e.g. "fd00::1") comes out bracketed ("[fd00::1]:1883") the
+// way net.Dial expects; concatenating "%s:%d" instead produces
+// "fd00::1:1883", which net.Dial rejects as "too many colons in address".
+func buildServerURL(cfg *config.Config) *url.URL {
 	scheme := "mqtt"
 	if cfg.MQTT.TLS.Enabled {
 		scheme = "tls"
 	}
-	serverURL, err := url.Parse(fmt.Sprintf("%s://%s:%d", scheme, cfg.MQTT.Host, cfg.MQTT.Port))
-	if err != nil {
-		return nil, fmt.Errorf("build broker url: %w", err)
+	return &url.URL{
+		Scheme: scheme,
+		Host:   net.JoinHostPort(cfg.MQTT.Host, strconv.Itoa(cfg.MQTT.Port)),
 	}
+}
+
+func New(ctx context.Context, opts Options) (*Client, error) {
+	cfg := opts.Config
+
+	serverURL := buildServerURL(cfg)
 
 	c := &Client{cfg: cfg, log: opts.Logger, version: opts.Version}
 

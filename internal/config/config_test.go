@@ -252,6 +252,31 @@ func TestValidationRejects(t *testing.T) {
 				"allowed_networks:\n  - {name: Home, cidrs: [\"10.0.0.0/8\"]}\n",
 			wantError: "mqtt.tls.cert_file and mqtt.tls.key_file must both be set, or both left empty",
 		},
+		{
+			name:      "host with scheme",
+			yaml:      "mqtt:\n  host: mqtt://broker\nallowed_networks:\n  - {name: Home, cidrs: [\"10.0.0.0/8\"]}\n",
+			wantError: "host name or IP only, no scheme or port",
+		},
+		{
+			name:      "host with port",
+			yaml:      "mqtt:\n  host: \"broker:1883\"\nallowed_networks:\n  - {name: Home, cidrs: [\"10.0.0.0/8\"]}\n",
+			wantError: "host name or IP only, no scheme or port",
+		},
+		{
+			name:      "host with path",
+			yaml:      "mqtt:\n  host: broker/\nallowed_networks:\n  - {name: Home, cidrs: [\"10.0.0.0/8\"]}\n",
+			wantError: "host name or IP only, no scheme or port",
+		},
+		{
+			name:      "host with whitespace",
+			yaml:      "mqtt:\n  host: \"broker \"\nallowed_networks:\n  - {name: Home, cidrs: [\"10.0.0.0/8\"]}\n",
+			wantError: "host name or IP only, no scheme or port",
+		},
+		{
+			name:      "host with fragment",
+			yaml:      "mqtt:\n  host: \"broker#frag\"\nallowed_networks:\n  - {name: Home, cidrs: [\"10.0.0.0/8\"]}\n",
+			wantError: "host name or IP only, no scheme or port",
+		},
 	}
 
 	for _, tt := range tests {
@@ -264,6 +289,18 @@ func TestValidationRejects(t *testing.T) {
 				t.Errorf("error %q does not mention %q", err, tt.wantError)
 			}
 		})
+	}
+}
+
+// TestValidationAcceptsIPv6Hosts is the regression test for issue #11: an
+// IPv6-literal mqtt.host, bracketed or not, must pass validation just like a
+// hostname or IPv4 literal.
+func TestValidationAcceptsIPv6Hosts(t *testing.T) {
+	for _, host := range []string{"fd00::1", "::1", "2001:db8::10", "[fd00::1]", "broker.local", "192.168.1.10"} {
+		yaml := "mqtt:\n  host: \"" + host + "\"\nallowed_networks:\n  - {name: Home, cidrs: [\"10.0.0.0/8\"]}\n"
+		if _, err := Parse([]byte(yaml)); err != nil {
+			t.Errorf("host %q rejected: %v", host, err)
+		}
 	}
 }
 
