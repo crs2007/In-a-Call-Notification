@@ -35,7 +35,7 @@ import (
 // showing a control that does nothing.
 type Startup interface {
 	IsEnabled() (bool, error)
-	Enable() error
+	Enable(configPath string) error
 	Disable() error
 }
 
@@ -58,13 +58,18 @@ type supervisorAPI interface {
 
 // Options configures the tray.
 type Options struct {
-	Supervisor   supervisorAPI
-	Logger       *slog.Logger
-	ConfigPath   string
-	LogPath      string
-	PollInterval time.Duration // default 2s
-	Dialog       Dialog
-	Startup      Startup
+	Supervisor supervisorAPI
+	Logger     *slog.Logger
+	ConfigPath string
+	// StartupConfigPath is what Startup.Enable passes as --config: "" when
+	// the agent is running with its default config path (so autostart
+	// launches with no flags and stays correct across upgrades), or the
+	// explicit path the user passed on the command line otherwise.
+	StartupConfigPath string
+	LogPath           string
+	PollInterval      time.Duration // default 2s
+	Dialog            Dialog
+	Startup           Startup
 }
 
 // Run builds the tray icon and menu and blocks pumping the OS message loop
@@ -376,7 +381,7 @@ func (a *app) toggleStartup() {
 	go func() {
 		var err error
 		if next {
-			err = a.opts.Startup.Enable()
+			err = a.opts.Startup.Enable(a.opts.StartupConfigPath)
 		} else {
 			err = a.opts.Startup.Disable()
 		}

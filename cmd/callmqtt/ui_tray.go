@@ -16,11 +16,12 @@ import (
 // platforms.
 func runUI(ctx context.Context, sup *supervisor.Supervisor, log *slog.Logger, configPath, logPath string) error {
 	return tray.Run(ctx, tray.Options{
-		Supervisor: sup,
-		Logger:     log,
-		ConfigPath: configPath,
-		LogPath:    logPath,
-		Dialog:     brokerDialog,
-		Startup:    startup,
+		Supervisor:        sup,
+		Logger:            log,
+		ConfigPath:        configPath,
+		StartupConfigPath: startupConfigPath(configPath),
+		LogPath:           logPath,
+		Dialog:            brokerDialog,
+		Startup:           startup,
 	})
 }

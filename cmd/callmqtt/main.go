@@ -65,15 +65,15 @@ func run() error {
 		return nil
 	}
 
-	if flag.Arg(0) == "startup" {
-		return startupCommand(flag.Arg(1))
-	}
-
 	configPath, err := absolutePath(f.configPath)
 	if err != nil {
 		return err
 	}
 	f.configPath = configPath
+
+	if flag.Arg(0) == "startup" {
+		return startupCommand(flag.Arg(1), startupConfigPath(f.configPath))
+	}
 
 	if flag.Arg(0) == "init" {
 		return initConfig(f.configPath)
@@ -225,10 +225,10 @@ Flags:
 // startupCommand implements `callmqtt startup enable|disable|status`. It
 // talks to the same build-tag-selected adapter the tray uses, so the CLI and
 // the tray checkbox can never disagree about how autostart is wired up.
-func startupCommand(action string) error {
+func startupCommand(action, configPath string) error {
 	switch action {
 	case "enable":
-		if err := startup.Enable(); err != nil {
+		if err := startup.Enable(configPath); err != nil {
 			return fmt.Errorf("enable start at login: %w", err)
 		}
 		fmt.Println("start at login: enabled")
@@ -425,6 +425,18 @@ func defaultConfigPath() string {
 		return "config.yaml"
 	}
 	return filepath.Join(dir, "callmqtt", "config.yaml")
+}
+
+// startupConfigPath decides what Startup.Enable should store as --config: ""
+// when resolved is the default config path, so autostart launches with no
+// flags and keeps working across upgrades that move the default location;
+// the resolved path itself otherwise.
+func startupConfigPath(resolved string) string {
+	defaultAbs, err := absolutePath(defaultConfigPath())
+	if err == nil && resolved == defaultAbs {
+		return ""
+	}
+	return resolved
 }
 
 func absolutePath(path string) (string, error) {
