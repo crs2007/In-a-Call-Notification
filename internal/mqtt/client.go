@@ -151,6 +151,21 @@ func New(ctx context.Context, opts Options) (*Client, error) {
 			// it to publishTimeout keeps the two guards in step instead of
 			// carrying a second, looser number that could drift.
 			PacketTimeout: publishTimeout,
+			// A DISCONNECT from the broker usually names why it dropped us
+			// (e.g. 0x82 protocol error / 0x90 topic name invalid after a
+			// bad topic). Without this the log only says "connection lost".
+			OnServerDisconnect: func(d *paho.Disconnect) {
+				reason := ""
+				if d.Properties != nil {
+					reason = d.Properties.ReasonString
+				}
+				c.log.Warn("mqtt broker sent DISCONNECT",
+					"reason_code", fmt.Sprintf("0x%02X", d.ReasonCode),
+					"reason", reason,
+					"state_topic", cfg.Topics.State,
+					"availability_topic", cfg.Topics.Availability,
+					"discovery_prefix", cfg.MQTT.Discovery.Prefix)
+			},
 			OnClientError: func(err error) {
 				c.log.Warn("mqtt client error", "error", err)
 			},

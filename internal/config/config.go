@@ -17,6 +17,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+	"unicode"
+	"unicode/utf8"
 
 	"gopkg.in/yaml.v3"
 
@@ -420,6 +422,28 @@ func validateBrokerHost(h string) error {
 	return nil
 }
 
+// validateTopicName rejects strings that are not legal MQTT topic names for
+// PUBLISH. The broker answers a bad one with a protocol-error DISCONNECT, which
+// the agent would otherwise retry forever (MQTT v5 §3.3.2.1, §1.5.4).
+func validateTopicName(t string) error {
+	switch {
+	case len(t) > 65535:
+		return errors.New("is longer than the 65535-byte MQTT limit")
+	case !utf8.ValidString(t):
+		return errors.New("is not valid UTF-8")
+	case strings.ContainsAny(t, "+#"):
+		return errors.New("must not contain the wildcards '+' or '#'; a publish topic is not a subscription filter")
+	case strings.HasPrefix(t, "$"):
+		return errors.New("must not start with '$'; those topics are reserved for the broker")
+	}
+	for _, r := range t {
+		if unicode.IsControl(r) {
+			return fmt.Errorf("must not contain control character U+%04X", r)
+		}
+	}
+	return nil
+}
+
 // Validate reports every problem with the configuration at once.
 func (c *Config) Validate() error {
 	var problems []error
@@ -445,15 +469,26 @@ func (c *Config) Validate() error {
 	if c.MQTT.Discovery.Enabled && c.MQTT.Discovery.Prefix == "" {
 		add("mqtt.discovery.prefix is required when discovery is enabled")
 	}
+	if c.MQTT.Discovery.Prefix != "" {
+		if err := validateTopicName(c.MQTT.Discovery.Prefix); err != nil {
+			add("mqtt.discovery.prefix %q: %v", c.MQTT.Discovery.Prefix, err)
+		} else if strings.HasPrefix(c.MQTT.Discovery.Prefix, "/") || strings.HasSuffix(c.MQTT.Discovery.Prefix, "/") {
+			add("mqtt.discovery.prefix %q must not start or end with '/'", c.MQTT.Discovery.Prefix)
+		}
+	}
 	if (c.MQTT.TLS.CertFile == "") != (c.MQTT.TLS.KeyFile == "") {
 		add("mqtt.tls.cert_file and mqtt.tls.key_file must both be set, or both left empty")
 	}
 
 	if c.Topics.State == "" {
 		add("topics.state is required")
+	} else if err := validateTopicName(c.Topics.State); err != nil {
+		add("topics.state %q: %v", c.Topics.State, err)
 	}
 	if c.Topics.Availability == "" {
 		add("topics.availability is required")
+	} else if err := validateTopicName(c.Topics.Availability); err != nil {
+		add("topics.availability %q: %v", c.Topics.Availability, err)
 	}
 	if c.Topics.State != "" && c.Topics.State == c.Topics.Availability {
 		add("topics.state and topics.availability must differ")

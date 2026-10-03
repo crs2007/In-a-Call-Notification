@@ -294,8 +294,8 @@ important ones and their defaults:
 | `mqtt.qos` / `mqtt.retain` | `1` / `true` | Publish options for state messages. |
 | `mqtt.tls.enabled` | `false` | Enable TLS to the broker (`insecure_skip_verify` also available). |
 | `mqtt.discovery.enabled` / `.prefix` | `true` / `homeassistant` | Auto-create the Home Assistant `binary_sensor`; the prefix must match the MQTT integration's discovery prefix. See [Home Assistant Integration](#home-assistant-integration). |
-| `topics.state` | `desktop-presence/{device_id}/call` | Where the JSON state payload is published. |
-| `topics.availability` | `desktop-presence/{device_id}/availability` | `online` / `offline`, with an MQTT last-will. |
+| `topics.state` | `desktop-presence/{device_id}/call` | Where the JSON state payload is published. Must be a plain topic name: no `+` or `#` wildcards, no leading `$`. |
+| `topics.availability` | `desktop-presence/{device_id}/availability` | `online` / `offline`, with an MQTT last-will. Same topic-name rules as `topics.state`. |
 | `allowed_networks` | *(empty — publishes nothing)* | Rules matched by `ssids`, `bssids`, `cidrs` or `gateways`. **Only `cidrs` currently matches anything** — `ssids`/`bssids`/`gateways` are accepted by the schema but not yet implemented on any platform; a rule relying on them alone fails config validation. See [Privacy](#privacy). |
 | `detectors.<teams\|zoom\|slack>.enabled` | `true` | Turn individual app detectors on or off. |
 | `detection.active_threshold` / `.inactive_threshold` | `0.70` / `0.30` | Confidence needed to enter / leave the `active` state. |

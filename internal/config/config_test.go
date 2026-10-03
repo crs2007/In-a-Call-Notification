@@ -198,6 +198,36 @@ func TestValidationRejects(t *testing.T) {
 			wantError: "name is required",
 		},
 		{
+			name:      "state topic with plus wildcard",
+			yaml:      minimal + "topics:\n  state: desktop-presence/+/call\n",
+			wantError: "topics.state",
+		},
+		{
+			name:      "state topic with hash wildcard",
+			yaml:      minimal + "topics:\n  state: desktop-presence/#\n",
+			wantError: "wildcards",
+		},
+		{
+			name:      "availability topic with dollar prefix",
+			yaml:      minimal + "topics:\n  availability: $SYS/x\n",
+			wantError: "topics.availability",
+		},
+		{
+			name:      "state topic with NUL",
+			yaml:      minimal + "topics:\n  state: \"a/b\\0c\"\n",
+			wantError: "control character",
+		},
+		{
+			name:      "discovery prefix with wildcard",
+			yaml:      minimal + "  discovery:\n    prefix: home/#\n",
+			wantError: "mqtt.discovery.prefix",
+		},
+		{
+			name:      "discovery prefix with trailing slash",
+			yaml:      minimal + "  discovery:\n    prefix: homeassistant/\n",
+			wantError: "must not start or end",
+		},
+		{
 			name:      "port out of range",
 			yaml:      minimal + "  port: 99999\n",
 			wantError: "out of range",
@@ -530,5 +560,18 @@ func TestValidateBrokerHost(t *testing.T) {
 				t.Errorf("accepted %q", tt.host)
 			}
 		})
+	}
+}
+
+func TestValidateTopicName(t *testing.T) {
+	for _, ok := range []string{"desktop-presence/pc/call", "a", "home assistant/x", "ünï/çode"} {
+		if err := validateTopicName(ok); err != nil {
+			t.Errorf("validateTopicName(%q) = %v, want nil", ok, err)
+		}
+	}
+	for _, bad := range []string{"a/+/b", "a/#", "$SYS/x", "a\x00b", "a\x7fb", "a/\xffb"} {
+		if err := validateTopicName(bad); err == nil {
+			t.Errorf("validateTopicName(%q) = nil, want error", bad)
+		}
 	}
 }
