@@ -327,6 +327,7 @@ func Defaults() *Config {
 			"teams": {Enabled: true},
 			"zoom":  {Enabled: true},
 			"slack": {Enabled: true},
+			"meet":  {Enabled: true},
 		},
 		Logging: Logging{Level: "info"},
 	}

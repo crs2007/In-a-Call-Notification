@@ -1,5 +1,5 @@
 // Package probe dumps the raw OS signals the detectors consume: every visible
-// window title, and every application holding the microphone or camera.
+// window title, and every application holding the microphone or camera or rendering audio.
 //
 // The output deliberately does no filtering and contains window titles, which
 // carry meeting names. It is opt-in diagnostics only and must never be wired
@@ -47,6 +47,7 @@ func Snapshot(w io.Writer) {
 	}{
 		{"microphone", platformwindows.AppsUsingMicrophone(names)},
 		{"webcam", platformwindows.AppsUsingWebcam(names)},
+		{"audio-out", audioOut(names)},
 	}
 	for _, d := range devices {
 		fmt.Fprintf(w, "[%s] %d in use\n", d.name, len(d.apps))
@@ -71,4 +72,14 @@ func Run(w io.Writer, count int, interval time.Duration, done <-chan struct{}) {
 		}
 		Snapshot(w)
 	}
+}
+
+// audioOut lists processes with an active playback stream and their peak level.
+// It is capture instrumentation only; no detection rule scores it.
+func audioOut(names map[uint32]string) []string {
+	var out []string
+	for _, s := range platformwindows.AudioSessions(names) {
+		out = append(out, fmt.Sprintf("%s peak=%.3f", s.Exe, s.Peak))
+	}
+	return out
 }
