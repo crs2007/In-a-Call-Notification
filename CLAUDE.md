@@ -29,9 +29,10 @@
   - `workflow_dispatch` on the Release workflow offers a `bump` input
     (patch/minor/major) for an on-demand release without a new commit.
 - **Before pushing to `main`, always:** run `go vet ./...` and
-  `go test -race ./...` locally (a failure in the release job means the tag
-  has already been pushed but nothing was published — delete the tag before
-  retrying); decide whether the commit message needs a `[minor]`, `[major]`
+  `go test -race ./...` locally (the `verify` job re-runs these plus the tidy
+  check and tray builds *before* the tag is pushed, so a red build consumes no
+  version; if publishing itself fails after tagging, re-run the workflow — a
+  tagged HEAD with no GitHub release is published automatically); decide whether the commit message needs a `[minor]`, `[major]`
   or `[skip release]` marker in its subject line; and if the change alters what ships (see the
   checklist below), update README in the same push so the release and its
   docs match.

@@ -36,8 +36,8 @@ jobs:
       - name: go test -race
         run: go test -race ./...
 
-      - name: cross-compile windows/arm64 (build check only)
-        run: go build ./...
+      - name: cross-compile windows/arm64 (build check only, tray tag as shipped)
+        run: go build -tags tray ./...
         env:
           GOOS: windows
           GOARCH: arm64

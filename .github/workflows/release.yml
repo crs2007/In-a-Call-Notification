@@ -32,8 +32,52 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # The gate runs before the tag is pushed, so a red build never consumes a
+  # version number. Skipped for [skip release] commits (nothing will publish).
+  verify:
+    name: verify (vet, test, tidy, tray builds)
+    if: >-
+      github.ref_type == 'tag' ||
+      !(contains(github.event.head_commit.message, '[skip release]') ||
+        contains(github.event.head_commit.message, '[no release]'))
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: go test -race
+        run: go test -race ./...
+
+      # GoReleaser's before-hook runs `go mod tidy`; if that changes anything
+      # the publish pass refuses to run on a dirty tree. Fail here with a
+      # readable reason instead.
+      - name: go.mod / go.sum are tidy
+        run: |
+          go mod tidy
+          git diff --exit-code -- go.mod go.sum
+
+      - name: build tray (windows/amd64)
+        run: go build -tags tray ./...
+        env:
+          GOOS: windows
+          GOARCH: amd64
+
+      - name: build tray (windows/arm64)
+        run: go build -tags tray ./...
+        env:
+          GOOS: windows
+          GOARCH: arm64
+
   version:
     name: compute release tag
+    needs: verify
+    if: ${{ !cancelled() && (needs.verify.result == 'success' || needs.verify.result == 'skipped') }}
     runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.next.outputs.tag }}
@@ -47,6 +91,7 @@ jobs:
         id: next
         env:
           BUMP_INPUT: ${{ inputs.bump }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           # versionsort.suffix=- makes v0.1.0-alpha.1 sort *before* v0.1.0,
@@ -61,8 +106,15 @@ jobs:
 
           existing=$(git tag --points-at HEAD --list 'v*' | head -n1)
           if [ -n "$existing" ]; then
-            echo "HEAD is already tagged $existing; the tag push releases it"
-            echo "tag=" >> "$GITHUB_OUTPUT"
+            # A tag with no release behind it is a previous run that failed
+            # after tagging: publish it now instead of skipping.
+            if gh release view "$existing" >/dev/null 2>&1; then
+              echo "HEAD is already tagged $existing and released"
+              echo "tag=" >> "$GITHUB_OUTPUT"
+            else
+              echo "HEAD is tagged $existing but has no release; publishing it"
+              echo "tag=$existing" >> "$GITHUB_OUTPUT"
+            fi
             exit 0
           fi
 
@@ -138,21 +190,6 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-
-      # Never publish a red build: the same gate CI runs, on the tagged commit.
-      - name: go vet
-        run: go vet ./...
-
-      - name: go test -race
-        run: go test -race ./...
-
-      # GoReleaser's before-hook runs `go mod tidy`; if that changes anything
-      # the publish pass refuses to run on a dirty tree. Fail here with a
-      # readable reason instead.
-      - name: go.mod / go.sum are tidy
-        run: |
-          go mod tidy
-          git diff --exit-code -- go.mod go.sum
 
       - name: Build release artifacts for version preflight
         uses: goreleaser/goreleaser-action@v6
