@@ -48,9 +48,20 @@ func ShowBrokerDialog(current BrokerFields) (BrokerFields, bool, error) {
 // ShowError pops a blocking MessageBox with an OK button and an error icon.
 // It exists because the shipped binary is linked with -H=windowsgui: it has
 // no console, so anything written to stderr — a startup error, most
-// visibly "no config, run `callmqtt init`" on first launch — is otherwise
-// invisible and the process just exits with nothing on screen.
+// visibly "no config yet" on first launch — is otherwise invisible and the
+// process just exits with nothing on screen.
 func ShowError(title, message string) {
+	messageBox(title, message, mbOK|mbIconError)
+}
+
+// ShowInfo is ShowError with an information icon, for a message that is
+// not a failure — "wrote your starter config here" — but still has nowhere
+// else to go in a console-less build.
+func ShowInfo(title, message string) {
+	messageBox(title, message, mbOK|mbIconInformation)
+}
+
+func messageBox(title, message string, flags uintptr) {
 	msg, err := windows.UTF16PtrFromString(message)
 	if err != nil {
 		return
@@ -59,7 +70,7 @@ func ShowError(title, message string) {
 	if err != nil {
 		return
 	}
-	procMessageBoxW.Call(0, uintptr(unsafe.Pointer(msg)), uintptr(unsafe.Pointer(titleP)), mbOK|mbIconError)
+	procMessageBoxW.Call(0, uintptr(unsafe.Pointer(msg)), uintptr(unsafe.Pointer(titleP)), flags)
 }
 
 // --- Win32 plumbing ----------------------------------------------------
@@ -110,9 +121,10 @@ const (
 	smCXScreen = 0
 	smCYScreen = 1
 
-	mbOK          = 0x00000000
-	mbIconWarning = 0x00000030
-	mbIconError   = 0x00000010
+	mbOK              = 0x00000000
+	mbIconWarning     = 0x00000030
+	mbIconError       = 0x00000010
+	mbIconInformation = 0x00000040
 
 	idOK     = 1 // IDOK, so Enter (via IsDialogMessage) triggers this button
 	idCancel = 2 // IDCANCEL, so Escape triggers this button

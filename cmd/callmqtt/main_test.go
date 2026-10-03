@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/crs2007/callmqtt/internal/config"
 )
 
 func TestAbsolutePath(t *testing.T) {
@@ -88,6 +90,71 @@ func TestRotateLogIfLarge(t *testing.T) {
 		}
 		if string(rotated) != big {
 			t.Fatalf("rotated log has %d bytes, want the original %d-byte contents", len(rotated), len(big))
+		}
+	})
+}
+
+func TestLoadConfig(t *testing.T) {
+	t.Run("missing config on a plain launch writes the starter", func(t *testing.T) {
+		path := filepath.Join(t.TempDir(), "callmqtt", "config.yaml")
+
+		cfg, err := loadConfig(path, true)
+		if cfg != nil || err == nil {
+			t.Fatalf("loadConfig = (%v, %v), want (nil, error)", cfg, err)
+		}
+		for _, want := range []string{"starter", path, "mqtt.host", "allowed_networks", appTitle} {
+			if !strings.Contains(err.Error(), want) {
+				t.Errorf("error %q does not mention %q", err, want)
+			}
+		}
+		got, readErr := os.ReadFile(path)
+		if readErr != nil {
+			t.Fatalf("starter config was not written: %v", readErr)
+		}
+		if string(got) != string(config.Example) {
+			t.Fatal("starter config differs from the packaged example")
+		}
+	})
+
+	t.Run("missing config under an inspection flag writes nothing", func(t *testing.T) {
+		path := filepath.Join(t.TempDir(), "config.yaml")
+
+		_, err := loadConfig(path, false)
+		if err == nil {
+			t.Fatal("loadConfig succeeded on a missing file")
+		}
+		if !strings.Contains(err.Error(), "callmqtt init") || !strings.Contains(err.Error(), path) {
+			t.Errorf("error %q should point at `callmqtt init` and the path", err)
+		}
+		if _, statErr := os.Stat(path); !os.IsNotExist(statErr) {
+			t.Fatalf("a file appeared at %s (stat: %v)", path, statErr)
+		}
+	})
+
+	t.Run("existing config loads and is left alone", func(t *testing.T) {
+		path := filepath.Join(t.TempDir(), "config.yaml")
+		if err := os.WriteFile(path, config.Example, 0o600); err != nil {
+			t.Fatal(err)
+		}
+
+		cfg, err := loadConfig(path, true)
+		if err != nil {
+			t.Fatalf("loadConfig: %v", err)
+		}
+		if cfg == nil || cfg.MQTT.Host == "" {
+			t.Fatalf("loaded config is empty: %+v", cfg)
+		}
+	})
+
+	t.Run("unreadable config is not mistaken for a missing one", func(t *testing.T) {
+		path := filepath.Join(t.TempDir(), "config.yaml")
+		if err := os.WriteFile(path, []byte("mqtt: [not a mapping"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+
+		_, err := loadConfig(path, true)
+		if err == nil || strings.Contains(err.Error(), "starter") {
+			t.Fatalf("broken config: got %v, want a parse error, not a bootstrap", err)
 		}
 	})
 }
