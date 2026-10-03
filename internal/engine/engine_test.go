@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"io"
@@ -25,12 +26,13 @@ type fakeDetector struct {
 	app        string
 	state      model.CallState
 	confidence float64
+	reasons    []string
 }
 
 func (f *fakeDetector) App() string { return f.app }
 
 func (f *fakeDetector) Detect(context.Context) model.DetectionResult {
-	return model.DetectionResult{App: f.app, State: f.state, Confidence: f.confidence}
+	return model.DetectionResult{App: f.app, State: f.state, Confidence: f.confidence, Reasons: f.reasons}
 }
 
 type fakeChecker struct {
@@ -714,5 +716,25 @@ mqtt:
 				t.Errorf("error %q does not name the offending rule", err.Error())
 			}
 		})
+	}
+}
+
+// --debug promises per-poll visibility, but only of scored signals: a poll
+// line must appear and must never carry a window title.
+func TestDebugPollLogsScoredSignalsOnly(t *testing.T) {
+	var buf bytes.Buffer
+	h := newHarness(t)
+	h.engine.log = slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	h.detector.state = model.StateActive
+	h.detector.confidence = 0.9
+	h.detector.reasons = []string{"mic-in-use"}
+
+	h.tick(0)
+
+	out := buf.String()
+	for _, want := range []string{`msg=poll`, `app=teams`, `confidence=0.9`, `mic-in-use`} {
+		if !strings.Contains(out, want) {
+			t.Errorf("debug output missing %q:\n%s", want, out)
+		}
 	}
 }

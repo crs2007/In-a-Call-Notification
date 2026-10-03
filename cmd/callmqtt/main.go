@@ -9,6 +9,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -23,6 +24,7 @@ import (
 	"github.com/crs2007/callmqtt/internal/model"
 	"github.com/crs2007/callmqtt/internal/mqtt"
 	"github.com/crs2007/callmqtt/internal/network"
+	"github.com/crs2007/callmqtt/internal/probe"
 	"github.com/crs2007/callmqtt/internal/rules"
 	"github.com/crs2007/callmqtt/internal/simulate"
 	"github.com/crs2007/callmqtt/internal/supervisor"
@@ -38,6 +40,9 @@ type flags struct {
 	printConfig    bool
 	once           bool
 	simulate       bool
+	probe          bool
+	probeCount     int
+	probeOut       string
 	showVersion    bool
 }
 
@@ -57,6 +62,9 @@ func run() error {
 	flag.BoolVar(&f.printConfig, "print-config", false, "print the effective config, secrets redacted, and exit")
 	flag.BoolVar(&f.once, "once", false, "run one detection cycle, print the result, and exit")
 	flag.BoolVar(&f.simulate, "simulate", false, "fake a call every 30s, to test a Home Assistant automation without joining one")
+	flag.BoolVar(&f.probe, "probe", false, "dump visible window titles and microphone/camera owners to a file, then exit (contains window titles)")
+	flag.IntVar(&f.probeCount, "count", 15, "number of snapshots --probe takes, 2s apart")
+	flag.StringVar(&f.probeOut, "probe-out", "", "file --probe writes to (default: probe-<timestamp>.txt next to the config)")
 	flag.BoolVar(&f.showVersion, "version", false, "print the version and exit")
 	flag.Usage = usage
 	flag.Parse()
@@ -76,6 +84,10 @@ func run() error {
 	// default is found again at login anyway.
 	if defaultPath, err := absolutePath(defaultConfigPath()); err != nil || !strings.EqualFold(defaultPath, configPath) {
 		startupConfigPath = configPath
+	}
+
+	if f.probe {
+		return runProbe(probeContext(), f)
 	}
 
 	if flag.Arg(0) == "startup" {
@@ -225,6 +237,33 @@ func runOnce(ctx context.Context, cfg *config.Config, log *slog.Logger, detector
 	if len(s.Reasons) > 0 {
 		fmt.Printf("reasons:    %v\n", s.Reasons)
 	}
+	return nil
+}
+
+func probeContext() context.Context {
+	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	return ctx
+}
+
+// runProbe is the opt-in diagnostic behind the FAQ's missed-call advice. The
+// release build has no console, so output goes to a file as well as stdout.
+// The file contains window titles; the banner at its top says so.
+func runProbe(ctx context.Context, f flags) error {
+	if f.probeCount < 1 {
+		return errors.New("--count must be at least 1")
+	}
+	out := f.probeOut
+	if out == "" {
+		out = filepath.Join(filepath.Dir(f.configPath), "probe-"+time.Now().Format("20060102-150405")+".txt")
+	}
+	file, err := os.Create(out)
+	if err != nil {
+		return fmt.Errorf("create probe file: %w", err)
+	}
+	defer file.Close()
+
+	fmt.Printf("probing %d times, 2s apart; join or leave the call now.\nWriting %s (contains window titles; review before sharing)\n", f.probeCount, out)
+	probe.Run(io.MultiWriter(os.Stdout, file), f.probeCount, 2*time.Second, ctx.Done())
 	return nil
 }
 

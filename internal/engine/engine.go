@@ -222,7 +222,11 @@ func (e *Engine) evaluate(ctx context.Context, now time.Time) {
 	if !e.paused.Load() {
 		results := make([]model.DetectionResult, 0, len(e.detectors))
 		for _, d := range e.detectors {
-			results = append(results, d.Detect(ctx))
+			r := d.Detect(ctx)
+			// Scored signals only: Reasons never carries a window title.
+			e.log.Debug("poll",
+				"app", r.App, "state", r.State, "confidence", r.Confidence, "reasons", r.Reasons)
+			results = append(results, r)
 		}
 		resolved = detection.Resolve(results)
 	}

@@ -317,7 +317,8 @@ important ones and their defaults:
 | `--print-config` | Print the effective config, secrets redacted, and exit. |
 | `--once` | Run one detection cycle, print the result, and exit. |
 | `--simulate` | Fake a call every 30 s to test a Home Assistant automation. |
-| `--debug` | Log every poll to stderr. |
+| `--debug` | Log each detector's score, confidence and reasons on every poll, to stderr and the log file. Window titles and process names are never logged. |
+| `--probe` | Take `--count` snapshots (default 15, 2 s apart) of visible window titles and microphone/camera owners, and write them to `probe-<timestamp>.txt` next to the config (or `--probe-out <file>`). The output contains window titles; review it before sharing. |
 | `--version` | Print the version and exit. |
 
 Settings changed from the tray menu (broker, discovery, allowed network) are
@@ -381,9 +382,12 @@ variable for your user instead of storing the secret in plain text.
 
 **Zoom or Slack calls are not detected.**
 Those detectors are validated against recorded fixtures but have not yet been
-confirmed on a live call. Run with `--debug`, capture the process names and
-window titles it sees during a real call, and open an issue — the fix is
-usually a rule in `rules.yaml`.
+confirmed on a live call. While you are in a real call, run
+`callmqtt --probe` and open the `probe-<timestamp>.txt` file it writes next to
+your config. It lists the process names and window titles on your machine, so
+redact anything private, then attach it to an issue — the fix is usually a rule
+in `rules.yaml`. `--debug` adds the detectors' scores to the log, which shows
+why a call scored too low, but not the titles.
 
 ## License
 
