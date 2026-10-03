@@ -86,6 +86,8 @@ type Client struct {
 	version   string
 	connected atomic.Bool
 
+	connectFails failureThrottle
+
 	// stateSource is set once, at wiring time, by SetStateSource. It is a
 	// *func rather than a plain field because onConnectionUp runs on
 	// autopaho's own goroutine and may fire (on a reconnect) concurrently
@@ -132,8 +134,11 @@ func New(ctx context.Context, opts Options) (*Client, error) {
 		OnConnectionDown: c.onConnectionDown,
 		OnConnectError: func(err error) {
 			// Reconnecting is normal operation, not a fault: the broker may
-			// simply not be up yet.
-			c.log.Warn("mqtt connection attempt failed", "error", err)
+			// simply not be up yet. Logged through a throttle because a
+			// broker that stays down would otherwise write a line per retry.
+			if attempts, ok := c.connectFails.failed(time.Now()); ok {
+				c.log.Warn("mqtt connection attempt failed", "error", err, "attempts", attempts)
+			}
 		},
 
 		ClientConfig: paho.ClientConfig{
@@ -276,6 +281,9 @@ func (c *Client) SetStateSource(f func() (Payload, bool)) {
 func (c *Client) onConnectionUp(cm *autopaho.ConnectionManager, _ *paho.Connack) {
 	c.log.Info("mqtt connected", "broker", c.cfg.MQTT.Host, "client_id", c.cfg.MQTT.ClientID)
 	c.connected.Store(true)
+	if n := c.connectFails.recovered(); n > 0 {
+		c.log.Info("mqtt connect recovered", "failed_attempts", n)
+	}
 
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

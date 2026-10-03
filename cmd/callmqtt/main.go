@@ -417,8 +417,9 @@ func rotateLogIfLarge(path string) error {
 
 // newLogger writes human-readable output to stderr and, when configured, JSON
 // to a log file. Info level records state transitions only, so the log stays
-// readable across a full working day. The file is rotated (see
-// rotateLogIfLarge) before each open, so it never grows without bound.
+// readable across a full working day. The file is rotated at startup (see
+// rotateLogIfLarge) and again in place by rotatingFile as it grows, so it
+// stays bounded however long the process runs.
 func newLogger(cfg *config.Config, debug bool) (*slog.Logger, func(), error) {
 	level := slog.LevelInfo
 	if debug {
@@ -446,7 +447,7 @@ func newLogger(cfg *config.Config, debug bool) (*slog.Logger, func(), error) {
 		if err := rotateLogIfLarge(cfg.Logging.File); err != nil {
 			return nil, nil, fmt.Errorf("rotate log file: %w", err)
 		}
-		file, err := os.OpenFile(cfg.Logging.File, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+		file, err := newRotatingFile(cfg.Logging.File, maxLogSize)
 		if err != nil {
 			return nil, nil, fmt.Errorf("open log file: %w", err)
 		}
