@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
@@ -65,15 +66,21 @@ func run() error {
 		return nil
 	}
 
-	if flag.Arg(0) == "startup" {
-		return startupCommand(flag.Arg(1))
-	}
-
 	configPath, err := absolutePath(f.configPath)
 	if err != nil {
 		return err
 	}
 	f.configPath = configPath
+
+	// Only a non-default config is worth baking into the autostart entry; the
+	// default is found again at login anyway.
+	if defaultPath, err := absolutePath(defaultConfigPath()); err != nil || !strings.EqualFold(defaultPath, configPath) {
+		startupConfigPath = configPath
+	}
+
+	if flag.Arg(0) == "startup" {
+		return startupCommand(flag.Arg(1))
+	}
 
 	if flag.Arg(0) == "init" {
 		return initConfig(f.configPath)
@@ -225,6 +232,10 @@ Flags:
 	flag.PrintDefaults()
 }
 
+// startupConfigPath is the --config to bake into the autostart entry, or ""
+// when the default config path is in use. Set once in run().
+var startupConfigPath string
+
 // startupCommand implements `callmqtt startup enable|disable|status`. It
 // talks to the same build-tag-selected adapter the tray uses, so the CLI and
 // the tray checkbox can never disagree about how autostart is wired up.
@@ -243,11 +254,13 @@ func startupCommand(action string) error {
 		fmt.Println("start at login: disabled")
 		return nil
 	case "status":
-		enabled, err := startup.IsEnabled()
+		enabled, stale, target, err := startup.Status()
 		if err != nil {
 			return fmt.Errorf("check start at login: %w", err)
 		}
-		if enabled {
+		if enabled && stale {
+			fmt.Printf("start at login: disabled (stale: points to %s; run `callmqtt startup enable` to repair)\n", target)
+		} else if enabled {
 			fmt.Println("start at login: enabled")
 		} else {
 			fmt.Println("start at login: disabled")

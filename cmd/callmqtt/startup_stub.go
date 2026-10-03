@@ -17,4 +17,8 @@ func (stubStartup) IsEnabled() (bool, error) { return false, errStartupUnsupport
 func (stubStartup) Enable() error            { return errStartupUnsupported }
 func (stubStartup) Disable() error           { return errStartupUnsupported }
 
+func (stubStartup) Status() (bool, bool, string, error) {
+	return false, false, "", errStartupUnsupported
+}
+
 var startup = stubStartup{}

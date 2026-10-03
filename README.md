@@ -311,7 +311,7 @@ important ones and their defaults:
 | --- | --- |
 | `callmqtt` | Run the agent (tray icon in the release build). |
 | `callmqtt init` | Write a starter config and print where it went. |
-| `callmqtt startup enable\|disable\|status` | Manage start-at-login. |
+| `callmqtt startup enable\|disable\|status` | Manage start-at-login. A custom `--config` is kept in the login entry; if the install folder is moved, `status` and the tray checkbox show it as not enabled until you enable it again. |
 | `--config <path>` | Use a different config file. |
 | `--validate-config` | Check the config and exit. |
 | `--print-config` | Print the effective config, secrets redacted, and exit. |

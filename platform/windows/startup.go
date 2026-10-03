@@ -18,15 +18,25 @@ const runKey = `Software\Microsoft\Windows\CurrentVersion\Run`
 // Task Manager's Startup tab.
 const runValueName = "CallMQTT"
 
-// EnableStartup points HKCU's Run key at the current executable, quoted
-// since install paths can contain spaces.
-func EnableStartup() error {
+// currentExe is the running executable with symlinks resolved.
+func currentExe() (string, error) {
 	exe, err := os.Executable()
 	if err != nil {
-		return fmt.Errorf("locate executable: %w", err)
+		return "", fmt.Errorf("locate executable: %w", err)
 	}
 	if resolved, err := filepath.EvalSymlinks(exe); err == nil {
 		exe = resolved
+	}
+	return exe, nil
+}
+
+// EnableStartup points HKCU's Run key at the current executable, quoted
+// since install paths can contain spaces. A non-empty configPath is passed
+// on as --config so the login launch uses the same config as this run.
+func EnableStartup(configPath string) error {
+	exe, err := currentExe()
+	if err != nil {
+		return err
 	}
 
 	k, _, err := registry.CreateKey(registry.CURRENT_USER, runKey, registry.SET_VALUE)
@@ -35,7 +45,7 @@ func EnableStartup() error {
 	}
 	defer k.Close()
 
-	if err := k.SetStringValue(runValueName, fmt.Sprintf("%q", exe)); err != nil {
+	if err := k.SetStringValue(runValueName, runCommand(exe, configPath)); err != nil {
 		return fmt.Errorf("write run value: %w", err)
 	}
 	return nil
@@ -59,22 +69,38 @@ func DisableStartup() error {
 	return nil
 }
 
-// StartupEnabled reports whether the run value is currently set.
+// StartupEnabled reports whether the run value is set and still points at
+// the current executable. A value for a moved or deleted install counts as
+// not enabled, so re-enabling repairs it.
 func StartupEnabled() (bool, error) {
+	enabled, stale, _, err := StartupStatus()
+	return enabled && !stale, err
+}
+
+// StartupStatus reports whether a run value exists (enabled), whether it
+// points somewhere other than the current executable (stale), and the
+// executable path it names (target).
+func StartupStatus() (enabled, stale bool, target string, err error) {
 	k, err := registry.OpenKey(registry.CURRENT_USER, runKey, registry.QUERY_VALUE)
 	if err != nil {
 		if err == registry.ErrNotExist {
-			return false, nil
+			return false, false, "", nil
 		}
-		return false, fmt.Errorf("open run key: %w", err)
+		return false, false, "", fmt.Errorf("open run key: %w", err)
 	}
 	defer k.Close()
 
-	if _, _, err := k.GetStringValue(runValueName); err != nil {
+	v, _, err := k.GetStringValue(runValueName)
+	if err != nil {
 		if err == registry.ErrNotExist {
-			return false, nil
+			return false, false, "", nil
 		}
-		return false, fmt.Errorf("read run value: %w", err)
+		return false, false, "", fmt.Errorf("read run value: %w", err)
 	}
-	return true, nil
+	exe, err := currentExe()
+	if err != nil {
+		return false, false, "", err
+	}
+	target, ok := parseRunCommand(v)
+	return true, !ok || !sameExePath(target, exe), target, nil
 }
