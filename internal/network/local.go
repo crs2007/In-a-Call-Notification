@@ -20,6 +20,10 @@ import (
 // classifying by IfType/OperStatus via GetAdaptersAddresses on Windows
 // (platform/windows's job, filed as a follow-up); this list is the cheap,
 // platform-independent stopgap.
+//
+// On Windows, adapterAllowed (adapters_windows.go) now classifies by IfType
+// and OperStatus first; this list remains a second filter, and the only one
+// on other platforms.
 var virtualAdapterNames = []string{
 	"vEthernet",
 	"VirtualBox Host-Only",
@@ -28,6 +32,18 @@ var virtualAdapterNames = []string{
 	"WSL",
 	"Loopback",
 	"Bluetooth",
+	// VPN / tunnel adapters: their address says where the VPN hands out
+	// addresses, not where the machine physically is.
+	"TAP-Windows",
+	"Wintun",
+	"WireGuard",
+	"Tailscale",
+	"ZeroTier",
+	"NordLynx",
+	"AnyConnect",
+	"PANGP",
+	"Fortinet",
+	"OpenVPN",
 }
 
 func isVirtualAdapterName(name string) bool {
@@ -63,7 +79,7 @@ func (LocalChecker) Current(context.Context) ([]Info, error) {
 
 	return infosForInterfaces(ifaces, func(iface net.Interface) ([]net.Addr, error) {
 		return iface.Addrs()
-	}), nil
+	}, adapterAllowed()), nil
 }
 
 // Capabilities reports that LocalChecker can only ever populate Prefix
@@ -74,7 +90,9 @@ func (LocalChecker) Capabilities() Capabilities {
 	return Capabilities{CIDR: true}
 }
 
-func infosForInterfaces(ifaces []net.Interface, addrs func(net.Interface) ([]net.Addr, error)) []Info {
+// infosForInterfaces turns interfaces into candidates. allowed, when non-nil,
+// is the platform's adapter-type check (physical Ethernet / Wi-Fi only).
+func infosForInterfaces(ifaces []net.Interface, addrs func(net.Interface) ([]net.Addr, error), allowed func(net.Interface) bool) []Info {
 	var infos []Info
 	for _, iface := range ifaces {
 		if iface.Flags&net.FlagUp == 0 || iface.Flags&net.FlagLoopback != 0 {
@@ -88,6 +106,9 @@ func infosForInterfaces(ifaces []net.Interface, addrs func(net.Interface) ([]net
 			continue
 		}
 		if isVirtualAdapterName(iface.Name) {
+			continue
+		}
+		if allowed != nil && !allowed(iface) {
 			continue
 		}
 
@@ -111,6 +132,11 @@ func infosForInterfaces(ifaces []net.Interface, addrs func(net.Interface) ([]net
 	return infos
 }
 
+// cgnat is the shared address space (RFC 6598) handed out by Tailscale,
+// carrier NAT and similar overlays. Go reports it as global unicast, but it
+// identifies no particular network.
+var cgnat = netip.MustParsePrefix("100.64.0.0/10")
+
 func usablePrefix(assigned net.Addr) (netip.Addr, netip.Prefix, bool) {
 	ipNet, ok := assigned.(*net.IPNet)
 	if !ok {
@@ -122,7 +148,7 @@ func usablePrefix(assigned net.Addr) (netip.Addr, netip.Prefix, bool) {
 		return netip.Addr{}, netip.Prefix{}, false
 	}
 	addr = addr.Unmap()
-	if !addr.IsGlobalUnicast() {
+	if !addr.IsGlobalUnicast() || cgnat.Contains(addr) {
 		return netip.Addr{}, netip.Prefix{}, false
 	}
 

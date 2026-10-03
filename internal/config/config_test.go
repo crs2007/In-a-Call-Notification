@@ -1,6 +1,7 @@
 package config
 
 import (
+	"net/netip"
 	"os"
 	"strings"
 	"testing"
@@ -477,5 +478,22 @@ func BenchmarkSlugify(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		slugify(input)
+	}
+}
+
+func TestIsWideCIDR(t *testing.T) {
+	tests := map[string]bool{
+		"10.0.0.0/8":      true,
+		"0.0.0.0/0":       true,
+		"192.168.0.0/16":  false,
+		"192.168.1.0/24":  false,
+		"fd00::/8":        true,
+		"fd00:1:2::/48":   false,
+		"fd00:1:2:3::/64": false,
+	}
+	for cidr, want := range tests {
+		if got := isWideCIDR(netip.MustParsePrefix(cidr)); got != want {
+			t.Errorf("isWideCIDR(%s) = %v, want %v", cidr, got, want)
+		}
 	}
 }

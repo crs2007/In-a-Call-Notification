@@ -453,8 +453,14 @@ func (c *Config) Validate() error {
 			add("allowed_networks %q has no ssids, bssids, cidrs or gateways to match on", label)
 		}
 		for _, cidr := range rule.CIDRs {
-			if _, err := netip.ParsePrefix(cidr); err != nil {
+			prefix, err := netip.ParsePrefix(cidr)
+			if err != nil {
 				add("allowed_networks %q: invalid cidr %q", label, cidr)
+				continue
+			}
+			if isWideCIDR(prefix) {
+				slog.Warn("config: allowed_networks cidr is very wide and weakens the privacy gate; a VPN or unrelated network inside it will count as allowed",
+					"rule", label, "cidr", cidr)
 			}
 		}
 		for _, gw := range rule.Gateways {
@@ -579,4 +585,13 @@ func (c *Config) Redacted() Config {
 		clone.MQTT.Password = "********"
 	}
 	return clone
+}
+
+// isWideCIDR reports prefixes broader than a typical home LAN: wider than /16
+// for IPv4, wider than /48 for IPv6.
+func isWideCIDR(p netip.Prefix) bool {
+	if p.Addr().Is4() || p.Addr().Is4In6() {
+		return p.Bits() < 16
+	}
+	return p.Bits() < 48
 }

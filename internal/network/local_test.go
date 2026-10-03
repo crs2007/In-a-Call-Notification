@@ -73,7 +73,7 @@ func TestInfosForInterfaces(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := infosForInterfaces(interfaces, tt.read); !reflect.DeepEqual(got, tt.want) {
+			if got := infosForInterfaces(interfaces, tt.read, nil); !reflect.DeepEqual(got, tt.want) {
 				t.Fatalf("infos = %#v, want %#v", got, tt.want)
 			}
 		})
@@ -96,6 +96,16 @@ func TestInfosForInterfacesSkipsVirtualAndNonRunningAdapters(t *testing.T) {
 		{"Hyper-V Virtual Ethernet Adapter", net.Interface{Name: "Hyper-V Virtual Ethernet Adapter", Flags: upRunning}},
 		{"Local Area Connection* (WSL)", net.Interface{Name: "Local Area Connection* (WSL)", Flags: upRunning}},
 		{"Bluetooth Network Connection", net.Interface{Name: "Bluetooth Network Connection", Flags: upRunning}},
+		{"TAP-Windows Adapter V9", net.Interface{Name: "TAP-Windows Adapter V9", Flags: upRunning}},
+		{"Wintun", net.Interface{Name: "Wintun Userspace Tunnel", Flags: upRunning}},
+		{"WireGuard", net.Interface{Name: "WireGuard Tunnel", Flags: upRunning}},
+		{"Tailscale", net.Interface{Name: "Tailscale", Flags: upRunning}},
+		{"ZeroTier", net.Interface{Name: "ZeroTier One [abc]", Flags: upRunning}},
+		{"NordLynx", net.Interface{Name: "NordLynx", Flags: upRunning}},
+		{"AnyConnect", net.Interface{Name: "Cisco AnyConnect Secure Mobility Client", Flags: upRunning}},
+		{"PANGP", net.Interface{Name: "PANGP Virtual Ethernet Adapter", Flags: upRunning}},
+		{"Fortinet", net.Interface{Name: "Fortinet Virtual Ethernet Adapter", Flags: upRunning}},
+		{"OpenVPN", net.Interface{Name: "OpenVPN Data Channel Offload", Flags: upRunning}},
 		{"case-insensitive vmware match", net.Interface{Name: "vmware nat adapter", Flags: upRunning}},
 		{"up but not running Wi-Fi with no AP joined", net.Interface{Name: "Wi-Fi", Flags: net.FlagUp}},
 	}
@@ -105,7 +115,7 @@ func TestInfosForInterfacesSkipsVirtualAndNonRunningAdapters(t *testing.T) {
 			read := func(net.Interface) ([]net.Addr, error) {
 				return []net.Addr{ipNet("192.168.1.42", 24)}, nil
 			}
-			if got := infosForInterfaces([]net.Interface{tt.iface}, read); got != nil {
+			if got := infosForInterfaces([]net.Interface{tt.iface}, read, nil); got != nil {
 				t.Fatalf("infos = %#v, want nil", got)
 			}
 		})
@@ -119,7 +129,7 @@ func TestInfosForInterfacesKeepsRealRunningAdapter(t *testing.T) {
 		return []net.Addr{ipNet("192.168.1.42", 24)}, nil
 	}
 
-	got := infosForInterfaces([]net.Interface{iface}, read)
+	got := infosForInterfaces([]net.Interface{iface}, read, nil)
 	want := []Info{{Connected: true, Interface: "Ethernet", LocalIP: netip.MustParseAddr("192.168.1.42"), Prefix: netip.MustParsePrefix("192.168.1.0/24")}}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("infos = %#v, want %#v", got, want)
@@ -142,5 +152,41 @@ func TestUnreadableNetworkDenies(t *testing.T) {
 	}
 	if _, allowed := m.Match(Info{Connected: false}); allowed {
 		t.Error("a disconnected machine must be denied")
+	}
+}
+
+// The platform adapter-type check is applied after the name denylist.
+func TestInfosForInterfacesHonoursAdapterAllowed(t *testing.T) {
+	const upRunning = net.FlagUp | net.FlagRunning
+	ifaces := []net.Interface{
+		{Index: 1, Name: "Ethernet", Flags: upRunning},
+		{Index: 2, Name: "Corp Gateway", Flags: upRunning},
+	}
+	read := func(net.Interface) ([]net.Addr, error) {
+		return []net.Addr{ipNet("10.1.2.3", 24)}, nil
+	}
+	got := infosForInterfaces(ifaces, read, func(i net.Interface) bool { return i.Index == 1 })
+	if len(got) != 1 || got[0].Interface != "Ethernet" {
+		t.Fatalf("infos = %#v, want only Ethernet", got)
+	}
+}
+
+func TestUsablePrefixRejectsCGNAT(t *testing.T) {
+	tests := []struct {
+		ip   string
+		want bool
+	}{
+		{"100.64.0.1", false},
+		{"100.127.255.254", false},
+		{"100.63.255.255", true},
+		{"100.128.0.1", true},
+		{"192.168.1.5", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.ip, func(t *testing.T) {
+			if _, _, ok := usablePrefix(ipNet(tt.ip, 24)); ok != tt.want {
+				t.Fatalf("usablePrefix(%s) ok = %v, want %v", tt.ip, ok, tt.want)
+			}
+		})
 	}
 }

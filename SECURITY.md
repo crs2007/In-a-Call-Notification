@@ -32,6 +32,12 @@ That is only true of the schema, not the running agent:
   nothing (fail closed, by design). A device that's on a subnet with the same
   range as your home network — even if it's not actually your home — is
   treated as "home" (fail open on identity). Choose your subnet accordingly.
+- VPNs and tunnels: on Windows only operationally-up Ethernet and Wi-Fi
+  adapters count as evidence; tunnel, PPP and other adapter types are ignored,
+  as are well-known VPN adapter names and the CGNAT range `100.64.0.0/10`
+  (Tailscale and similar). Off Windows only the name list applies. Very wide
+  CIDRs (wider than `/16`) log a warning because they make an unrelated
+  network easier to mistake for home.
 
 ## Reporting a vulnerability
 
