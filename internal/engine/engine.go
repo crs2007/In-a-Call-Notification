@@ -38,9 +38,12 @@ type Status struct {
 	Reasons     []string
 	Network     network.Info
 	NetworkRule string
-	Allowed     bool
-	LastChange  time.Time
-	Paused      bool
+	// NetworkRuleWide reports that NetworkRule matched only through a very
+	// wide CIDR (see network.Match.Wide).
+	NetworkRuleWide bool
+	Allowed         bool
+	LastChange      time.Time
+	Paused          bool
 
 	// EvaluatedAt is when this snapshot was computed, regardless of whether
 	// it was ever actually published (a poll tick with nothing new to say
@@ -64,6 +67,7 @@ type Engine struct {
 	// far less often than call state.
 	netInfo    network.Info
 	netRule    string
+	netWide    bool
 	netAllowed bool
 	netCheckAt time.Time
 	netKnown   bool
@@ -239,17 +243,18 @@ func (e *Engine) evaluate(ctx context.Context, now time.Time) {
 		lastChange = now
 	}
 	newStatus := Status{
-		State:       state,
-		App:         resolved.App,
-		Apps:        resolved.Apps,
-		Confidence:  resolved.Confidence,
-		Reasons:     resolved.Reasons,
-		Network:     e.netInfo,
-		NetworkRule: e.netRule,
-		Allowed:     e.netAllowed,
-		LastChange:  lastChange,
-		Paused:      e.paused.Load(),
-		EvaluatedAt: now,
+		State:           state,
+		App:             resolved.App,
+		Apps:            resolved.Apps,
+		Confidence:      resolved.Confidence,
+		Reasons:         resolved.Reasons,
+		Network:         e.netInfo,
+		NetworkRule:     e.netRule,
+		NetworkRuleWide: e.netWide,
+		Allowed:         e.netAllowed,
+		LastChange:      lastChange,
+		Paused:          e.paused.Load(),
+		EvaluatedAt:     now,
 	}
 	e.status = copyStatus(newStatus)
 	e.evaluated = true
@@ -332,11 +337,12 @@ func (e *Engine) refreshNetwork(ctx context.Context, now time.Time) {
 	infos, err := e.checker.Current(ctx)
 	if err != nil {
 		e.log.Warn("network check failed, suspending publishing", "error", err)
-		e.netInfo, e.netRule, e.netAllowed = network.Info{}, "", false
+		e.netInfo, e.netRule, e.netWide, e.netAllowed = network.Info{}, "", false, false
 		return
 	}
 
-	info, rule, allowed := e.matcher.MatchAny(infos)
+	match, allowed := e.matcher.MatchAny(infos)
+	info, rule := match.Info, match.Rule
 	if !allowed {
 		// No rule matched, but the tray and `--once` still need to tell the
 		// user where they are so they can add that network — otherwise
@@ -346,11 +352,11 @@ func (e *Engine) refreshNetwork(ctx context.Context, now time.Time) {
 			info = fallback
 		}
 	}
-	if allowed != e.netAllowed || rule != e.netRule {
+	if allowed != e.netAllowed || rule != e.netRule || match.Wide != e.netWide {
 		e.log.Info("network changed",
-			"interface", info.Interface, "rule", rule, "allowed", allowed)
+			"interface", info.Interface, "rule", rule, "wide", match.Wide, "allowed", allowed)
 	}
-	e.netInfo, e.netRule, e.netAllowed = info, rule, allowed
+	e.netInfo, e.netRule, e.netWide, e.netAllowed = info, rule, match.Wide, allowed
 }
 
 // firstConnected returns the first connected candidate, if any, so the UI has

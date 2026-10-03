@@ -35,6 +35,9 @@ mqtt:
 # Presence is published ONLY while connected to one of these networks.
 # Matching any single field is enough, so one rule covers both Wi-Fi and
 # Ethernet at the same site. An empty list publishes nothing at all.
+# Use your exact subnet: a CIDR wider than /16 (IPv6: /48) logs a warning,
+# because it also matches hotel, office and hotspot networks, and one wider
+# than /8 (IPv6: /32) is rejected.
 allowed_networks:
   - name: Home
     cidrs:

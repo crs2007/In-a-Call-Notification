@@ -296,7 +296,7 @@ important ones and their defaults:
 | `mqtt.discovery.enabled` / `.prefix` | `true` / `homeassistant` | Auto-create the Home Assistant `binary_sensor`; the prefix must match the MQTT integration's discovery prefix. See [Home Assistant Integration](#home-assistant-integration). |
 | `topics.state` | `desktop-presence/{device_id}/call` | Where the JSON state payload is published. Must be a plain topic name: no `+` or `#` wildcards, no leading `$`. |
 | `topics.availability` | `desktop-presence/{device_id}/availability` | `online` / `offline`, with an MQTT last-will. Same topic-name rules as `topics.state`. |
-| `allowed_networks` | *(empty — publishes nothing)* | Rules matched by `ssids`, `bssids`, `cidrs` or `gateways`. **Only `cidrs` currently matches anything** — `ssids`/`bssids`/`gateways` are accepted by the schema but not yet implemented on any platform; a rule relying on them alone fails config validation. See [Privacy](#privacy). |
+| `allowed_networks` | *(empty — publishes nothing)* | Rules matched by `ssids`, `bssids`, `cidrs` or `gateways`. **Only `cidrs` currently matches anything** — `ssids`/`bssids`/`gateways` are accepted by the schema but not yet implemented on any platform; a rule relying on them alone fails config validation. A CIDR shorter than `/8` (IPv4) or `/32` (IPv6), such as `0.0.0.0/0`, is rejected; one shorter than `/16` or `/48` (e.g. `10.0.0.0/8`) is accepted but logs a warning, and the tray marks the rule "(wide rule)". See [Privacy](#privacy). |
 | `detectors.<teams\|zoom\|slack>.enabled` | `true` | Turn individual app detectors on or off. |
 | `detection.active_threshold` / `.inactive_threshold` | `0.70` / `0.30` | Confidence needed to enter / leave the `active` state. |
 | `detection.enter_debounce_seconds` / `.exit_debounce_seconds` | `2` / `8` | Asymmetric on purpose: quick to light up, slow to go dark. |
@@ -352,7 +352,9 @@ can be agreed before you write code.
 Almost always `allowed_networks`. An empty list publishes nothing, and a
 CIDR that doesn't match your current subnet does the same. The tray menu shows which network rule (if
 any) currently matches; `callmqtt --once` prints `publishing: true|false` and
-the reasons.
+the reasons. Fix it by allowing the exact subnet you are on (the tray's
+"Allow current network"), not by widening an existing CIDR until it matches:
+a range like `10.0.0.0/8` also matches hotel, office and hotspot networks.
 
 **`callmqtt init` / `--once` / `--validate-config` print nothing.**
 The release binary is a Windows GUI app (no console window), so it cannot

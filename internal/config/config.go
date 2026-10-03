@@ -528,9 +528,12 @@ func (c *Config) Validate() error {
 				add("allowed_networks %q: invalid cidr %q", label, cidr)
 				continue
 			}
-			if isWideCIDR(prefix) {
-				slog.Warn("config: allowed_networks cidr is very wide and weakens the privacy gate; a VPN or unrelated network inside it will count as allowed",
-					"rule", label, "cidr", cidr)
+			// A prefix this broad contains every network the machine could
+			// plausibly join, so the rule would publish from anywhere while
+			// the tray still names it as if it identified one place.
+			if ClassifyCIDR(prefix) == CIDRTooWide {
+				add("allowed_networks %q: cidr %q is too wide to identify a network (it must be at least /%d for IPv4, /%d for IPv6)",
+					label, cidr, minIPv4Bits, minIPv6Bits)
 			}
 		}
 		for _, gw := range rule.Gateways {
@@ -657,11 +660,73 @@ func (c *Config) Redacted() Config {
 	return clone
 }
 
-// isWideCIDR reports prefixes broader than a typical home LAN: wider than /16
-// for IPv4, wider than /48 for IPv6.
-func isWideCIDR(p netip.Prefix) bool {
-	if p.Addr().Is4() || p.Addr().Is4In6() {
-		return p.Bits() < 16
+// Warnings reports configuration choices that are valid but weaken the
+// privacy gate. Validate leaves them to the caller, like PasswordIsLiteral,
+// so they can reach the log file (or --validate-config's output) rather than
+// whatever slog default happens to be installed when the config is parsed.
+func (c *Config) Warnings() []string {
+	var warnings []string
+	for i, rule := range c.AllowedNetworks {
+		label := rule.Name
+		if label == "" {
+			label = fmt.Sprintf("#%d", i)
+		}
+		for _, cidr := range rule.CIDRs {
+			prefix, err := netip.ParsePrefix(cidr)
+			if err != nil || ClassifyCIDR(prefix) != CIDRWide {
+				continue
+			}
+			warnings = append(warnings, fmt.Sprintf(
+				"allowed_networks %q: cidr %q is very wide (shorter than /%d for IPv4, /%d for IPv6), so unrelated networks inside it, such as a hotel, office or VPN, count as allowed",
+				label, cidr, wideIPv4Bits, wideIPv6Bits))
+		}
 	}
-	return p.Bits() < 48
+	return warnings
+}
+
+// CIDRWidth classifies how much of the address space an allowed_networks
+// prefix covers.
+type CIDRWidth int
+
+const (
+	// CIDRNormal is narrow enough to plausibly identify one network.
+	CIDRNormal CIDRWidth = iota
+	// CIDRWide is broader than a typical home LAN — the RFC 1918 blocks
+	// every hotel, office and hotspot also uses. Accepted, with a warning.
+	CIDRWide
+	// CIDRTooWide covers so much of the address space that it identifies
+	// nothing. Rejected by Validate.
+	CIDRTooWide
+)
+
+const (
+	minIPv4Bits  = 8
+	wideIPv4Bits = 16
+	minIPv6Bits  = 32
+	wideIPv6Bits = 48
+)
+
+// ClassifyCIDR reports how wide p is: shorter than /8 (IPv4) or /32 (IPv6)
+// is too wide, shorter than /16 or /48 is wide. An IPv4-mapped IPv6 prefix
+// (::ffff:a.b.c.d/n) is judged by its IPv4 portion.
+func ClassifyCIDR(p netip.Prefix) CIDRWidth {
+	bits := p.Bits()
+	minBits, wideBits := minIPv6Bits, wideIPv6Bits
+	switch {
+	case p.Addr().Is4():
+		minBits, wideBits = minIPv4Bits, wideIPv4Bits
+	case p.Addr().Is4In6():
+		// Shorter than /96 spans more than the mapped range, so it goes
+		// negative and is judged too wide.
+		bits -= 96
+		minBits, wideBits = minIPv4Bits, wideIPv4Bits
+	}
+	switch {
+	case bits < minBits:
+		return CIDRTooWide
+	case bits < wideBits:
+		return CIDRWide
+	default:
+		return CIDRNormal
+	}
 }

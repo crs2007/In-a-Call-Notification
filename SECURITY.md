@@ -35,9 +35,17 @@ That is only true of the schema, not the running agent:
 - VPNs and tunnels: on Windows only operationally-up Ethernet and Wi-Fi
   adapters count as evidence; tunnel, PPP and other adapter types are ignored,
   as are well-known VPN adapter names and the CGNAT range `100.64.0.0/10`
-  (Tailscale and similar). Off Windows only the name list applies. Very wide
-  CIDRs (wider than `/16`) log a warning because they make an unrelated
-  network easier to mistake for home.
+  (Tailscale and similar). Off Windows only the name list applies.
+- Very wide CIDRs: a prefix shorter than `/8` (IPv4) or `/32` (IPv6) — such
+  as `0.0.0.0/0`, `::/0` or `2000::/3` — identifies no network at all and is
+  rejected by config validation. A prefix shorter than `/16` (IPv4) or `/48`
+  (IPv6) is accepted but logs a warning at startup and in
+  `--validate-config`, and the tray shows the matching rule as
+  "(wide rule)". The private ranges `10.0.0.0/8`, `172.16.0.0/12` and
+  `192.168.0.0/16` are the ones every hotel, office and phone hotspot also
+  uses, so a rule that wide treats almost anywhere as home. Allow the exact
+  subnet you are on (the tray's "Allow current network" does this) rather
+  than widening a rule until it matches.
 
 ## Reporting a vulnerability
 

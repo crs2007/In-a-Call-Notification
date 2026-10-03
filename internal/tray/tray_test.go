@@ -120,6 +120,26 @@ func TestAllowNetLabelAndDisabled(t *testing.T) {
 	}
 }
 
+func TestNetworkLabel(t *testing.T) {
+	tests := []struct {
+		name   string
+		status engine.Status
+		want   string
+	}{
+		{"no rule", engine.Status{}, "Network: not allowed — not publishing"},
+		{"publishing", engine.Status{NetworkRule: "Home", Allowed: true}, "Network: Home — publishing"},
+		{"wide rule publishing", engine.Status{NetworkRule: "Home", NetworkRuleWide: true, Allowed: true}, "Network: Home (wide rule) — publishing"},
+		{"wide rule not publishing", engine.Status{NetworkRule: "Home", NetworkRuleWide: true}, "Network: Home (wide rule) — not publishing"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := networkLabel(tt.status); got != tt.want {
+				t.Errorf("networkLabel() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
 // fakeSupervisor is a minimal supervisorAPI, so tests never touch a real
 // engine or broker connection. Status()'s State flips on every call and
 // BrokerConnected() flips on every call, so refresh() computes a genuinely

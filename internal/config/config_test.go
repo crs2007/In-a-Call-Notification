@@ -248,6 +248,21 @@ func TestValidationRejects(t *testing.T) {
 			wantError: "invalid cidr",
 		},
 		{
+			name:      "catch-all IPv4 cidr",
+			yaml:      "mqtt:\n  host: broker\nallowed_networks:\n  - {name: Everywhere, cidrs: [\"0.0.0.0/0\"]}\n",
+			wantError: "too wide",
+		},
+		{
+			name:      "catch-all IPv6 cidr",
+			yaml:      "mqtt:\n  host: broker\nallowed_networks:\n  - {name: Everywhere, cidrs: [\"::/0\"]}\n",
+			wantError: "too wide",
+		},
+		{
+			name:      "all global IPv6",
+			yaml:      "mqtt:\n  host: broker\nallowed_networks:\n  - {name: Internet, cidrs: [\"2000::/3\"]}\n",
+			wantError: "too wide",
+		},
+		{
 			name:      "malformed gateway",
 			yaml:      "mqtt:\n  host: broker\nallowed_networks:\n  - {name: Home, gateways: [\"not-an-ip\"]}\n",
 			wantError: "invalid gateway",
@@ -576,20 +591,60 @@ func BenchmarkSlugify(b *testing.B) {
 	}
 }
 
-func TestIsWideCIDR(t *testing.T) {
-	tests := map[string]bool{
-		"10.0.0.0/8":      true,
-		"0.0.0.0/0":       true,
-		"192.168.0.0/16":  false,
-		"192.168.1.0/24":  false,
-		"fd00::/8":        true,
-		"fd00:1:2::/48":   false,
-		"fd00:1:2:3::/64": false,
+func TestClassifyCIDR(t *testing.T) {
+	tests := map[string]CIDRWidth{
+		"0.0.0.0/0":           CIDRTooWide,
+		"8.0.0.0/7":           CIDRTooWide,
+		"10.0.0.0/8":          CIDRWide,
+		"172.16.0.0/12":       CIDRWide,
+		"192.168.0.0/15":      CIDRWide,
+		"192.168.0.0/16":      CIDRNormal,
+		"192.168.1.0/24":      CIDRNormal,
+		"::/0":                CIDRTooWide,
+		"2000::/3":            CIDRTooWide,
+		"fd00::/8":            CIDRTooWide,
+		"2001:db8::/31":       CIDRTooWide,
+		"2001:db8::/32":       CIDRWide,
+		"fd00:1::/47":         CIDRWide,
+		"fd00:1:2::/48":       CIDRNormal,
+		"fd00:1:2:3::/64":     CIDRNormal,
+		"::ffff:0.0.0.0/80":   CIDRTooWide,
+		"::ffff:0.0.0.0/96":   CIDRTooWide,
+		"::ffff:10.0.0.0/104": CIDRWide,
+		"::ffff:10.1.0.0/112": CIDRNormal,
 	}
 	for cidr, want := range tests {
-		if got := isWideCIDR(netip.MustParsePrefix(cidr)); got != want {
-			t.Errorf("isWideCIDR(%s) = %v, want %v", cidr, got, want)
+		if got := ClassifyCIDR(netip.MustParsePrefix(cidr)); got != want {
+			t.Errorf("ClassifyCIDR(%s) = %v, want %v", cidr, got, want)
 		}
+	}
+}
+
+// A wide-but-accepted CIDR loads, and is reported through Warnings so the
+// caller can put it somewhere the user will actually see it.
+func TestWideCIDRLoadsWithWarning(t *testing.T) {
+	cfg, err := Parse([]byte("mqtt:\n  host: broker\nallowed_networks:\n" +
+		"  - {name: Home, cidrs: [\"192.168.1.0/24\"]}\n" +
+		"  - {name: Office, cidrs: [\"10.0.0.0/8\"]}\n"))
+	if err != nil {
+		t.Fatalf("Parse: %v", err)
+	}
+	warnings := cfg.Warnings()
+	if len(warnings) != 1 {
+		t.Fatalf("Warnings() = %q, want exactly one", warnings)
+	}
+	if !strings.Contains(warnings[0], `"Office"`) || !strings.Contains(warnings[0], "10.0.0.0/8") {
+		t.Errorf("warning %q should name the rule and the cidr", warnings[0])
+	}
+}
+
+func TestNarrowCIDRsHaveNoWarnings(t *testing.T) {
+	cfg, err := Parse([]byte(minimal))
+	if err != nil {
+		t.Fatalf("Parse: %v", err)
+	}
+	if w := cfg.Warnings(); len(w) != 0 {
+		t.Errorf("Warnings() = %q, want none", w)
 	}
 }
 

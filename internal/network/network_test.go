@@ -162,10 +162,68 @@ func TestMatchAny(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotInfo, gotRule, gotAllow := m.MatchAny(tt.infos)
-			if gotAllow != tt.wantAllow || gotRule != tt.wantRule || gotInfo != tt.wantInfo {
-				t.Fatalf("MatchAny() = (%+v, %q, %v), want (%+v, %q, %v)",
-					gotInfo, gotRule, gotAllow, tt.wantInfo, tt.wantRule, tt.wantAllow)
+			got, gotAllow := m.MatchAny(tt.infos)
+			if gotAllow != tt.wantAllow || got.Rule != tt.wantRule || got.Info != tt.wantInfo || got.Wide {
+				t.Fatalf("MatchAny() = (%+v, %v), want (%+v, %q, wide=false, %v)",
+					got, gotAllow, tt.wantInfo, tt.wantRule, tt.wantAllow)
+			}
+		})
+	}
+}
+
+// A match that rests only on a wide CIDR is flagged so the tray can say so;
+// any narrower evidence in the same rule clears the flag.
+func TestMatchAnyFlagsWideMatches(t *testing.T) {
+	office := Info{Connected: true, Interface: "Wi-Fi", LocalIP: addr(t, "10.20.30.40")}
+	home := Info{Connected: true, Interface: "Ethernet", LocalIP: addr(t, "192.168.1.42"), Gateway: addr(t, "10.0.0.1")}
+
+	tests := []struct {
+		name     string
+		rules    []config.NetworkRule
+		info     Info
+		wantWide bool
+	}{
+		{
+			name:     "wide cidr alone",
+			rules:    []config.NetworkRule{{Name: "Office", CIDRs: []string{"10.0.0.0/8"}}},
+			info:     office,
+			wantWide: true,
+		},
+		{
+			name:  "narrow cidr in the same rule wins",
+			rules: []config.NetworkRule{{Name: "Office", CIDRs: []string{"10.0.0.0/8", "10.20.30.0/24"}}},
+			info:  office,
+		},
+		{
+			name:  "narrow cidr listed first",
+			rules: []config.NetworkRule{{Name: "Office", CIDRs: []string{"10.20.30.0/24", "10.0.0.0/8"}}},
+			info:  office,
+		},
+		{
+			name:  "gateway match is not wide",
+			rules: []config.NetworkRule{{Name: "Home", CIDRs: []string{"192.0.0.0/8"}, Gateways: []string{"10.0.0.1"}}},
+			info:  home,
+		},
+		{
+			name:     "wide IPv6 cidr",
+			rules:    []config.NetworkRule{{Name: "V6", CIDRs: []string{"2001:db8::/32"}}},
+			info:     Info{Connected: true, LocalIP: addr(t, "2001:db8:1::5")},
+			wantWide: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m, err := NewMatcher(tt.rules)
+			if err != nil {
+				t.Fatalf("NewMatcher: %v", err)
+			}
+			got, allowed := m.MatchAny([]Info{tt.info})
+			if !allowed {
+				t.Fatal("expected a match")
+			}
+			if got.Wide != tt.wantWide {
+				t.Errorf("Wide = %v, want %v", got.Wide, tt.wantWide)
 			}
 		})
 	}
@@ -195,7 +253,7 @@ func TestVirtualAdapterRequiresExplicitAddressMatch(t *testing.T) {
 			if err != nil {
 				t.Fatalf("NewMatcher: %v", err)
 			}
-			_, _, gotAllow := m.MatchAny([]Info{docker})
+			_, gotAllow := m.MatchAny([]Info{docker})
 			if gotAllow != tt.wantAllow {
 				t.Fatalf("allowed = %v, want %v", gotAllow, tt.wantAllow)
 			}

@@ -191,6 +191,9 @@ func TestSaveRejectsConfigsThatCouldNeverWork(t *testing.T) {
 		{"allow-list emptied", func(s *Settings) { s.AllowedNetworks = nil }},
 		{"port out of range", func(s *Settings) { s.BrokerPort = 0 }},
 		{"host with port", func(s *Settings) { s.BrokerHost = "broker:1883" }},
+		{"catch-all cidr", func(s *Settings) {
+			s.AllowedNetworks = append(s.AllowedNetworks, NetworkRule{Name: "Everywhere", CIDRs: []string{"0.0.0.0/0"}})
+		}},
 	}
 
 	for _, tt := range tests {

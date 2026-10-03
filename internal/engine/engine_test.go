@@ -99,14 +99,19 @@ type harness struct {
 
 func newHarness(t *testing.T) *harness {
 	t.Helper()
-
-	cfg, err := config.Parse([]byte(`
+	return newHarnessWithConfig(t, `
 allowed_networks:
   - name: Home
     cidrs: ["192.168.1.0/24"]
 mqtt:
   host: 192.168.1.10
-`))
+`)
+}
+
+func newHarnessWithConfig(t *testing.T, yaml string) *harness {
+	t.Helper()
+
+	cfg, err := config.Parse([]byte(yaml))
 	if err != nil {
 		t.Fatalf("config: %v", err)
 	}
@@ -360,6 +365,31 @@ func TestVPNDoesNotHideAllowedPhysicalNetwork(t *testing.T) {
 	}
 	if status.Network.Interface != "Ethernet" || status.Network.LocalIP != netip.MustParseAddr("192.168.1.42") {
 		t.Fatalf("matched network = %+v, want the physical Home adapter", status.Network)
+	}
+}
+
+// A rule that matches only through a very wide CIDR still allows
+// publishing, but Status says so, so the tray can show "(wide rule)".
+func TestWideRuleMatchIsReportedInStatus(t *testing.T) {
+	h := newHarnessWithConfig(t, `
+allowed_networks:
+  - name: Home
+    cidrs: ["192.168.0.0/12"]
+mqtt:
+  host: 192.168.1.10
+`)
+	h.tick(0)
+
+	status := h.engine.Status()
+	if !status.Allowed || status.NetworkRule != "Home" || !status.NetworkRuleWide {
+		t.Fatalf("network decision = (%q, wide=%v, %v), want (Home, wide=true, true)",
+			status.NetworkRule, status.NetworkRuleWide, status.Allowed)
+	}
+
+	h.checker.infos = []network.Info{hotspot()}
+	h.tick(time.Minute)
+	if status := h.engine.Status(); status.NetworkRuleWide {
+		t.Error("NetworkRuleWide should clear once no rule matches")
 	}
 }
 

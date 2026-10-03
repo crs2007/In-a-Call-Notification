@@ -53,7 +53,19 @@ type rule struct {
 	ssids    []string // lowercased
 	bssids   []string // lowercased, separators stripped
 	prefixes []netip.Prefix
+	wide     []bool // parallel to prefixes: config.ClassifyCIDR said CIDRWide
 	gateways []netip.Addr
+}
+
+// Match is the outcome of a successful MatchAny.
+type Match struct {
+	Info Info   // the candidate that matched
+	Rule string // the allow-list rule's name
+
+	// Wide reports that the rule matched only through a CIDR config flags
+	// as very wide (config.CIDRWide), so the "allowed" verdict says little
+	// about where the machine actually is. The tray surfaces it.
+	Wide bool
 }
 
 // NewMatcher compiles the allow-list. Malformed entries are rejected here
@@ -77,6 +89,7 @@ func NewMatcher(rules []config.NetworkRule) (*Matcher, error) {
 				return nil, fmt.Errorf("allowed network %q: invalid cidr %q: %w", r.Name, cidr, err)
 			}
 			c.prefixes = append(c.prefixes, prefix.Masked())
+			c.wide = append(c.wide, config.ClassifyCIDR(prefix) == config.CIDRWide)
 		}
 		for _, gw := range r.Gateways {
 			addr, err := netip.ParseAddr(gw)
@@ -100,31 +113,37 @@ func NewMatcher(rules []config.NetworkRule) (*Matcher, error) {
 // An empty allow-list, a disconnected machine, or a network matching nothing
 // all deny.
 func (m *Matcher) Match(info Info) (string, bool) {
-	_, rule, allowed := m.MatchAny([]Info{info})
-	return rule, allowed
+	match, allowed := m.MatchAny([]Info{info})
+	return match.Rule, allowed
 }
 
 // MatchAny reports the first allow-list rule satisfied by any connected
 // candidate, along with the candidate that matched. Rule order remains the
 // policy tie-breaker; interface names and address ranges are never treated as
 // evidence unless an existing rule explicitly matches them.
-func (m *Matcher) MatchAny(infos []Info) (Info, string, bool) {
+func (m *Matcher) MatchAny(infos []Info) (Match, bool) {
 	for _, r := range m.rules {
 		for _, info := range infos {
-			if info.Connected && r.matches(info) {
-				return info, r.name, true
+			if !info.Connected {
+				continue
+			}
+			if ok, wide := r.matches(info); ok {
+				return Match{Info: info, Rule: r.name, Wide: wide}, true
 			}
 		}
 	}
-	return Info{}, "", false
+	return Match{}, false
 }
 
-func (r rule) matches(info Info) bool {
+// matches reports whether info satisfies the rule and, if it does, whether
+// the only evidence was a wide CIDR. Any narrower evidence — an SSID, BSSID,
+// gateway or narrow CIDR — wins over a wide CIDR in the same rule.
+func (r rule) matches(info Info) (ok, wide bool) {
 	if info.SSID != "" {
 		want := strings.ToLower(info.SSID)
 		for _, ssid := range r.ssids {
 			if ssid == want {
-				return true
+				return true, false
 			}
 		}
 	}
@@ -133,28 +152,33 @@ func (r rule) matches(info Info) bool {
 		want := normalizeBSSID(info.BSSID)
 		for _, bssid := range r.bssids {
 			if bssid == want {
-				return true
+				return true, false
 			}
 		}
 	}
 
+	wideHit := false
 	if ip := info.LocalIP.Unmap(); ip.IsValid() {
-		for _, prefix := range r.prefixes {
-			if prefix.Contains(ip) {
-				return true
+		for i, prefix := range r.prefixes {
+			if !prefix.Contains(ip) {
+				continue
 			}
+			if !r.wide[i] {
+				return true, false
+			}
+			wideHit = true
 		}
 	}
 
 	if gw := info.Gateway.Unmap(); gw.IsValid() {
 		for _, want := range r.gateways {
 			if want == gw {
-				return true
+				return true, false
 			}
 		}
 	}
 
-	return false
+	return wideHit, wideHit
 }
 
 // normalizeBSSID reduces a MAC address to lowercase hex digits so that

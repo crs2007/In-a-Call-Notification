@@ -283,14 +283,21 @@ func allowNetDisabled(s engine.Status) bool {
 	return !s.Network.Prefix.IsValid() || s.NetworkRule != ""
 }
 
+// networkLabel names the matched rule. A rule that matched only through a
+// very wide CIDR is marked "(wide rule)": it says little about where the
+// machine actually is, and the user should not mistake it for one that does.
 func networkLabel(s engine.Status) string {
 	if s.NetworkRule == "" {
 		return "Network: not allowed — not publishing"
 	}
-	if s.Allowed {
-		return fmt.Sprintf("Network: %s — publishing", s.NetworkRule)
+	rule := s.NetworkRule
+	if s.NetworkRuleWide {
+		rule += " (wide rule)"
 	}
-	return fmt.Sprintf("Network: %s — not publishing", s.NetworkRule)
+	if s.Allowed {
+		return fmt.Sprintf("Network: %s — publishing", rule)
+	}
+	return fmt.Sprintf("Network: %s — not publishing", rule)
 }
 
 func brokerLabel(connected bool) string {
@@ -361,6 +368,9 @@ func (a *app) applyChange(mutate func(*config.Settings), item *systray.MenuItem,
 				item.SetChecked(revert)
 			}
 			return
+		}
+		for _, w := range newCfg.Warnings() {
+			a.log().Warn("config: " + w)
 		}
 
 		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)

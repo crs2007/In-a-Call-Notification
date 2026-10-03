@@ -102,7 +102,15 @@ func run() error {
 		if err := network.CheckConfig(cfg); err != nil {
 			return err
 		}
-		fmt.Printf("%s is valid\n", f.configPath)
+		warnings := cfg.Warnings()
+		if len(warnings) == 0 {
+			fmt.Printf("%s is valid\n", f.configPath)
+			return nil
+		}
+		fmt.Printf("%s is valid, with warnings:\n", f.configPath)
+		for _, w := range warnings {
+			fmt.Printf("  - %s\n", w)
+		}
 		return nil
 	}
 	if f.printConfig {
@@ -117,6 +125,9 @@ func run() error {
 
 	if cfg.PasswordIsLiteral() {
 		log.Warn("mqtt password is written directly in the config file; prefer ${ENV_VAR}")
+	}
+	for _, w := range cfg.Warnings() {
+		log.Warn("config: " + w)
 	}
 
 	// Signals are handled before anything connects, so an interrupt during a
