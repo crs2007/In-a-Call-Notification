@@ -343,7 +343,10 @@ func (c *Config) applyDerivedDefaults() {
 		c.App.DeviceID = slugify(c.App.DeviceID)
 	}
 	if c.MQTT.ClientID == "" {
-		c.MQTT.ClientID = "callmqtt-" + c.App.DeviceID
+		// The suffix keeps two installs with the same device id (duplicate
+		// hostnames, two user sessions) from taking over each other's broker
+		// session. Topics keep the plain device id.
+		c.MQTT.ClientID = "callmqtt-" + c.App.DeviceID + "-" + installSuffix()
 	}
 	if c.Logging.File == "" {
 		if dir, err := os.UserConfigDir(); err == nil {
@@ -369,7 +372,17 @@ func autoDeviceID() string {
 	if err != nil || host == "" {
 		return "unknown-host"
 	}
-	return slugify(host)
+	return deviceIDFromHost(host)
+}
+
+// deviceIDFromHost slugifies a hostname. One with no ASCII letters or digits
+// (Hebrew, Cyrillic, CJK) slugifies to nothing; fall back rather than failing
+// the default config.
+func deviceIDFromHost(host string) string {
+	if id := slugify(host); id != "" {
+		return id
+	}
+	return "unknown-host"
 }
 
 // slugify reduces a string to lowercase alphanumerics and single hyphens, so

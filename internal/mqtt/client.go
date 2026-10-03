@@ -154,18 +154,7 @@ func New(ctx context.Context, opts Options) (*Client, error) {
 			// A DISCONNECT from the broker usually names why it dropped us
 			// (e.g. 0x82 protocol error / 0x90 topic name invalid after a
 			// bad topic). Without this the log only says "connection lost".
-			OnServerDisconnect: func(d *paho.Disconnect) {
-				reason := ""
-				if d.Properties != nil {
-					reason = d.Properties.ReasonString
-				}
-				c.log.Warn("mqtt broker sent DISCONNECT",
-					"reason_code", fmt.Sprintf("0x%02X", d.ReasonCode),
-					"reason", reason,
-					"state_topic", cfg.Topics.State,
-					"availability_topic", cfg.Topics.Availability,
-					"discovery_prefix", cfg.MQTT.Discovery.Prefix)
-			},
+			OnServerDisconnect: c.onServerDisconnect,
 			OnClientError: func(err error) {
 				c.log.Warn("mqtt client error", "error", err)
 			},
@@ -348,6 +337,27 @@ func (c *Client) republishState(ctx context.Context, cm connectionPublisher) {
 // onConnectionDown reports whether autopaho should keep retrying. It always
 // should: the broker being unreachable is a transient condition, and giving up
 // would strand the entity.
+// reasonSessionTakenOver is the MQTT v5 DISCONNECT reason code a broker sends
+// when another client connects with the same client id.
+const reasonSessionTakenOver = 0x8E
+
+func (c *Client) onServerDisconnect(d *paho.Disconnect) {
+	reason := ""
+	if d.Properties != nil {
+		reason = d.Properties.ReasonString
+	}
+	c.log.Warn("mqtt broker sent DISCONNECT",
+		"reason_code", fmt.Sprintf("0x%02X", d.ReasonCode),
+		"reason", reason,
+		"state_topic", c.cfg.Topics.State,
+		"availability_topic", c.cfg.Topics.Availability,
+		"discovery_prefix", c.cfg.MQTT.Discovery.Prefix)
+	if d.ReasonCode == reasonSessionTakenOver {
+		c.log.Warn("another client is using this client_id; set mqtt.client_id or app.device_id to something unique on each machine",
+			"client_id", c.cfg.MQTT.ClientID)
+	}
+}
+
 func (c *Client) onConnectionDown() bool {
 	c.log.Warn("mqtt connection lost, reconnecting")
 	c.connected.Store(false)

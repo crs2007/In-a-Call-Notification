@@ -3,6 +3,7 @@ package config
 import (
 	"net/netip"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -69,8 +70,72 @@ func TestDeviceIDSubstitutedIntoTopics(t *testing.T) {
 	if want := "desktop-presence/sharon-pc/call"; cfg.Topics.State != want {
 		t.Errorf("topics.state = %q, want %q", cfg.Topics.State, want)
 	}
-	if want := "callmqtt-sharon-pc"; cfg.MQTT.ClientID != want {
-		t.Errorf("mqtt.client_id = %q, want %q", cfg.MQTT.ClientID, want)
+	if !strings.HasPrefix(cfg.MQTT.ClientID, "callmqtt-sharon-pc-") || !validSuffix(strings.TrimPrefix(cfg.MQTT.ClientID, "callmqtt-sharon-pc-")) {
+		t.Errorf("mqtt.client_id = %q, want callmqtt-sharon-pc-<6 hex>", cfg.MQTT.ClientID)
+	}
+}
+
+func TestMain(m *testing.M) {
+	// Keep the persisted install id out of the real user profile.
+	dir, err := os.MkdirTemp("", "callmqtt-config-test")
+	if err != nil {
+		panic(err)
+	}
+	userConfigDir = func() (string, error) { return dir, nil }
+	code := m.Run()
+	os.RemoveAll(dir)
+	os.Exit(code)
+}
+
+func TestClientIDSuffixIsStableAndExplicitIDKept(t *testing.T) {
+	a, err := Parse([]byte(minimal))
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+	b, err := Parse([]byte(minimal))
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+	if a.MQTT.ClientID != b.MQTT.ClientID {
+		t.Errorf("client_id changed between loads: %q vs %q", a.MQTT.ClientID, b.MQTT.ClientID)
+	}
+	c, err := Parse([]byte(minimal + "  client_id: mine\n"))
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+	if c.MQTT.ClientID != "mine" {
+		t.Errorf("explicit client_id = %q, want mine", c.MQTT.ClientID)
+	}
+}
+
+func TestInstallSuffixFallsBackWhenConfigDirUnusable(t *testing.T) {
+	old := userConfigDir
+	defer func() { userConfigDir = old }()
+
+	// A regular file where the directory should be makes MkdirAll fail.
+	f := filepath.Join(t.TempDir(), "file")
+	if err := os.WriteFile(f, nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	userConfigDir = func() (string, error) { return f, nil }
+	if s := installSuffix(); !validSuffix(s) {
+		t.Errorf("fallback suffix %q is not 6 hex chars", s)
+	}
+	userConfigDir = func() (string, error) { return "", os.ErrNotExist }
+	if s := installSuffix(); !validSuffix(s) {
+		t.Errorf("fallback suffix %q is not 6 hex chars", s)
+	}
+}
+
+func TestNonLatinHostnameFallsBackToUnknownHost(t *testing.T) {
+	for host, want := range map[string]string{
+		"מחשב":      "unknown-host",
+		"---":       "unknown-host",
+		"Sharon-PC": "sharon-pc",
+	} {
+		if got := deviceIDFromHost(host); got != want {
+			t.Errorf("deviceIDFromHost(%q) = %q, want %q", host, got, want)
+		}
 	}
 }
 

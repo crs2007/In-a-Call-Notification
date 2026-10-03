@@ -287,10 +287,10 @@ important ones and their defaults:
 
 | Key | Default | What it controls |
 | --- | --- | --- |
-| `app.device_id` | `auto` (from hostname) | Appears in the MQTT topics and the Home Assistant entity id. |
+| `app.device_id` | `auto` (from hostname) | Appears in the MQTT topics and the Home Assistant entity id. With `auto`, a hostname containing no ASCII letters or digits (for example Hebrew, Cyrillic or CJK) yields `unknown-host`. If several such machines share one broker, set `app.device_id` explicitly on each so their topics and entities don't collide. |
 | `mqtt.host` / `mqtt.port` | — / `1883` | Broker address. `host` is required: a host name or IP only (IPv6 literals allowed), no scheme or port. |
 | `mqtt.username` / `mqtt.password` | — | Broker credentials. `password` may be `${ENV_VAR}`. |
-| `mqtt.client_id` | `callmqtt-<device_id>` | MQTT client id. |
+| `mqtt.client_id` | `callmqtt-<device_id>-<6 hex>` | MQTT client id. The 6-hex suffix is a random per-install id stored in `%APPDATA%\callmqtt\install_id`, so machines with duplicate hostnames, or two sessions, don't take over each other's broker session. Topics and the Home Assistant entity use the plain `device_id`, without the suffix. The client id changes once when you upgrade; the old persistent session is left orphaned on the broker, which is harmless. |
 | `mqtt.qos` / `mqtt.retain` | `1` / `true` | Publish options for state messages. |
 | `mqtt.tls.enabled` | `false` | Enable TLS to the broker (`insecure_skip_verify` also available). |
 | `mqtt.discovery.enabled` / `.prefix` | `true` / `homeassistant` | Auto-create the Home Assistant `binary_sensor`; the prefix must match the MQTT integration's discovery prefix. See [Home Assistant Integration](#home-assistant-integration). |
@@ -365,6 +365,13 @@ Expected for up to 1.5 × `poll.heartbeat_seconds` (90 s by default), after
 which Home Assistant marks the entity unavailable. The availability topic's
 last-will also flips to `offline` as soon as the broker notices the connection
 drop. Lower `heartbeat_seconds` if you need faster recovery.
+
+**The log says "another client is using this client_id".**
+The broker sent DISCONNECT 0x8E (session taken over): two clients connected with
+the same `mqtt.client_id` and each keeps kicking the other off. Give each
+machine a unique `mqtt.client_id`, or a unique `app.device_id` (the default
+client id is derived from it). This is most likely when several machines share
+the `unknown-host` device id.
 
 **The log warns that my MQTT password is written in the config.**
 Set `mqtt.password: ${CALLMQTT_MQTT_PASSWORD}` and define that environment

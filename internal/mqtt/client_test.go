@@ -1,6 +1,7 @@
 package mqtt
 
 import (
+	"bytes"
 	"context"
 	"crypto/ecdsa"
 	"crypto/elliptic"
@@ -18,6 +19,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -450,5 +452,20 @@ func TestBrokerURLHandlesIPv6Literals(t *testing.T) {
 				t.Errorf("Host %q is not dialable: %v", u.Host, err)
 			}
 		})
+	}
+}
+
+func TestServerDisconnectWarnsOnSessionTakeover(t *testing.T) {
+	var buf bytes.Buffer
+	c := &Client{cfg: testConfig(t), log: slog.New(slog.NewTextHandler(&buf, nil))}
+
+	c.onServerDisconnect(&paho.Disconnect{ReasonCode: 0x82})
+	if strings.Contains(buf.String(), "client_id") {
+		t.Errorf("unrelated disconnect produced a takeover warning: %s", buf.String())
+	}
+
+	c.onServerDisconnect(&paho.Disconnect{ReasonCode: reasonSessionTakenOver})
+	if !strings.Contains(buf.String(), "another client is using this client_id") {
+		t.Errorf("0x8E did not produce the takeover warning: %s", buf.String())
 	}
 }
