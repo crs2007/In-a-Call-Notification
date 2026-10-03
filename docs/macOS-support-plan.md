@@ -1,4 +1,10 @@
-# macOS Support Plan — In a Call Notification (`callmqtt`)
+# Feature Request: macOS Support — In a Call Notification (`callmqtt`)
+
+> **Status:** proposed feature request — not scheduled. This document is the
+> plan to deliver it. It is written for a **zero-cost path (no paid Apple
+> Developer Program membership)**; the only things that membership would add
+> are listed in [§1a](#1a-the-apple-developer-account-question) as an
+> optional later upgrade.
 
 ## Context
 
@@ -28,7 +34,8 @@ the worst failure" bar) as Windows.
 ## 1. Scope Definition — what "full support for Mac" means
 
 **In scope (v1 = "GA on macOS")**
-- **Native menu-bar app**, not a compatibility layer: a signed, notarized
+- **Native menu-bar app**, not a compatibility layer: a code-signed (stable
+  self-signed identity, see §1a — *not* notarized in the free track)
   `CallMQTT.app` (LSUIElement — menu bar only, no Dock icon), universal binary
   (arm64 + amd64), pure Go, `CGO_ENABLED=0` kept (purego/goffi FFI, same
   approach as the vendored systray).
@@ -73,9 +80,9 @@ the worst failure" bar) as Windows.
 1. Team: 1 senior Go engineer (owner) + part-time QA/reviewer; Claude subagents
    (`go-core`, `release-ci`, `detector-rules`, and a new `mac-platform`) do
    scoped work. Estimates are in engineer-weeks for that shape.
-2. Someone has (or will buy) an **Apple Developer Program** membership
-   ($99/yr) for a Developer ID certificate + notarization; secrets can be added
-   to GitHub Actions.
+2. **No paid Apple Developer Program membership.** Everything is built,
+   signed and packaged with free, open-source tooling (see §1a). Notarization
+   is deferred to an optional upgrade.
 3. At least one physical Mac (ideally one Apple Silicon + one Intel) is
    available for fixture capture and live confirmation; GitHub `macos-latest`
    runners are acceptable for CI.
@@ -84,6 +91,45 @@ the worst failure" bar) as Windows.
 5. Minimum OS 13 is acceptable; 12 and older unsupported.
 
 ---
+
+## 1a. The Apple Developer account question
+
+**Short answer:** an open-source path covers everything *except notarization*.
+Nothing in this plan needs a Mac-in-a-container or Apple's paid program to be
+built, signed or run; the $99/yr account only removes a one-time Gatekeeper
+warning on first launch.
+
+| Need | Requires paid account? | Free / open-source way |
+| --- | --- | --- |
+| Compile for macOS | No | Go cross-compiles from Linux (`GOOS=darwin`, `CGO_ENABLED=0`); the repo already does this in CI. No macOS container needed. |
+| Universal (arm64+amd64) binary | No | GoReleaser OSS `universal_binaries` (pure-Go lipo, runs on Linux). |
+| `.app` bundle | No | Plain directory + `Info.plist` written by a script in `packaging/macos/`. |
+| Run on Apple Silicon at all | No | arm64 requires *a* signature; Go's linker ad-hoc signs darwin/arm64 automatically. |
+| **Stable identity so Accessibility (TCC) grants survive updates** | No | Sign every build with the **same self-signed code-signing certificate** using [`rcodesign`](https://github.com/indygreg/apple-platform-rs) (open source, runs on Linux) or `codesign` on a free `macos-latest` runner. TCC keys on the designated requirement, which stays constant with the same cert + bundle ID. (Same technique yabai documents for its accessibility grant.) |
+| Test on real macOS in CI | No | GitHub `macos-latest` runners (free for public repos; metered for private). |
+| Gatekeeper accepting a downloaded app silently | **Yes** (Developer ID + notarization) | No free equivalent. Work-arounds below. |
+
+**How users get past Gatekeeper without notarization (documented in README):**
+1. **Homebrew tap formula that builds from source** (`brew install
+   crs2007/tap/callmqtt`) — locally built binaries carry no quarantine flag, so
+   Gatekeeper never prompts. Recommended primary channel. (A *cask* serving
+   the unnotarized zip is not used: Homebrew is phasing out casks that fail
+   Gatekeeper.)
+2. **`go install github.com/crs2007/callmqtt/cmd/callmqtt@latest`** for Go
+   users — same reason, no quarantine.
+3. **Release zip** — first launch is blocked once; user approves via *System
+   Settings → Privacy & Security → Open Anyway* (macOS 15) or right-click →
+   Open (13/14), or `xattr -dr com.apple.quarantine CallMQTT.app`. Later
+   updates of the same signed identity keep the Accessibility grant.
+
+**What is deliberately *not* done:** pirated/borrowed certificates, disabling
+Gatekeeper/SIP system-wide, or Docker-OSX-style macOS VMs (licence-restricted
+on non-Apple hardware and unnecessary here).
+
+**Optional upgrade (if the account is ever bought):** swap the self-signed
+cert for Developer ID, add `rcodesign notary-submit` (also runs on Linux) and
+staple; the zip then opens with no warning and a Homebrew cask becomes viable.
+Note: changing the signing identity resets users' Accessibility grant once.
 
 ## 2. Gap Analysis
 
@@ -102,8 +148,8 @@ the worst failure" bar) as Windows.
 | Start at login | HKCU Run key (`startup.go`, pure part in `startup_pure.go`) | stub returns error | User **LaunchAgent** plist in `~/Library/LaunchAgents/com.crs2007.callmqtt.plist` + `launchctl bootstrap/bootout gui/$UID`. Pure plist rendering unit-testable. (SMAppService later; needs ObjC + bundle.) |
 | Config / logs paths | `os.UserConfigDir()` → `%APPDATA%\callmqtt` | Works → `~/Library/Application Support/callmqtt` | Minor: docs; optionally logs to `~/Library/Logs/callmqtt`. |
 | Open file | `ShellExecute` | `open` via `exec` (`internal/tray/tray.go:499`) | Already done. |
-| Packaging | goreleaser zip, `-H=windowsgui` | none | `.app` bundle (Info.plist: `LSUIElement`, `NSAccessibilityUsageDescription`-style copy, bundle ID), universal binary, hardened runtime, Developer ID codesign, notarize + staple, zip (+ optional DMG, Homebrew cask). TCC grants bind to code signature → **unsigned builds lose permissions on every update**. |
-| CI | `test-windows`, `cross-compile-darwin` (build only) | no tests run on mac | Add `test-macos` (`macos-latest`): vet, `go test -race`, tray build; release `verify` gains darwin builds; release job gains sign/notarize. |
+| Packaging | goreleaser zip, `-H=windowsgui` | none | `.app` bundle (Info.plist: `LSUIElement`, `NSAccessibilityUsageDescription`-style copy, bundle ID), universal binary, hardened runtime, signed with a stable self-signed identity via `rcodesign` (§1a), zip + Homebrew tap formula. TCC grants bind to code signature → **ad-hoc/unsigned builds lose permissions on every update**; notarization deferred. |
+| CI | `test-windows`, `cross-compile-darwin` (build only) | no tests run on mac | Add `test-macos` (`macos-latest`): vet, `go test -race`, tray build; release `verify` gains darwin builds; release job gains self-signed codesign (no notarization). |
 | Diagnostics | `--probe`, `cmd/probe`, `testdata/probe/*.txt` | prints nothing useful | Probe must print mac signals + permission status so fixtures can be captured. |
 | Docs | README Windows-centric (badges, "Windows PC", install) | — | README Installation/Quick Start/FAQ for mac (Gatekeeper, permissions), SECURITY threat-model additions (Accessibility grant scope). Must pass `readme-standards` validator. |
 
@@ -165,7 +211,7 @@ the worst failure" bar) as Windows.
 | Rules | `internal/rules/rules.go` (`goos` field + filter + validation), `internal/rules/rules.yaml` (darwin entries), `internal/rules/rules_test.go` (fixture tests), new `testdata/probe/darwin/*.txt` |
 | Network | new `internal/network/adapters_darwin.go` (+ pure classifier test); `adapters_other.go` → `!windows && !darwin` |
 | Tray | `internal/tray/tray.go`: template icon on darwin (keep colour encoded as distinct glyphs, since template images are monochrome), Permissions submenu, `Options.Permissions` injection; `cmd/callmqtt/main.go`: main-thread lock on darwin |
-| Build/release | `.goreleaser.yaml`: second build id `callmqtt-darwin` (`goos: darwin`, amd64+arm64, no `-H=windowsgui`), `universal_binaries`, separate archive; `.github/workflows/ci.yml` (`test-macos`), `release.yml` (darwin verify builds, macOS sign/notarize/staple job) |
+| Build/release | `.goreleaser.yaml`: second build id `callmqtt-darwin` (`goos: darwin`, amd64+arm64, no `-H=windowsgui`), `universal_binaries`, separate archive; `.github/workflows/ci.yml` (`test-macos`), `release.yml` (darwin verify builds, `rcodesign` signing step, tap formula bump) |
 | Packaging | new `packaging/macos/{Info.plist.tmpl,entitlements.plist,bundle.sh}` |
 | Docs | README (Installation, Quick Start, permissions FAQ, badge), SECURITY (Accessibility scope), `docs/TASKS.md` task entries, CLAUDE.md release checklist (new assets) — via `release-ci` subagent, validated with `go run ./.claude/skills/readme-standards/scripts/validate_readme.go` |
 
@@ -189,13 +235,13 @@ but darwin-excluded goreleaser config).
 | **2. macOS signal adapters + probe** | 2–3 wk | `platform/darwin` process/window/mic/camera/permissions; probe output; `adapters_darwin.go` | `callmqtt --probe` on a real Mac lists processes, titles (with AX grant), mic bundle IDs; pure-part unit tests in Linux CI |
 | **3. Rules & fixtures** | 1.5–2 wk | Capture `testdata/probe/darwin/` (idle, music, each app open-no-call, in-call, muted, huddle); darwin rules in `rules.yaml`; fixture tests | Scenario matrix passes in tests; **live confirmation** for Teams first, then Zoom, Slack (M1: "detects calls on Mac") |
 | **4. OS integration & UX** | 1.5 wk | LaunchAgent startup, osascript broker dialog + error alert, tray Permissions submenu, template icons | Feature parity checklist vs Windows tray complete (M2: "feature parity") |
-| **5. Packaging, CI, release** | 1.5–2 wk (parallelisable from Phase 2) | `.app` bundle, universal binary, codesign + hardened runtime, notarize + staple, `test-macos` CI job, release workflow, Homebrew cask (optional) | A tagged release publishes `callmqtt_<v>_darwin_universal.zip` that opens on a clean Mac without Gatekeeper warnings (M3: "shippable") |
+| **5. Packaging, CI, release** | 1.5–2 wk (parallelisable from Phase 2) | `.app` bundle, universal binary, self-signed `rcodesign` signing, `test-macos` CI job, release workflow, Homebrew tap formula (build-from-source) | A tagged release publishes `callmqtt_<v>_darwin_universal.zip`; `brew install crs2007/tap/callmqtt` runs with no Gatekeeper prompt; the zip runs after one documented "Open Anyway"; Accessibility grant survives an update (M3: "shippable") |
 | **6. Beta → GA** | 2 wk | `-beta.N` pre-release tags, dogfood on ≥3 Macs (Intel + Apple Silicon, macOS 13/14/15), perf measurement, README/SECURITY | 2 weeks of dogfooding with zero false positives; perf targets met; docs validated (M4: GA) |
 | **7. Stretch** | later | AX-tree Slack huddle signal, SSID via CoreWLAN (Location), SMAppService login item, Teams power-assertion signal | Backlog |
 
 **Resources**
 - 1 Go engineer (owner), ~0.5 engineer for CI/packaging in Phase 5.
-- Apple Developer Program account; GitHub secrets: Developer ID `.p12` + password, App Store Connect API key (notarytool).
+- **No Apple Developer account.** One self-signed code-signing cert (generated once, kept as a GitHub secret: PEM cert + key) and a `crs2007/homebrew-tap` repo.
 - Hardware: ≥1 Apple Silicon Mac + ≥1 Intel Mac (or a cloud Mac), test accounts on Teams/Zoom/Slack with a second participant for live calls.
 - CI: `macos-latest` minutes (~10× Linux cost) — limit to one mac job per CI run.
 
@@ -206,15 +252,16 @@ but darwin-excluded goreleaser config).
 | # | Risk | Likelihood / Impact | Mitigation |
 | --- | --- | --- | --- |
 | R1 | Window titles unavailable without Accessibility; users decline the prompt | High / High | Rules designed so mic + process can still reach `active` only where fixtures prove it's safe; otherwise stay inactive (under-trigger). Tray shows "Detection degraded — grant Accessibility". Clear onboarding copy. Never request Screen Recording. |
-| R2 | TCC grants reset on every update if signature changes (unsigned/ad-hoc builds) | High / High | Ship only Developer-ID-signed builds with a stable bundle ID and designated requirement; document `tccutil reset` for recovery. |
+| R2 | TCC grants reset on every update if signature changes (unsigned/ad-hoc builds) | High / High | Sign every build with the same self-signed cert + fixed bundle ID (stable designated requirement); CI test asserts the DR is unchanged between releases; document `tccutil reset Accessibility com.crs2007.callmqtt` for recovery. |
 | R3 | purego FFI to CoreAudio/AX is brittle (struct layouts, CFRelease leaks, arm64 vs amd64 ABI) | Med / Med | Phase-0 spike decides; keep FFI in tiny files with pure logic separated; leak test by running probe 10k iterations; fallback to cgo + macOS runner build. |
 | R4 | Mic held by helper process / different bundle ID than the app (Teams, Zoom helpers) | Med / High | Fixture capture per app per version; rules match helper bundle IDs explicitly; regression fixtures. |
 | R5 | macOS 13 lacks per-process audio attribution | Med / Med | Unattributed mic is *not* counted as app evidence; document reduced accuracy on 13; consider raising floor to 14 if beta data shows misses. |
 | R6 | Vendored systray darwin backend bugs (main-thread, menu updates from goroutines) | Med / High | Phase-0 smoke test; dispatch UI updates to main thread; upstream fixes as with the existing Windows patch in `third_party/systray/README.md`. |
 | R7 | Apple OS updates change TCC / AX behaviour (e.g. Sequoia prompts) | Med / Med | CI on `macos-latest`, beta-channel dogfooding, probe tool as first-line diagnostic. |
 | R8 | App vendors change titles/process names | High (ongoing) / Med | Same fixture-first discipline as Windows (`detector-rules` agent); probe output makes new fixtures cheap. |
-| R9 | Notarization/signing secrets in CI leak or expire | Low / High | Store in GitHub environment with required reviewers; use App Store Connect API key (rotatable); cert expiry reminder. |
-| R10 | Release pipeline coupling: every push to `main` releases — a broken mac step blocks Windows releases | Med / Med | Mac build/sign in `verify` before tagging; mac publish as a separate job so a notarization outage can be re-run without re-tagging (existing "tagged HEAD without release" recovery). |
+| R9 | Signing key in CI leaks or the self-signed cert expires | Low / High | Store in a GitHub environment with required reviewers; issue the cert with a long validity (10 yr); losing it means one forced Accessibility re-grant for all users — back it up offline. |
+| R14 | Unnotarized zip: Gatekeeper friction and user distrust | High / Med | Homebrew tap formula (build from source) as the primary channel; clear README steps for "Open Anyway"; publish checksums; notarization kept as an optional upgrade (§1a). |
+| R10 | Release pipeline coupling: every push to `main` releases — a broken mac step blocks Windows releases | Med / Med | Mac build/sign in `verify` before tagging; mac publish as a separate job so a signing failure can be re-run without re-tagging (existing "tagged HEAD without release" recovery). |
 | R11 | Privacy perception: Accessibility grant is powerful | Med / Med | Read titles only for rule-listed bundle IDs; never log titles above Debug (existing rule); document in SECURITY.md. |
 | R12 | Network false-allow on mac (VPN `utun`, AWDL, Parallels/UTM bridges) | Med / Med | Darwin interface classifier + tests; keep `CheckCapabilities` rejecting unsupported fields. |
 | R13 | CI cost / flakiness of mac runners | Med / Low | One mac job; most logic in pure files tested on Linux. |
@@ -237,7 +284,10 @@ but darwin-excluded goreleaser config).
   mid-call; network change / VPN up; start-at-login after reboot; update
   preserves TCC grant. Observe with
   `mosquitto_sub -t 'desktop-presence/#' -v` and the HA entity.
-- **Release:** downloaded zip on a clean Mac opens without Gatekeeper warning
-  (`spctl -a -vv`, `stapler validate`); assets match README Installation;
+- **Release:** `codesign -dv --verbose=4` shows the self-signed authority and
+  an unchanged designated requirement vs the previous release; `brew install`
+  from the tap launches without a Gatekeeper prompt; the zip launches after one
+  "Open Anyway"; assets match README Installation;
   README validator passes.
 - **Perf:** Activity Monitor / `ps` CPU & RSS over a 1-hour idle run.
+
