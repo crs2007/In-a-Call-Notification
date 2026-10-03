@@ -92,6 +92,9 @@ func run() error {
 	}
 
 	if f.validateConfig {
+		if err := network.CheckConfig(cfg); err != nil {
+			return err
+		}
 		fmt.Printf("%s is valid\n", f.configPath)
 		return nil
 	}

@@ -98,3 +98,14 @@ func TestCheckCapabilities(t *testing.T) {
 		})
 	}
 }
+
+func TestCheckConfigRejectsSSIDOnlyRule(t *testing.T) {
+	cfg := &config.Config{AllowedNetworks: []config.NetworkRule{{Name: "Home", SSIDs: []string{"MyWifi"}}}}
+	if err := CheckConfig(cfg); err == nil {
+		t.Fatal("CheckConfig() = nil, want error for ssids-only rule")
+	}
+	cfg.AllowedNetworks[0].CIDRs = []string{"192.168.1.0/24"}
+	if err := CheckConfig(cfg); err != nil {
+		t.Fatalf("CheckConfig() with cidrs = %v, want nil", err)
+	}
+}

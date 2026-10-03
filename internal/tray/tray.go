@@ -29,6 +29,7 @@ import (
 	"github.com/crs2007/callmqtt/internal/config"
 	"github.com/crs2007/callmqtt/internal/engine"
 	"github.com/crs2007/callmqtt/internal/model"
+	"github.com/crs2007/callmqtt/internal/network"
 )
 
 // Startup manages whether the agent launches at login. Implementations live
@@ -346,7 +347,7 @@ func (a *app) applyChange(mutate func(*config.Settings), item *systray.MenuItem,
 		settings := cfg.Settings()
 		mutate(&settings)
 
-		if err := config.Save(a.opts.ConfigPath, settings); err != nil {
+		if err := config.Save(a.opts.ConfigPath, settings, network.CheckConfig); err != nil {
 			a.log().Error("save settings", "error", err)
 			if item != nil {
 				item.SetChecked(revert)

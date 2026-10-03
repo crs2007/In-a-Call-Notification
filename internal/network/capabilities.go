@@ -99,3 +99,10 @@ func CheckCapabilities(rules []config.NetworkRule, caps Capabilities) error {
 
 	return errors.Join(problems...)
 }
+
+// CheckConfig applies CheckCapabilities against this platform's LocalChecker,
+// so config validation (--validate-config, config.Save) rejects the same rules
+// engine.New would refuse at startup.
+func CheckConfig(cfg *config.Config) error {
+	return CheckCapabilities(cfg.AllowedNetworks, LocalChecker{}.Capabilities())
+}

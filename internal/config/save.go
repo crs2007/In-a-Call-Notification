@@ -65,7 +65,12 @@ func (c *Config) Settings() Settings {
 //
 // The file is written atomically and with owner-only permissions, since it now
 // holds the broker password.
-func Save(path string, s Settings) error {
+//
+// Each check runs against the parsed result of the new document, after Parse's
+// own validation and before anything is written. It exists for rules config
+// cannot express itself, such as platform capabilities (the network package
+// imports config, so config cannot call it directly).
+func Save(path string, s Settings, checks ...func(*Config) error) error {
 	raw, err := os.ReadFile(path)
 	if err != nil {
 		return fmt.Errorf("read config %s: %w", path, err)
@@ -107,8 +112,14 @@ func Save(path string, s Settings) error {
 
 	// Validate before replacing the file. A UI that can write a config the
 	// agent then refuses to load would be worse than no UI at all.
-	if _, err := Parse(out); err != nil {
+	parsed, err := Parse(out)
+	if err != nil {
 		return fmt.Errorf("refusing to save an invalid config: %w", err)
+	}
+	for _, check := range checks {
+		if err := check(parsed); err != nil {
+			return fmt.Errorf("refusing to save an invalid config: %w", err)
+		}
 	}
 
 	return writeAtomic(path, out)

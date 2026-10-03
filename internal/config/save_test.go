@@ -444,3 +444,28 @@ func TestSavedConfigIsNotWorldReadable(t *testing.T) {
 		t.Errorf("config mode is %v, want no group or other access", mode)
 	}
 }
+
+// A caller-supplied check that fails must stop the save before anything is
+// written, so the file on disk is never one the agent would refuse.
+func TestSaveRunsExtraChecksBeforeWriting(t *testing.T) {
+	path := writeTemp(t, Example)
+	before, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cfg, err := Load(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := cfg.Settings()
+	s.BrokerHost = "changed.example"
+
+	err = Save(path, s, func(*Config) error { return os.ErrInvalid })
+	if err == nil || !strings.Contains(err.Error(), "refusing to save") {
+		t.Fatalf("Save() = %v, want refusal", err)
+	}
+	after, _ := os.ReadFile(path)
+	if string(before) != string(after) {
+		t.Fatal("file changed despite failing check")
+	}
+}
