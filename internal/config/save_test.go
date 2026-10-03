@@ -190,6 +190,7 @@ func TestSaveRejectsConfigsThatCouldNeverWork(t *testing.T) {
 		}},
 		{"allow-list emptied", func(s *Settings) { s.AllowedNetworks = nil }},
 		{"port out of range", func(s *Settings) { s.BrokerPort = 0 }},
+		{"host with port", func(s *Settings) { s.BrokerHost = "broker:1883" }},
 	}
 
 	for _, tt := range tests {

@@ -14,6 +14,7 @@ import (
 	"io"
 	"log/slog"
 	"math/big"
+	"net"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -426,5 +427,28 @@ func TestBuildTLSConfigInsecureSkipVerifyPassthrough(t *testing.T) {
 	}
 	if !got.InsecureSkipVerify { //nolint:gosec // asserting the pass-through, not weakening anything
 		t.Error("InsecureSkipVerify was not passed through from config.TLS")
+	}
+}
+
+func TestBrokerURLHandlesIPv6Literals(t *testing.T) {
+	tests := []struct {
+		host, want string
+	}{
+		{"fd00::1", "[fd00::1]:1883"},
+		{"[fd00::1]", "[fd00::1]:1883"},
+		{"::1", "[::1]:1883"},
+		{"broker.local", "broker.local:1883"},
+		{"192.168.1.10", "192.168.1.10:1883"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.host, func(t *testing.T) {
+			u := brokerURL("mqtt", tt.host, 1883)
+			if u.Host != tt.want {
+				t.Errorf("Host = %q, want %q", u.Host, tt.want)
+			}
+			if _, _, err := net.SplitHostPort(u.Host); err != nil {
+				t.Errorf("Host %q is not dialable: %v", u.Host, err)
+			}
+		})
 	}
 }

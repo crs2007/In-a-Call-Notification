@@ -497,3 +497,38 @@ func TestIsWideCIDR(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateBrokerHost(t *testing.T) {
+	tests := []struct {
+		host string
+		ok   bool
+	}{
+		{"broker.local", true},
+		{"192.168.1.10", true},
+		{"fd00::1", true},
+		{"::1", true},
+		{"[fd00::1]", true},
+		{"2001:db8::10", true},
+		{"mqtt://broker", false},
+		{"broker:1883", false},
+		{"192.168.1.10:1883", false},
+		{"broker/", false},
+		{" broker", false},
+		{"broker ", false},
+		{"a#b", false},
+		{"a?b", false},
+		{"user@broker", false},
+		{"[broker]", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.host, func(t *testing.T) {
+			err := validateBrokerHost(tt.host)
+			if tt.ok && err != nil {
+				t.Errorf("rejected %q: %v", tt.host, err)
+			}
+			if !tt.ok && err == nil {
+				t.Errorf("accepted %q", tt.host)
+			}
+		})
+	}
+}

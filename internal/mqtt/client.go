@@ -21,8 +21,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/url"
 	"os"
+	"strconv"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -105,10 +108,7 @@ func New(ctx context.Context, opts Options) (*Client, error) {
 	if cfg.MQTT.TLS.Enabled {
 		scheme = "tls"
 	}
-	serverURL, err := url.Parse(fmt.Sprintf("%s://%s:%d", scheme, cfg.MQTT.Host, cfg.MQTT.Port))
-	if err != nil {
-		return nil, fmt.Errorf("build broker url: %w", err)
-	}
+	serverURL := brokerURL(scheme, cfg.MQTT.Host, cfg.MQTT.Port)
 
 	c := &Client{cfg: cfg, log: opts.Logger, version: opts.Version}
 
@@ -413,4 +413,16 @@ func (c *Client) publish(ctx context.Context, cm connectionPublisher, topic stri
 // absent or overly generous one.
 func boundedPublishContext(ctx context.Context) (context.Context, context.CancelFunc) {
 	return context.WithTimeout(ctx, publishTimeout)
+}
+
+// brokerURL builds the broker address autopaho dials. autopaho passes the URL's
+// Host field straight to net.Dial, so it must be a valid host:port; plain string
+// concatenation leaves an IPv6 literal unbracketed ("fd00::1:1883"), which the
+// dialer rejects. JoinHostPort adds the brackets. One pair of brackets already
+// in host is tolerated so "[fd00::1]" does not become "[[fd00::1]]".
+func brokerURL(scheme, host string, port int) *url.URL {
+	if strings.HasPrefix(host, "[") && strings.HasSuffix(host, "]") {
+		host = host[1 : len(host)-1]
+	}
+	return &url.URL{Scheme: scheme, Host: net.JoinHostPort(host, strconv.Itoa(port))}
 }

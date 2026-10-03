@@ -288,7 +288,7 @@ important ones and their defaults:
 | Key | Default | What it controls |
 | --- | --- | --- |
 | `app.device_id` | `auto` (from hostname) | Appears in the MQTT topics and the Home Assistant entity id. |
-| `mqtt.host` / `mqtt.port` | — / `1883` | Broker address. `host` is required. |
+| `mqtt.host` / `mqtt.port` | — / `1883` | Broker address. `host` is required: a host name or IP only (IPv6 literals allowed), no scheme or port. |
 | `mqtt.username` / `mqtt.password` | — | Broker credentials. `password` may be `${ENV_VAR}`. |
 | `mqtt.client_id` | `callmqtt-<device_id>` | MQTT client id. |
 | `mqtt.qos` / `mqtt.retain` | `1` / `true` | Publish options for state messages. |

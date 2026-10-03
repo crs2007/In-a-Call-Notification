@@ -400,6 +400,26 @@ func slugify(s string) string {
 	return strings.Trim(b.String(), "-")
 }
 
+// validateBrokerHost rejects mqtt.host values that would build a wrong broker
+// address: a scheme, port or path, whitespace, or URL delimiters. A colon is
+// only allowed as part of an IPv6 literal, with or without brackets.
+func validateBrokerHost(h string) error {
+	bad := errors.New("mqtt.host must be a host name or IP address only, no scheme, port or path")
+	if strings.ContainsAny(h, " \t\r\n/\\#?@") {
+		return bad
+	}
+	if strings.ContainsAny(h, ":[]") {
+		lit := h
+		if strings.HasPrefix(lit, "[") && strings.HasSuffix(lit, "]") {
+			lit = lit[1 : len(lit)-1]
+		}
+		if a, err := netip.ParseAddr(lit); err != nil || !a.Is6() {
+			return bad
+		}
+	}
+	return nil
+}
+
 // Validate reports every problem with the configuration at once.
 func (c *Config) Validate() error {
 	var problems []error
@@ -413,6 +433,8 @@ func (c *Config) Validate() error {
 
 	if c.MQTT.Host == "" {
 		add("mqtt.host is required")
+	} else if err := validateBrokerHost(c.MQTT.Host); err != nil {
+		add("%v", err)
 	}
 	if c.MQTT.Port < 1 || c.MQTT.Port > 65535 {
 		add("mqtt.port %d is out of range 1-65535", c.MQTT.Port)
