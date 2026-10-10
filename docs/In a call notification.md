@@ -7,8 +7,13 @@ Open-source project plan: local call-presence → MQTT
 > `callmqtt diagnose` command — as if shipped. They are not. The network
 > matcher that actually ships today matches by local subnet (CIDR) only;
 > SSID, BSSID and gateway matching are planned but not implemented on any
-> platform. Also, this project is Windows-only for now — the macOS sections
-> below are aspirational, not current. For the real, current behaviour, see
+> platform. Also, the macOS sections below are a brainstorm, not a description
+> of what shipped: macOS support is an **alpha** (macOS 13+, one universal app,
+> menu-bar icon, MQTT, start-at-login via a LaunchAgent), it uses Screen
+> Recording for window titles and Core Audio for per-app microphone use (not
+> Accessibility, CoreWLAN or the sources named below), and its detection rules
+> are not populated yet because they need real call captures. For the real,
+> current behaviour, see
 > [README.md](../README.md) (Privacy and Configuration sections) and
 > [SECURITY.md](../SECURITY.md) (Threat model & known limitations). Treat
 > everything below as historical brainstorming, not a spec.

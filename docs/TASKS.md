@@ -188,7 +188,14 @@ caused this Teams bug may exist for Zoom/Slack too and hasn't been
 live-checked — worth a live pass on those before trusting their detection the
 same way.
 
-## ⬜ (unscoped) — macOS platform support
-No owning subagent exists yet (`win-platform` only covers `platform/windows/`).
-Worth revisiting once T36–T38 are done and Windows detection has proven itself
-live, rather than starting it now.
+## 🚧 macOS platform support (alpha)
+Started 2026-10. Packaging, CI and release are in place: `macos-latest` CI
+job (`.github/workflows/macos-checks.yml`, shared with the release gate),
+`scripts/make-app.sh` / `scripts/package-macos.sh` producing
+`callmqtt_<version>_darwin_universal.zip`, and a `package-macos` job in
+`release.yml`. T36's `cross-compile-darwin` job was replaced by that real
+macOS job. **Still open:** macOS detection rules (they need real `--probe`
+captures of Teams, Zoom and Slack calls on a Mac), live confirmation of
+per-app microphone attribution for those apps, and a decision on Developer ID
+signing and notarization (wired in the release workflow, off until the
+`MACOS_*` secrets exist).

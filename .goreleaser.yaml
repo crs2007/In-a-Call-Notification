@@ -46,8 +46,22 @@ archives:
       - src: internal/config/example.yaml
         dst: configs/example.yaml
 
+# The macOS asset is NOT built by goreleaser. It needs macOS-only tools
+# (lipo, codesign, ditto, plutil), and this job runs on windows-latest. The
+# release.yml `package-macos` job (macos-latest, scripts/package-macos.sh)
+# builds callmqtt_<version>_darwin_universal.zip first and hands it over in
+# macos-assets/; goreleaser then folds it into checksums.txt and the release
+# upload below. One publish step means checksums.txt always covers every
+# asset and nothing is patched onto an already-published release, and a
+# re-run of a tagged-but-unreleased HEAD rebuilds everything the same way.
+# The glob must match: to run goreleaser locally, first run
+# `scripts/package-macos.sh <version> macos-assets`.
+# The darwin build flags live in scripts/package-macos.sh; keep them in sync
+# with the `callmqtt` build above (same tags and -trimpath, no -H=windowsgui).
 checksum:
   name_template: "checksums.txt"
+  extra_files:
+    - glob: macos-assets/callmqtt_*_darwin_universal.zip
 
 changelog:
   sort: asc
@@ -65,3 +79,5 @@ release:
   # marked as GitHub "pre-release" automatically, so alpha testers don't
   # mistake a build for the stable "Latest" release.
   prerelease: auto
+  extra_files:
+    - glob: macos-assets/callmqtt_*_darwin_universal.zip

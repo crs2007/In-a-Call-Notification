@@ -1,0 +1,66 @@
+name: macOS checks
+
+# Reusable: called by ci.yml (every PR / push) and release.yml (the gate that
+# runs before a release tag is pushed). One definition, so "green in the PR"
+# and "allowed to release" can never mean different things on macOS.
+on:
+  workflow_call:
+
+jobs:
+  checks:
+    name: macos-latest (vet, test, universal .app)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: build (headless, no tray tag)
+        run: go build ./...
+
+      - name: build (tray tag, as shipped)
+        run: go build -tags tray ./...
+
+      - name: go test -race
+        run: go test -race ./...
+
+      # The shipped binary is built with CGO_ENABLED=0 and the darwin adapters
+      # reach CoreGraphics / Core Audio through goffi, so the tests must also
+      # pass in that exact configuration (-race above needs cgo, this doesn't).
+      - name: go test (CGO_ENABLED=0, as shipped)
+        run: go test ./platform/... ./internal/...
+        env:
+          CGO_ENABLED: "0"
+
+      - name: cross-compile darwin/amd64 (build check only, tray tag as shipped)
+        run: go build -tags tray ./...
+        env:
+          GOOS: darwin
+          GOARCH: amd64
+          CGO_ENABLED: "0"
+
+      # Builds amd64 + arm64, lipo, version check, .app (plutil -lint and
+      # codesign --verify run inside scripts/make-app.sh), zip. Exactly what
+      # release.yml's package-macos job runs, so packaging breaks surface in
+      # a PR instead of after a tag has been spent.
+      - name: package universal .app
+        run: scripts/package-macos.sh 0.0.0-ci "$RUNNER_TEMP/macos-dist"
+
+      - name: verify the packaged app from the zip
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/macos-verify"
+          mkdir -p "$out"
+          ditto -x -k "$RUNNER_TEMP/macos-dist/callmqtt_0.0.0-ci_darwin_universal.zip" "$out"
+          app="$out/In a Call Notification.app"
+          plutil -lint "$app/Contents/Info.plist"
+          codesign --verify --deep --strict --verbose=2 "$app"
+          lipo -archs "$app/Contents/MacOS/callmqtt"
+          test -f "$out/configs/example.yaml"
+          test -f "$out/README.md"
+          test -f "$out/LICENSE"

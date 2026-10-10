@@ -1,3 +1,22 @@
+> **Status of the macOS items (2026-10):** this is the original planning
+> review; it is kept as written. What changed for macOS:
+>
+> *   **Target platform "macOS (Intel/Apple Silicon)":** delivered as an alpha,
+>     macOS 13+, one universal app (`callmqtt_<version>_darwin_universal.zip`).
+>     Detection rules for macOS are **not populated yet** — they need real call
+>     captures (`callmqtt --probe`) — so the alpha reports no calls.
+> *   **Permissions risk:** resolved differently from the plan. The agent uses
+>     **Screen Recording** (window titles only) and needs **no** Accessibility
+>     or Microphone permission; per-app microphone attribution needs macOS
+>     14.2+, and it degrades to process and microphone evidence without Screen
+>     Recording.
+> *   **Task 7 (CoreWLAN SSID/BSSID) and task 8 (AXUIElement):** not built.
+>     Network matching is by subnet (CIDR) only on every platform, and window
+>     titles come from CGWindowList rather than Accessibility.
+> *   **CI "matrix os: [windows-latest, macos-latest] with golangci-lint":**
+>     replaced by a `windows-latest` gate plus a `macos-latest` job (no
+>     golangci-lint, by design). See `.github/workflows/`.
+
 1\. Project Review
 ------------------
 
