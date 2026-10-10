@@ -4,17 +4,16 @@ package main
 
 import "github.com/crs2007/callmqtt/internal/config"
 
-// reportError has no implementation outside Windows yet: non-Windows builds
-// keep a console, so the stderr message main() already prints is visible
+// reportError has no implementation outside Windows and macOS yet: those
+// builds keep a console, so the stderr message main() already prints is visible
 // without an extra dialog.
 func reportError(error) {}
 
 // reportInfo likewise: stdout is visible, so the printed message suffices.
 func reportInfo(string) {}
 
-// brokerDialog has no implementation outside Windows yet; the tray falls
-// back to opening the config file directly (see internal/tray's nil-Dialog
-// handling).
-func brokerDialog(config.Settings) (config.Settings, bool, error) {
-	return config.Settings{}, false, nil
-}
+// brokerDialog is nil outside Windows and macOS, as on macOS (see
+// dialog_darwin.go): a nil tray.Dialog makes "MQTT broker settings…" open
+// config.yaml, where a function that always returned "cancelled" would
+// leave that item doing nothing at all.
+var brokerDialog func(config.Settings) (config.Settings, bool, error)

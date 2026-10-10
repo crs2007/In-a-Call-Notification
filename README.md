@@ -81,7 +81,11 @@ configured. Nothing goes to any other server.
   (macOS withholds window titles from apps that lack it). Nothing is
   recorded, captured or stored, and the agent never takes a screenshot. If you
   decline, the agent keeps running and relies on process names and per-app
-  microphone evidence alone, which is less accurate.
+  microphone evidence alone, which is less accurate. The first time the app
+  is opened from Finder it explains this once and then shows the macOS
+  prompt; after that, the menu-bar item **Allow window titles (Screen
+  Recording)…** opens the right settings pane. macOS applies a grant only
+  after the app is quit and reopened.
 - **No Microphone permission is needed.** macOS reports which process is
   capturing audio without the agent opening the microphone, so it cannot hear
   anything.
@@ -398,6 +402,9 @@ scripts/package-macos.sh 0.0.0-dev
    shows what it detects and whether it is publishing. Tick **Start at login**
    to keep it running, or run `callmqtt startup enable` (on macOS this installs
    a per-user LaunchAgent, `~/Library/LaunchAgents/io.github.crs2007.callmqtt.plist`).
+   On macOS the tray checkbox takes effect at your next login, so it never
+   starts a second copy next to the one you are using; `startup enable` from
+   a terminal also starts it straight away.
 
    ```powershell
    .\callmqtt.exe
@@ -540,7 +547,9 @@ then open the `probe-<timestamp>.txt` it writes next to the config, redact
 anything private (it contains window titles and process names), and attach it
 to an issue. If your problem is something else, check in order: the
 `allowed_networks` entry above; that **Screen Recording** is granted to the app
-(**System Settings → Privacy & Security → Screen Recording**) — without it
+(**System Settings → Privacy & Security → Screen & System Audio Recording**,
+called **Screen Recording** before macOS 15; quit and reopen the app after
+granting it) — without it
 window titles are missing and detection relies on process and microphone
 evidence only; and that you are on macOS 14.2 or newer, since older versions
 cannot say *which* app is using the microphone. Remember that an unsigned

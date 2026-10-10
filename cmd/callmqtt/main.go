@@ -206,6 +206,8 @@ func runAgent(ctx context.Context, cfg *config.Config, log *slog.Logger, f flags
 		"version", version, "device_id", cfg.App.DeviceID,
 		"broker", fmt.Sprintf("%s:%d", cfg.MQTT.Host, cfg.MQTT.Port))
 
+	offerScreenRecording(log, f.configPath)
+
 	uiErr := runUI(ctx, sup, log, f.configPath, cfg.Logging.File)
 
 	// Shutdown gets its own context: ctx may already be cancelled (SIGINT, or

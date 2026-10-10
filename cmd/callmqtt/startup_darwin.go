@@ -30,3 +30,6 @@ func (macStartup) Status() (enabled, stale bool, target string, err error) {
 }
 
 var startup = macStartup{}
+
+// startupSupported tells ui_tray.go whether to offer the login checkbox.
+const startupSupported = true

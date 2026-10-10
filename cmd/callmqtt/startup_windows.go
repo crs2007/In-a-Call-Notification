@@ -23,3 +23,6 @@ func (winStartup) Status() (enabled, stale bool, target string, err error) {
 func (winStartup) Disable() error { return platformwindows.DisableStartup() }
 
 var startup = winStartup{}
+
+// startupSupported tells ui_tray.go whether to offer the login checkbox.
+const startupSupported = true
