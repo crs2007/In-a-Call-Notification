@@ -1,6 +1,6 @@
 ---
 name: detector-rules
-description: Owns internal/rules/rules.yaml and the fixture-driven detector tests. Use when authoring or tuning detection rules for Teams, Zoom, Slack — window title regexes, process names and signal weights.
+description: Owns internal/rules/rules.yaml (Windows), internal/rules/rules_darwin.yaml (macOS) and the fixture-driven detector tests. Use when authoring or tuning detection rules for Teams, Zoom, Slack — window title regexes, process names and signal weights.
 model: sonnet
 tools: Read, Write, Edit, Bash, Grep, Glob
 ---

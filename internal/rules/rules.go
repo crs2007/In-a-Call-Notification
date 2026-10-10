@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"runtime"
 	"strings"
 	"time"
 
@@ -30,18 +31,37 @@ import (
 	"github.com/crs2007/callmqtt/internal/model"
 )
 
-// defaultRulesYAML is CallMQTT's shipped rule set, tuned against the
-// fixtures in testdata/probe/*.txt. It is not user-configurable: unlike
-// config.yaml, a wrong pattern here needs a new capture and a test, not a
-// runtime edit, so it is compiled into the binary rather than read from a
-// path.
+// windowsRulesYAML and darwinRulesYAML are CallMQTT's shipped rule sets,
+// one per OS, because process names, window titles and microphone owners
+// look nothing alike across platforms. Each is tuned against its own
+// fixtures: testdata/probe/*.txt for Windows, testdata/probe/darwin/*.txt
+// for macOS. Neither is user-configurable: unlike config.yaml, a wrong
+// pattern here needs a new capture and a test, not a runtime edit, so both
+// are compiled into the binary rather than read from a path.
+//
+// Both are embedded on every OS, not selected by build tag, so the fixture
+// tests for each platform's rules run on any machine (see DefaultFor).
 //
 //go:embed rules.yaml
-var defaultRulesYAML []byte
+var windowsRulesYAML []byte
 
-// Default parses and compiles CallMQTT's shipped rule set.
+//go:embed rules_darwin.yaml
+var darwinRulesYAML []byte
+
+// Default parses and compiles the shipped rule set for the OS this binary
+// was built for.
 func Default() (*Config, error) {
-	return Load(defaultRulesYAML)
+	return DefaultFor(runtime.GOOS)
+}
+
+// DefaultFor parses and compiles the shipped rule set for goos. Every OS
+// other than darwin gets the Windows set, which is what every build shipped
+// before macOS support existed; on Linux it simply never matches anything.
+func DefaultFor(goos string) (*Config, error) {
+	if goos == "darwin" {
+		return Load(darwinRulesYAML)
+	}
+	return Load(windowsRulesYAML)
 }
 
 // Weights controls how much each kind of evidence contributes to an app's

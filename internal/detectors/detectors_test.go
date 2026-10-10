@@ -8,7 +8,7 @@ import (
 
 	"github.com/crs2007/callmqtt/internal/model"
 	"github.com/crs2007/callmqtt/internal/rules"
-	platformwindows "github.com/crs2007/callmqtt/platform/windows"
+	"github.com/crs2007/callmqtt/platform"
 )
 
 const testRulesYAML = `
@@ -41,9 +41,9 @@ func loadTestConfig(t *testing.T) *rules.Config {
 }
 
 // fakeSnapshot builds a Snapshot from fixed values, with no platform calls.
-func fakeSnapshot(windows []platformwindows.WindowInfo, procNames map[uint32]string, mic, cam []string) Snapshot {
+func fakeSnapshot(windows []platform.WindowInfo, procNames map[uint32]string, mic, cam []string) Snapshot {
 	return Snapshot{
-		VisibleWindows:      func() []platformwindows.WindowInfo { return windows },
+		VisibleWindows:      func() []platform.WindowInfo { return windows },
 		ProcessNames:        func() map[uint32]string { return procNames },
 		AppsUsingMicrophone: func(map[uint32]string) []string { return mic },
 		AppsUsingWebcam:     func(map[uint32]string) []string { return cam },
@@ -61,7 +61,7 @@ func allEnabled(string) bool { return true }
 func TestNew_FullObservationCrossesThreshold(t *testing.T) {
 	cfg := loadTestConfig(t)
 	snap := fakeSnapshot(
-		[]platformwindows.WindowInfo{{PID: 1, Title: "Meeting with Bob"}},
+		[]platform.WindowInfo{{PID: 1, Title: "Meeting with Bob"}},
 		map[uint32]string{1: "ms-teams.exe"},
 		[]string{"ms-teams.exe"},
 		nil,
@@ -115,7 +115,7 @@ func TestNew_NoSignalsIsInactiveWithZeroConfidence(t *testing.T) {
 func TestNew_MultipleRulesEachProduceOwnResult(t *testing.T) {
 	cfg := loadTestConfig(t)
 	snap := fakeSnapshot(
-		[]platformwindows.WindowInfo{
+		[]platform.WindowInfo{
 			{PID: 1, Title: "Meeting with Bob"},
 			{PID: 2, Title: "Zoom Meeting in progress"},
 		},
@@ -233,16 +233,16 @@ rules:
 		t.Fatalf("load rules: %v", err)
 	}
 
-	meetingWindow := platformwindows.WindowInfo{PID: 1, Title: "Meeting with Bob"}
-	process := platformwindows.WindowInfo{PID: 1, Title: "ms-teams.exe window"}
+	meetingWindow := platform.WindowInfo{PID: 1, Title: "Meeting with Bob"}
+	process := platform.WindowInfo{PID: 1, Title: "ms-teams.exe window"}
 	procNames := map[uint32]string{1: "ms-teams.exe"}
 
 	// obsA: process present + matching window title -> 0.25+0.60 = 0.85.
-	obsA := fakeSnapshot([]platformwindows.WindowInfo{meetingWindow}, procNames, nil, nil)
+	obsA := fakeSnapshot([]platform.WindowInfo{meetingWindow}, procNames, nil, nil)
 	// obsB: microphone in use by teams only, no window or process -> 0.60.
 	obsB := fakeSnapshot(nil, nil, []string{"ms-teams.exe"}, nil)
 	// obsC: process present only, no window match, no mic -> 0.25.
-	obsC := fakeSnapshot([]platformwindows.WindowInfo{process}, procNames, nil, nil)
+	obsC := fakeSnapshot([]platform.WindowInfo{process}, procNames, nil, nil)
 
 	// clock is a mutable clock, advanced between steps below so each one
 	// lands outside sharedObserverTTL and is treated as a genuinely new poll
@@ -319,7 +319,7 @@ rules:
 
 	var windowsCalls, procCalls, micCalls, camCalls int32
 	snap := Snapshot{
-		VisibleWindows: func() []platformwindows.WindowInfo {
+		VisibleWindows: func() []platform.WindowInfo {
 			atomic.AddInt32(&windowsCalls, 1)
 			return nil
 		},
@@ -359,14 +359,14 @@ rules:
 	}
 }
 
-func TestWindowsSnapshot_ReturnsCallablePlatformFunctions(t *testing.T) {
-	snap := WindowsSnapshot()
+func TestOSSnapshot_ReturnsCallablePlatformFunctions(t *testing.T) {
+	snap := OSSnapshot()
 	if snap.VisibleWindows == nil || snap.ProcessNames == nil ||
 		snap.AppsUsingMicrophone == nil || snap.AppsUsingWebcam == nil {
-		t.Fatal("WindowsSnapshot left a nil field")
+		t.Fatal("OSSnapshot left a nil field")
 	}
 	// Calling these must not panic even on a platform without the real
-	// implementation (the !windows stub returns nil).
+	// implementation (the no-op adapters return nil).
 	_ = snap.VisibleWindows()
 	names := snap.ProcessNames()
 	_ = snap.AppsUsingMicrophone(names)

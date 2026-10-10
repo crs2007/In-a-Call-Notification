@@ -1,0 +1,23 @@
+# CallMQTT detection rules for macOS.
+#
+# Same contract as rules.yaml (the Windows set): every pattern must come from
+# a real capture in testdata/probe/darwin/*.txt, taken with
+# `callmqtt --probe` on a Mac, and be pinned by a fixture-driven test in
+# rules_test.go. No captures exist yet, so each app below is declared with
+# no patterns at all: the app names exist (so a config.yaml that enables
+# teams/zoom/slack is valid on both OSes), but nothing can ever score, so a
+# macOS build observes and logs without reporting a call until rules backed
+# by real fixtures land here.
+#
+# What differs from Windows (see platform/darwin):
+#   - process names are executable base names without ".exe"
+#     (the macOS Teams/Zoom/Slack names are to be confirmed by capture);
+#   - microphone owners are bundle IDs from Core Audio's per-process input
+#     state, so music playback (output only) never counts as the mic;
+#   - window titles need the Screen Recording permission; without it every
+#     title is empty and only process + mic evidence is available.
+
+rules:
+  - app: teams
+  - app: zoom
+  - app: slack

@@ -12,7 +12,7 @@ import (
 	"sort"
 	"time"
 
-	platformwindows "github.com/crs2007/callmqtt/platform/windows"
+	"github.com/crs2007/callmqtt/platform"
 )
 
 // Banner warns the reader before the output is shared.
@@ -23,8 +23,8 @@ const Banner = "# In a Call Notification probe output.\n" +
 func Snapshot(w io.Writer) {
 	fmt.Fprintf(w, "=== %s ===\n", time.Now().Format(time.RFC3339))
 
-	names := platformwindows.ProcessNames()
-	wins := platformwindows.VisibleWindows()
+	names := platform.ProcessNames()
+	wins := platform.VisibleWindows()
 	sort.Slice(wins, func(i, j int) bool {
 		if names[wins[i].PID] != names[wins[j].PID] {
 			return names[wins[i].PID] < names[wins[j].PID]
@@ -45,8 +45,8 @@ func Snapshot(w io.Writer) {
 		name string
 		apps []string
 	}{
-		{"microphone", platformwindows.AppsUsingMicrophone(names)},
-		{"webcam", platformwindows.AppsUsingWebcam(names)},
+		{"microphone", platform.AppsUsingMicrophone(names)},
+		{"webcam", platform.AppsUsingWebcam(names)},
 	}
 	for _, d := range devices {
 		fmt.Fprintf(w, "[%s] %d in use\n", d.name, len(d.apps))

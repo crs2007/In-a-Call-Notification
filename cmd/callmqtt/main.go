@@ -427,7 +427,7 @@ func buildDetectors(cfg *config.Config, f flags) ([]model.Detector, error) {
 	}
 
 	enabled := func(app string) bool { return cfg.Detectors[app].Enabled }
-	return detectors.New(rulesCfg, cfg.Detection.ActiveThreshold, cfg.Detection.InactiveThreshold, enabled, detectors.WindowsSnapshot(), time.Now), nil
+	return detectors.New(rulesCfg, cfg.Detection.ActiveThreshold, cfg.Detection.InactiveThreshold, enabled, detectors.OSSnapshot(), time.Now), nil
 }
 
 // loadRules picks the shipped rule set, or cfg.RulesFile if the user set one,
