@@ -4,17 +4,28 @@
 
 - **Version source of truth:** `cmd/callmqtt/main.go`'s `var version = "dev"`,
   overridden only via goreleaser's `-X main.version={{.Version}}` ldflag in the
-  release build. There is no separate VERSION file and nothing to bump by
+  release build (Windows) and by the equivalent `-X main.version=<version>` in
+  `scripts/package-macos.sh` (macOS). There is no separate VERSION file and nothing to bump by
   hand — the version comes from the git tag the workflow creates.
 - **How a release is cut — every push to `main` is a release:**
   `.github/workflows/release.yml` runs on `push` to `main`. Its `version` job
   computes the next tag from the latest existing `v*` tag, pushes it, and the
-  `goreleaser` job (`windows-latest`, gated by `go vet` + `go test -race`)
-  runs `goreleaser release --clean` for that tag. Published assets:
+  `goreleaser` job (`windows-latest`, gated by `go vet` + `go test -race`,
+  and by the macOS `verify-macos` job) runs `goreleaser release --clean` for
+  that tag. In between, the `package-macos` job (`macos-latest`) runs
+  `scripts/package-macos.sh` to build the universal `.app` zip and hands it to
+  goreleaser as an artifact (`macos-assets/`); goreleaser lists it in
+  `checksums.txt` and uploads it (`checksum.extra_files` /
+  `release.extra_files` in `.goreleaser.yaml`). Published assets:
   `callmqtt_<version>_windows_amd64.zip`,
-  `callmqtt_<version>_windows_arm64.zip`, and `checksums.txt` on
-  `crs2007/In-a-Call-Notification`. There is no manual version bump step and
-  no version file to edit — the tag *is* the version.
+  `callmqtt_<version>_windows_arm64.zip`,
+  `callmqtt_<version>_darwin_universal.zip`, and `checksums.txt` on
+  `crs2007/In-a-Call-Notification`. The macOS zip is ad-hoc signed; if the
+  `MACOS_SIGN_P12`, `MACOS_SIGN_PASSWORD`, `MACOS_NOTARY_KEY`,
+  `MACOS_NOTARY_KEY_ID` and `MACOS_NOTARY_ISSUER_ID` secrets exist it is
+  Developer-ID signed and notarized instead (off otherwise). There is no
+  manual version bump step and no version file to edit — the tag *is* the
+  version.
 - **Controlling the bump from the commit subject line** (first line of the
   head commit of the push — the body is ignored, so it can mention the
   markers freely):
@@ -30,7 +41,8 @@
     (patch/minor/major) for an on-demand release without a new commit.
 - **Before pushing to `main`, always:** run `go vet ./...` and
   `go test -race ./...` locally (the `verify` job re-runs these plus the tidy
-  check and tray builds *before* the tag is pushed, so a red build consumes no
+  check and tray builds, and `verify-macos` re-runs them on macOS plus a
+  packaging dry run of the `.app`, *before* the tag is pushed, so a red build consumes no
   version; if publishing itself fails after tagging, re-run the workflow — a
   tagged HEAD with no GitHub release is published automatically); decide whether the commit message needs a `[minor]`, `[major]`
   or `[skip release]` marker in its subject line; and if the change alters what ships (see the
@@ -48,6 +60,13 @@
     shipped files change (e.g. a new OS/arch is added, or the archive format
     changes), update README's Installation section to match, in the same
     change.
+  - The macOS asset (`callmqtt_<version>_darwin_universal.zip`) is not built
+    by goreleaser: its shape lives in `scripts/package-macos.sh`,
+    `scripts/make-app.sh` and `packaging/darwin/Info.plist` (bundle name and
+    id, `LSMinimumSystemVersion`, zip contents). Changing any of them is a
+    change to the shape of the release: update README's Installation section
+    (the macOS steps and the archive table) in the same change. Check that
+    the published `checksums.txt` lists all three zips.
   - README links to `/releases/latest`, so a plain version bump needs no
     README edit — only a change in the *shape* of the release (new platform,
     renamed binary, different archive format, etc.) requires touching README.

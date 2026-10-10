@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Template for the .app bundle's Info.plist. scripts/make-app.sh replaces
+  @VERSION@ with the release version (no leading "v"). Keep the bundle id in
+  sync with the LaunchAgent label (io.github.crs2007.callmqtt): macOS ties
+  privacy (TCC) grants to it.
+-->
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleExecutable</key>
+	<string>callmqtt</string>
+	<key>CFBundleIdentifier</key>
+	<string>io.github.crs2007.callmqtt</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>In a Call Notification</string>
+	<key>CFBundleDisplayName</key>
+	<string>In a Call Notification</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>@VERSION@</string>
+	<key>CFBundleVersion</key>
+	<string>@VERSION@</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>13.0</string>
+	<!-- Menu-bar agent: no Dock icon, no app-switcher entry. -->
+	<key>LSUIElement</key>
+	<true/>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+</dict>
+</plist>
