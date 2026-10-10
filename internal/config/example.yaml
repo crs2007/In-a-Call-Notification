@@ -14,6 +14,9 @@ mqtt:
   username: callmqtt
   # Prefer an environment variable over a literal secret. In a Call Notification warns if
   # this is written directly into the file.
+  # On macOS, apps started from Finder or at login do not see environment
+  # variables; use the keychain instead: password: "keychain:callmqtt", then
+  # run  security add-generic-password -U -s callmqtt -a <username> -w
   password: ${CALLMQTT_MQTT_PASSWORD}
   # tls:
   #   enabled: true

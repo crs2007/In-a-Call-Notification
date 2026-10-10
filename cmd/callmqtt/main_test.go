@@ -158,3 +158,42 @@ func TestLoadConfig(t *testing.T) {
 		}
 	})
 }
+
+func TestNeedDialog(t *testing.T) {
+	tests := []struct {
+		name     string
+		writeErr error
+		console  bool
+		want     bool
+	}{
+		{"printed to a console", nil, true, false},
+		{"printed, but nobody is watching (macOS from Finder)", nil, false, true},
+		{"write failed (Windows GUI build)", os.ErrClosed, true, true},
+		{"write failed and no console", os.ErrClosed, false, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := needDialog(tt.writeErr, tt.console); got != tt.want {
+				t.Errorf("needDialog(%v, %v) = %v, want %v", tt.writeErr, tt.console, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestInitMessage(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "config.yaml")
+	got := initMessage(path, "my-mac")
+	for _, want := range []string{
+		"Wrote " + path,
+		`device id "my-mac"`,
+		"desktop-presence/my-mac/call",
+		"desktop-presence/my-mac/availability",
+		"allowed_networks",
+		passwordAdvice,
+		"callmqtt --validate-config",
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("init message does not contain %q:\n%s", want, got)
+		}
+	}
+}

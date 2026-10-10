@@ -47,6 +47,12 @@ type Config struct {
 	// passwordFromEnv records whether mqtt.password referenced ${VAR} in the
 	// file. It can only be determined before expansion, so Parse captures it.
 	passwordFromEnv bool
+	// passwordFromKeychain records that mqtt.password was a keychain:<service>
+	// reference (see keychain.go); keychainService is the <service> part.
+	// Load swaps the reference for the secret, so these are all that is left
+	// of it afterwards.
+	passwordFromKeychain bool
+	keychainService      string
 }
 
 // App identifies this machine.
@@ -251,6 +257,12 @@ func Load(path string) (*Config, error) {
 		return nil, err
 	}
 
+	// Only Load resolves a keychain: password: Parse also validates what
+	// Save is about to write, and that must not call out to the keychain.
+	if err := cfg.resolveKeychain(); err != nil {
+		return nil, err
+	}
+
 	baseDir := filepath.Dir(path)
 	cfg.MQTT.TLS.CAFile = resolveRelative(baseDir, cfg.MQTT.TLS.CAFile)
 	cfg.MQTT.TLS.CertFile = resolveRelative(baseDir, cfg.MQTT.TLS.CertFile)
@@ -279,6 +291,7 @@ func Parse(raw []byte) (*Config, error) {
 	}
 	// passwordFromEnv must be read before expansion below overwrites it.
 	cfg.passwordFromEnv = envPattern.MatchString(cfg.MQTT.Password)
+	cfg.parseKeychainRef()
 
 	// ${VAR} is expanded only in the fields where an environment override
 	// makes sense, and only after YAML parsing has already tokenized the
@@ -286,7 +299,9 @@ func Parse(raw []byte) (*Config, error) {
 	// can never be mistaken for YAML syntax.
 	cfg.MQTT.Host = expandField("mqtt.host", cfg.MQTT.Host)
 	cfg.MQTT.Username = expandField("mqtt.username", cfg.MQTT.Username)
-	cfg.MQTT.Password = expandField("mqtt.password", cfg.MQTT.Password)
+	if !cfg.passwordFromKeychain {
+		cfg.MQTT.Password = expandField("mqtt.password", cfg.MQTT.Password)
+	}
 	cfg.MQTT.ClientID = expandField("mqtt.client_id", cfg.MQTT.ClientID)
 	cfg.Logging.File = expandField("logging.file", cfg.Logging.File)
 	cfg.RulesFile = expandField("rules_file", cfg.RulesFile)
@@ -489,6 +504,7 @@ func (c *Config) Validate() error {
 			add("mqtt.discovery.prefix %q must not start or end with '/'", c.MQTT.Discovery.Prefix)
 		}
 	}
+	c.validateKeychainRef(add)
 	if (c.MQTT.TLS.CertFile == "") != (c.MQTT.TLS.KeyFile == "") {
 		add("mqtt.tls.cert_file and mqtt.tls.key_file must both be set, or both left empty")
 	}
@@ -644,11 +660,11 @@ func (c *Config) EnabledDetectors() []string {
 }
 
 // PasswordIsLiteral reports whether the MQTT password was written directly into
-// the config file rather than referenced from the environment. Callers warn on
-// this; it is not an error, because it is a defensible choice on a
-// single-user machine.
+// the config file rather than referenced from the environment or the macOS
+// keychain. Callers warn on this; it is not an error, because it is a
+// defensible choice on a single-user machine.
 func (c *Config) PasswordIsLiteral() bool {
-	return c.MQTT.Password != "" && !c.passwordFromEnv
+	return c.MQTT.Password != "" && !c.passwordFromEnv && !c.passwordFromKeychain
 }
 
 // Redacted returns a copy of the configuration that is safe to print or log.
