@@ -4,7 +4,7 @@ package platform
 
 import platformdarwin "github.com/crs2007/callmqtt/platform/darwin"
 
-// VisibleWindows reports every on-screen, normal-layer window.
+// VisibleWindows reports every on-screen, normal-layer, titled window.
 func VisibleWindows() []WindowInfo {
 	wins := platformdarwin.VisibleWindows()
 	out := make([]WindowInfo, len(wins))

@@ -35,7 +35,10 @@ That is only true of the schema, not the running agent:
 - VPNs and tunnels: on Windows only operationally-up Ethernet and Wi-Fi
   adapters count as evidence; tunnel, PPP and other adapter types are ignored,
   as are well-known VPN adapter names and the CGNAT range `100.64.0.0/10`
-  (Tailscale and similar). Off Windows only the name list applies.
+  (Tailscale and similar). On macOS only interfaces that are up, broadcast-
+  capable and not point-to-point count, and tunnel, VM-bridge, AWDL and
+  similar BSD interfaces (`utun*`, `bridge*`, `awdl*`, `vnic*`, …) are
+  ignored by name. Elsewhere only the name list applies.
 - Very wide CIDRs: a prefix shorter than `/8` (IPv4) or `/32` (IPv6) — such
   as `0.0.0.0/0`, `::/0` or `2000::/3` — identifies no network at all and is
   rejected by config validation. A prefix shorter than `/16` (IPv4) or `/48`
