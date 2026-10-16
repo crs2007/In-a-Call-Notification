@@ -235,11 +235,16 @@ func (s *Supervisor) Close(ctx context.Context) error {
 	s.reloadMu.Lock()
 	defer s.reloadMu.Unlock()
 
-	// Cancelled before the gen swap below, and still under reloadMu: a Reload
-	// that was blocked waiting for this lock must see s.ctx already cancelled
-	// once it acquires it, so it bails out instead of building a generation
-	// that stop's swap here has no way to ever find and close (see reloadMu).
-	s.cancel()
+	// Cancelled while still under reloadMu (this defer runs before the
+	// Unlock above): a Reload that was blocked waiting for this lock must see
+	// s.ctx already cancelled once it acquires it, so it bails out instead of
+	// building a generation that stop's swap here has no way to ever find and
+	// close (see reloadMu). It must not run before stop, though: s.ctx is the
+	// parent of the publisher's connection ctx, and cancelling it first tears
+	// the broker connection down before pub.Close can publish "offline" —
+	// and autopaho's clean disconnect then suppresses the Will as well, so
+	// Home Assistant keeps the last state after a quit.
+	defer s.cancel()
 
 	s.mu.Lock()
 	gen := s.gen
