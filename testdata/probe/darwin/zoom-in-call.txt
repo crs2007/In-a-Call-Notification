@@ -1,0 +1,213 @@
+# In a Call Notification probe output.
+# Contains window titles (meeting names). Review and redact before pasting.
+
+=== 2026-10-16T11:16:23+03:00 ===
+[windows] 7 visible
+  pid=58700  proc=Finder                       title="Downloads"
+  pid=791    proc=Google Chrome                title="Welcome to Zoom - Zoom"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — capture.sh — 120×30"
+  pid=24480  proc=zoom.us                      title=""
+  pid=24480  proc=zoom.us                      title="Zoom Meeting"
+  pid=24480  proc=zoom.us                      title="Zoom Workplace"
+[microphone] 1 in use
+  us.zoom.xos
+[webcam] 1 in use
+  (unknown)
+
+=== 2026-10-16T11:16:25+03:00 ===
+[windows] 7 visible
+  pid=58700  proc=Finder                       title="Downloads"
+  pid=791    proc=Google Chrome                title="Welcome to Zoom - Zoom"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+  pid=24480  proc=zoom.us                      title=""
+  pid=24480  proc=zoom.us                      title="Zoom Meeting"
+  pid=24480  proc=zoom.us                      title="Zoom Workplace"
+[microphone] 1 in use
+  us.zoom.xos
+[webcam] 1 in use
+  (unknown)
+
+=== 2026-10-16T11:16:28+03:00 ===
+[windows] 7 visible
+  pid=58700  proc=Finder                       title="Downloads"
+  pid=791    proc=Google Chrome                title="Welcome to Zoom - Zoom"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+  pid=24480  proc=zoom.us                      title=""
+  pid=24480  proc=zoom.us                      title="Zoom Meeting"
+  pid=24480  proc=zoom.us                      title="Zoom Workplace"
+[microphone] 1 in use
+  us.zoom.xos
+[webcam] 1 in use
+  (unknown)
+
+=== 2026-10-16T11:16:30+03:00 ===
+[windows] 7 visible
+  pid=58700  proc=Finder                       title="Downloads"
+  pid=791    proc=Google Chrome                title="Welcome to Zoom - Zoom"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+  pid=24480  proc=zoom.us                      title=""
+  pid=24480  proc=zoom.us                      title="Zoom Meeting"
+  pid=24480  proc=zoom.us                      title="Zoom Workplace"
+[microphone] 1 in use
+  us.zoom.xos
+[webcam] 1 in use
+  (unknown)
+
+=== 2026-10-16T11:16:32+03:00 ===
+[windows] 7 visible
+  pid=58700  proc=Finder                       title="Downloads"
+  pid=791    proc=Google Chrome                title="Welcome to Zoom - Zoom"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+  pid=24480  proc=zoom.us                      title=""
+  pid=24480  proc=zoom.us                      title="Zoom Meeting"
+  pid=24480  proc=zoom.us                      title="Zoom Workplace"
+[microphone] 1 in use
+  us.zoom.xos
+[webcam] 1 in use
+  (unknown)
+
+=== 2026-10-16T11:16:34+03:00 ===
+[windows] 7 visible
+  pid=58700  proc=Finder                       title="Downloads"
+  pid=791    proc=Google Chrome                title="Welcome to Zoom - Zoom"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+  pid=24480  proc=zoom.us                      title=""
+  pid=24480  proc=zoom.us                      title="Zoom Meeting"
+  pid=24480  proc=zoom.us                      title="Zoom Workplace"
+[microphone] 1 in use
+  us.zoom.xos
+[webcam] 1 in use
+  (unknown)
+
+=== 2026-10-16T11:16:36+03:00 ===
+[windows] 7 visible
+  pid=58700  proc=Finder                       title="Downloads"
+  pid=791    proc=Google Chrome                title="Welcome to Zoom - Zoom"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+  pid=24480  proc=zoom.us                      title=""
+  pid=24480  proc=zoom.us                      title="Zoom Meeting"
+  pid=24480  proc=zoom.us                      title="Zoom Workplace"
+[microphone] 1 in use
+  us.zoom.xos
+[webcam] 1 in use
+  (unknown)
+
+=== 2026-10-16T11:16:38+03:00 ===
+[windows] 7 visible
+  pid=58700  proc=Finder                       title="Downloads"
+  pid=791    proc=Google Chrome                title="Welcome to Zoom - Zoom"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+  pid=24480  proc=zoom.us                      title=""
+  pid=24480  proc=zoom.us                      title="Zoom Meeting"
+  pid=24480  proc=zoom.us                      title="Zoom Workplace"
+[microphone] 1 in use
+  us.zoom.xos
+[webcam] 1 in use
+  (unknown)
+
+=== 2026-10-16T11:16:40+03:00 ===
+[windows] 7 visible
+  pid=58700  proc=Finder                       title="Downloads"
+  pid=791    proc=Google Chrome                title="Welcome to Zoom - Zoom"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+  pid=24480  proc=zoom.us                      title=""
+  pid=24480  proc=zoom.us                      title="Zoom Meeting"
+  pid=24480  proc=zoom.us                      title="Zoom Workplace"
+[microphone] 1 in use
+  us.zoom.xos
+[webcam] 1 in use
+  (unknown)
+
+=== 2026-10-16T11:16:42+03:00 ===
+[windows] 7 visible
+  pid=58700  proc=Finder                       title="Downloads"
+  pid=791    proc=Google Chrome                title="Welcome to Zoom - Zoom"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+  pid=24480  proc=zoom.us                      title=""
+  pid=24480  proc=zoom.us                      title="Zoom Meeting"
+  pid=24480  proc=zoom.us                      title="Zoom Workplace"
+[microphone] 1 in use
+  us.zoom.xos
+[webcam] 1 in use
+  (unknown)
+
+=== 2026-10-16T11:16:44+03:00 ===
+[windows] 7 visible
+  pid=58700  proc=Finder                       title="Downloads"
+  pid=791    proc=Google Chrome                title="Welcome to Zoom - Zoom"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+  pid=24480  proc=zoom.us                      title=""
+  pid=24480  proc=zoom.us                      title="Zoom Meeting"
+  pid=24480  proc=zoom.us                      title="Zoom Workplace"
+[microphone] 1 in use
+  us.zoom.xos
+[webcam] 1 in use
+  (unknown)
+
+=== 2026-10-16T11:16:46+03:00 ===
+[windows] 7 visible
+  pid=58700  proc=Finder                       title="Downloads"
+  pid=791    proc=Google Chrome                title="Welcome to Zoom - Zoom"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+  pid=24480  proc=zoom.us                      title=""
+  pid=24480  proc=zoom.us                      title="Zoom Meeting"
+  pid=24480  proc=zoom.us                      title="Zoom Workplace"
+[microphone] 1 in use
+  us.zoom.xos
+[webcam] 1 in use
+  (unknown)
+
+=== 2026-10-16T11:16:48+03:00 ===
+[windows] 7 visible
+  pid=58700  proc=Finder                       title="Downloads"
+  pid=791    proc=Google Chrome                title="Welcome to Zoom - Zoom"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+  pid=24480  proc=zoom.us                      title=""
+  pid=24480  proc=zoom.us                      title="Zoom Meeting"
+  pid=24480  proc=zoom.us                      title="Zoom Workplace"
+[microphone] 1 in use
+  us.zoom.xos
+[webcam] 1 in use
+  (unknown)
+
+=== 2026-10-16T11:16:50+03:00 ===
+[windows] 7 visible
+  pid=58700  proc=Finder                       title="Downloads"
+  pid=791    proc=Google Chrome                title="Welcome to Zoom - Zoom"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+  pid=24480  proc=zoom.us                      title=""
+  pid=24480  proc=zoom.us                      title="Zoom Meeting"
+  pid=24480  proc=zoom.us                      title="Zoom Workplace"
+[microphone] 1 in use
+  us.zoom.xos
+[webcam] 1 in use
+  (unknown)
+
+=== 2026-10-16T11:16:52+03:00 ===
+[windows] 7 visible
+  pid=58700  proc=Finder                       title="Downloads"
+  pid=791    proc=Google Chrome                title="Welcome to Zoom - Zoom"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+  pid=24480  proc=zoom.us                      title=""
+  pid=24480  proc=zoom.us                      title="Zoom Meeting"
+  pid=24480  proc=zoom.us                      title="Zoom Workplace"
+[microphone] 1 in use
+  us.zoom.xos
+[webcam] 1 in use
+  (unknown)
+
