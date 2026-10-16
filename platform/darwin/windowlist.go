@@ -52,17 +52,17 @@ func loadWindowKeys() error {
 	return windowKeys.err
 }
 
-// VisibleWindows reports every on-screen, normal-layer, titled window with
-// its owning PID and title. It is a raw observation: whether any of these
-// titles means the user is "in a call" is a rule owned by internal/rules,
-// not this package.
+// VisibleWindows reports every on-screen, normal-layer window with its
+// owning PID and title (empty when macOS withholds it). It is a raw
+// observation: whether any of these titles means the user is "in a call" is
+// a rule owned by internal/rules, not this package.
 //
 // It reads CoreGraphics' window list (CGWindowListCopyWindowInfo), which
 // needs no permission for PIDs and layers but — since macOS 10.15 — returns
 // window titles only to processes granted Screen Recording. Without it,
-// almost every title comes back empty and filterWindows drops the window;
-// noteScreenRecordingState logs that once, not every poll. Detection then
-// leans on process and microphone evidence instead.
+// almost every title comes back empty but the window is still reported for
+// its owner; noteScreenRecordingState logs that once, not every poll.
+// Detection then leans on process and microphone evidence instead.
 //
 // Every failure (CoreGraphics or CoreFoundation unavailable, a NULL list)
 // means "no evidence": nil, never an error or a panic.
@@ -102,8 +102,8 @@ func VisibleWindows() []WindowInfo {
 		w.pid, w.hasPID = cf.Int32(cf.DictGet(d, windowKeys.ownerPID))
 		w.layer, w.hasLayer = cf.Int32(cf.DictGet(d, windowKeys.layer))
 		if w.hasLayer && w.layer == normalWindowLayer {
-			// Only convert titles filterWindows could keep: string
-			// conversion is the expensive part of the walk.
+			// Only convert titles of windows filterWindows keeps:
+			// string conversion is the expensive part of the walk.
 			w.name = cf.String(cf.DictGet(d, windowKeys.name))
 		}
 		raw = append(raw, w)

@@ -27,13 +27,15 @@ type rawWindow struct {
 }
 
 // filterWindows keeps only the entries VisibleWindows reports: normal-layer
-// windows with a known owner and a non-empty title.
+// windows with a known owner.
 //
-// Untitled windows are dropped because they carry no signal — the same rule
-// platform/windows applies. That includes every window whose title macOS
-// hid because Screen Recording isn't granted: process and microphone
-// evidence still flow in that case, so detection degrades rather than
-// stops. A window without a layer entry is treated as not normal-layer:
+// Untitled windows are kept, unlike platform/windows. Without Screen
+// Recording macOS blanks almost every title, and the window is then the only
+// place internal/rules learns that the app's process is on screen at all:
+// dropping it would leave mic evidence alone, which never reaches the active
+// threshold. An empty title never matches a title regex, so keeping it adds
+// process evidence and nothing else. A window without a layer entry is
+// treated as not normal-layer:
 // CoreGraphics always sets kCGWindowLayer, so a missing one means the entry
 // is not something this code understands.
 func filterWindows(raw []rawWindow) []WindowInfo {
@@ -44,9 +46,6 @@ func filterWindows(raw []rawWindow) []WindowInfo {
 		}
 		if !w.hasLayer || w.layer != normalWindowLayer {
 			continue
-		}
-		if w.name == "" {
-			continue // untitled windows carry no signal
 		}
 		out = append(out, WindowInfo{PID: uint32(w.pid), Title: w.name})
 	}

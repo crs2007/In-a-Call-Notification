@@ -48,8 +48,10 @@ func TestSignalsReturnQuickly(t *testing.T) {
 
 	check("VisibleWindows", func() {
 		for _, w := range VisibleWindows() {
-			if w.PID == 0 || w.Title == "" {
-				t.Errorf("VisibleWindows() returned %+v; want a PID and a title", w)
+			// Title may be empty: macOS withholds it without Screen
+			// Recording, and the window still counts for its owner.
+			if w.PID == 0 {
+				t.Errorf("VisibleWindows() returned %+v; want a PID", w)
 			}
 		}
 	})

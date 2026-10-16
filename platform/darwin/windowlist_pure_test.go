@@ -17,10 +17,11 @@ func TestFilterWindows(t *testing.T) {
 			want: []WindowInfo{{PID: 42, Title: "Meeting | Microsoft Teams"}},
 		},
 		{
-			// Screen Recording not granted: macOS blanks the title.
-			name: "untitled window dropped",
+			// Screen Recording not granted: macOS blanks the title, but
+			// the owning PID is still process evidence.
+			name: "untitled window kept for its owner",
 			raw:  []rawWindow{{pid: 42, hasPID: true, layer: 0, hasLayer: true, name: ""}},
-			want: []WindowInfo{},
+			want: []WindowInfo{{PID: 42, Title: ""}},
 		},
 		{
 			name: "menu bar and status items dropped",
