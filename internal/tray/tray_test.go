@@ -12,6 +12,7 @@ import (
 	"net/netip"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sync"
 	"testing"
 	"time"
@@ -203,16 +204,28 @@ func (f *fakeSupervisor) BrokerConnected() bool {
 // message-only window and menu construction work fine without either.
 func newTestApp(t *testing.T, sup supervisorAPI, cfgPath string, pollInterval time.Duration) *app {
 	t.Helper()
-	a := &app{
-		opts: Options{
-			Supervisor:   sup,
-			Logger:       slog.New(slog.NewTextHandler(io.Discard, nil)),
-			ConfigPath:   cfgPath,
-			PollInterval: pollInterval,
-		},
-		tray:       systray.New(),
-		refreshNow: make(chan struct{}, 1),
+	return newTestAppWith(t, Options{
+		Supervisor:   sup,
+		ConfigPath:   cfgPath,
+		PollInterval: pollInterval,
+	})
+}
+
+// newTestAppWith is newTestApp for tests that need other Options set.
+//
+// On macOS it skips: AppKit only lets the main thread create a status item,
+// and menu updates are handed to the main thread's run loop and waited on,
+// but go test runs every test on its own goroutine with no run loop. The
+// tray's macOS behaviour is covered by running the app itself instead.
+func newTestAppWith(t *testing.T, opts Options) *app {
+	t.Helper()
+	if runtime.GOOS == "darwin" {
+		t.Skip("systray needs the AppKit main thread and run loop, which go test does not provide on macOS")
 	}
+	if opts.Logger == nil {
+		opts.Logger = slog.New(slog.NewTextHandler(io.Discard, nil))
+	}
+	a := &app{opts: opts, tray: systray.New(), refreshNow: make(chan struct{}, 1)}
 	a.buildMenu()
 	return a
 }
@@ -371,4 +384,57 @@ func TestRefreshIsRaceFreeUnderConcurrentApplyChangeAndTogglePause(t *testing.T)
 	// race against refreshLoop, still running below — before stop closes it.
 	time.Sleep(200 * time.Millisecond)
 	close(stop)
+}
+
+// TestRefreshPermissionThrottlesCheckAndTracksGrant pins the Permission
+// item's contract: Check runs on the first refresh, not again until
+// permissionCheckEvery has passed, and a grant turns the action into a
+// disabled status line.
+func TestRefreshPermissionThrottlesCheckAndTracksGrant(t *testing.T) {
+	var checks int
+	granted := false
+	a := newTestAppWith(t, Options{
+		Supervisor: fixedStatusSupervisor{},
+		Permission: &Permission{
+			Missing: "Allow window titles…",
+			Granted: "Window titles: allowed",
+			Check:   func() bool { checks++; return granted },
+			Request: func() {},
+		},
+	})
+
+	start := time.Date(2026, 10, 10, 12, 0, 0, 0, time.UTC)
+	a.refreshPermission(start)
+	if checks != 1 || a.permItem.IsDisabled() {
+		t.Fatalf("first refresh: checks=%d disabled=%v, want 1 and enabled", checks, a.permItem.IsDisabled())
+	}
+
+	granted = true
+	a.refreshPermission(start.Add(permissionCheckEvery / 2))
+	if checks != 1 {
+		t.Fatalf("refresh inside the throttle window called Check again (%d calls)", checks)
+	}
+
+	a.refreshPermission(start.Add(permissionCheckEvery))
+	if checks != 2 || !a.permItem.IsDisabled() {
+		t.Fatalf("after window: checks=%d disabled=%v, want 2 and disabled", checks, a.permItem.IsDisabled())
+	}
+}
+
+func TestNoPermissionMeansNoItem(t *testing.T) {
+	a := newTestApp(t, fixedStatusSupervisor{}, "", time.Second)
+	if a.permItem != nil {
+		t.Fatal("a nil Options.Permission must not add a menu item")
+	}
+	a.refreshPermission(time.Now()) // must not panic
+}
+
+func TestPermissionLabel(t *testing.T) {
+	p := &Permission{Missing: "Allow…", Granted: "Allowed"}
+	if got := permissionLabel(p, false); got != "Allow…" {
+		t.Errorf("missing: got %q", got)
+	}
+	if got := permissionLabel(p, true); got != "Allowed" {
+		t.Errorf("granted: got %q", got)
+	}
 }

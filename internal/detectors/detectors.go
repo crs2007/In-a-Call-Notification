@@ -1,4 +1,4 @@
-// Package detectors is the adapter between platform/windows and the pure
+// Package detectors is the adapter between package platform and the pure
 // rule engine in internal/rules: it gathers raw OS signals (visible windows,
 // process names, microphone/webcam consent) into a rules.Observation and
 // hands it to a compiled rule to score.
@@ -19,7 +19,7 @@ import (
 
 	"github.com/crs2007/callmqtt/internal/model"
 	"github.com/crs2007/callmqtt/internal/rules"
-	platformwindows "github.com/crs2007/callmqtt/platform/windows"
+	"github.com/crs2007/callmqtt/platform"
 )
 
 // sharedObserverTTL is how long one platform observation is reused across
@@ -34,7 +34,7 @@ const sharedObserverTTL = 500 * time.Millisecond
 // "these windows are visible" without EnumWindows, the registry, or any OS
 // permission.
 type Snapshot struct {
-	VisibleWindows func() []platformwindows.WindowInfo
+	VisibleWindows func() []platform.WindowInfo
 	ProcessNames   func() map[uint32]string
 	// AppsUsingMicrophone and AppsUsingWebcam take the same PID->exe-name map
 	// ProcessNames just returned, so they can cross-check a ConsentStore
@@ -45,14 +45,14 @@ type Snapshot struct {
 	AppsUsingWebcam     func(procNames map[uint32]string) []string
 }
 
-// WindowsSnapshot returns a Snapshot backed by the real platform/windows
-// implementation (or its no-op stub on non-Windows builds).
-func WindowsSnapshot() Snapshot {
+// OSSnapshot returns a Snapshot backed by the real adapter for the OS this
+// binary was built for (see package platform).
+func OSSnapshot() Snapshot {
 	return Snapshot{
-		VisibleWindows:      platformwindows.VisibleWindows,
-		ProcessNames:        platformwindows.ProcessNames,
-		AppsUsingMicrophone: platformwindows.AppsUsingMicrophone,
-		AppsUsingWebcam:     platformwindows.AppsUsingWebcam,
+		VisibleWindows:      platform.VisibleWindows,
+		ProcessNames:        platform.ProcessNames,
+		AppsUsingMicrophone: platform.AppsUsingMicrophone,
+		AppsUsingWebcam:     platform.AppsUsingWebcam,
 	}
 }
 

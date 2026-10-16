@@ -22,8 +22,9 @@ import (
 // platform-independent stopgap.
 //
 // On Windows, adapterAllowed (adapters_windows.go) now classifies by IfType
-// and OperStatus first; this list remains a second filter, and the only one
-// on other platforms.
+// and OperStatus first, and on macOS (adapters_darwin.go) by interface flags
+// and BSD name prefix; this list remains a second filter on both, and the
+// only one on other platforms.
 var virtualAdapterNames = []string{
 	"vEthernet",
 	"VirtualBox Host-Only",

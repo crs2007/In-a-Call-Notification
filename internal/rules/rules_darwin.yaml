@@ -1,0 +1,82 @@
+# CallMQTT detection rules for macOS.
+#
+# Same contract as rules.yaml (the Windows set): every pattern must come from
+# a real capture in testdata/probe/darwin/*.txt, taken with
+# `callmqtt --probe` on a Mac, and be pinned by a fixture-driven test in
+# rules_test.go.
+#
+# Status: Zoom has fixture-backed patterns (idle, music-playing,
+# zoom-open-no-call, zoom-in-call). Teams and Slack were not installed when
+# the captures were taken, so they are declared with NO patterns: the app
+# names exist (a config.yaml that enables teams/zoom/slack is valid on both
+# OSes) but nothing can ever score for them. Still awaiting captures:
+# teams-open-no-call, teams-in-call, teams-in-call-muted,
+# slack-open-no-huddle, slack-huddle.
+#
+# What differs from Windows (see platform/darwin):
+#   - process names are executable base names without ".exe"
+#     (the macOS Teams/Zoom/Slack names are to be confirmed by capture);
+#   - microphone owners are bundle IDs from Core Audio's per-process input
+#     state, so music playback (output only) never counts as the mic;
+#   - window titles need the Screen Recording permission; without it every
+#     title is empty and only process + mic evidence is available.
+
+rules:
+  - app: teams
+  - app: zoom
+    process_names:
+      - zoom.us
+    # Captured only while in a meeting (zoom-in-call.txt, every snapshot,
+    # e.g. line 11):
+    #   title="Zoom Meeting"
+    # The untitled zoom.us window (zoom-in-call.txt line 10, title="") is
+    # deliberately NOT matched: it proves the process is on screen, nothing
+    # more.
+    window_include_regex:
+      - '^Zoom Meeting$'
+    # Captured windows that are not a meeting:
+    #   title="Zoom Workplace"  zoom-in-call.txt line 12 - the home window,
+    #     also present outside a meeting in a signed-in client;
+    #   title="Login"           zoom-open-no-call.txt line 14 - sign-in.
+    # Neither matches the include regex above; they are excluded explicitly
+    # so a future Zoom build can never turn them into window evidence (S3).
+    # Chrome's "Welcome to Zoom - Zoom" / "Download Zoom for Mac | Zoom"
+    # (proc=Google Chrome) are browser windows and never reach this rule,
+    # which only looks at windows owned by zoom.us.
+    window_exclude_regex:
+      - '^(Zoom Workplace|Login)$'
+    # Captured mic-in-use entry during a call (zoom-in-call.txt line 14):
+    #   us.zoom.xos
+    # Empty in idle, music-playing and zoom-open-no-call: Core Audio input
+    # state is per app, and Spotify playback (output) never appears.
+    mic_process_regex:
+      - '^us\.zoom\.xos$'
+    # No cam_process_regex, no cam weight: the only captured webcam entry is
+    # "(unknown)" (zoom-in-call.txt line 16). macOS camera detection is
+    # device level, so it cannot be attributed to Zoom; giving "(unknown)"
+    # weight to any rule would boost every app whenever any app uses the
+    # camera.
+    weights:
+      process: 0.20
+      window: 0.40
+      mic: 0.50
+      # Thresholds: active 0.70, inactive 0.30 (config defaults).
+      #   process only            = 0.20  inactive (below 0.30 too)
+      #   mic only                = 0.50  never active; a minimised/hidden
+      #                                   Zoom holding the mic is a
+      #                                   deliberate under-trigger
+      #   process + window        = 0.60  inactive: a title alone must not
+      #                                   light the bulb (same as Windows)
+      #   process + mic           = 0.70  ACTIVE (0.20+0.50 must compare
+      #                                   >= 0.70; pinned by a test)
+      #   process + window + mic  = 1.10  clamped to 1.00, active
+      # Differs from Windows (where process + mic = 0.45 stays inactive):
+      # there the mic comes from ConsentStore, whose attribution is weaker.
+      # Here it is per-app Core Audio input state, music cannot trigger it,
+      # and it is the only signal that survives without Screen Recording
+      # (every title empty), so process + mic must be enough on its own.
+      # Hysteresis: once active, a call stays active while the score is
+      # >= 0.30, so dropping the mic alone (process + window = 0.60) does
+      # not flip the state; it ends when the meeting window and mic are
+      # gone (process only = 0.20).
+  - app: slack

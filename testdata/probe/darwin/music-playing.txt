@@ -1,0 +1,153 @@
+# In a Call Notification probe output.
+# Contains window titles (meeting names). Review and redact before pasting.
+
+=== 2026-10-16T11:08:35+03:00 ===
+[windows] 5 visible
+  pid=9832   proc=Code                         title="<chat redacted>… — <project redacted>"
+  pid=9832   proc=Code                         title="<chat redacted>… — In-a-Call-Notification"
+  pid=791    proc=Google Chrome                title="Integrations – Home Assistant"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — capture.sh — 120×30"
+[microphone] 0 in use
+[webcam] 0 in use
+
+=== 2026-10-16T11:08:38+03:00 ===
+[windows] 5 visible
+  pid=9832   proc=Code                         title="<chat redacted>… — <project redacted>"
+  pid=9832   proc=Code                         title="<chat redacted>… — In-a-Call-Notification"
+  pid=791    proc=Google Chrome                title="Integrations – Home Assistant"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+[microphone] 0 in use
+[webcam] 0 in use
+
+=== 2026-10-16T11:08:40+03:00 ===
+[windows] 5 visible
+  pid=9832   proc=Code                         title="<chat redacted>… — <project redacted>"
+  pid=9832   proc=Code                         title="<chat redacted>… — In-a-Call-Notification"
+  pid=791    proc=Google Chrome                title="Integrations – Home Assistant"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+[microphone] 0 in use
+[webcam] 0 in use
+
+=== 2026-10-16T11:08:42+03:00 ===
+[windows] 5 visible
+  pid=9832   proc=Code                         title="<chat redacted>… — <project redacted>"
+  pid=9832   proc=Code                         title="<chat redacted>… — In-a-Call-Notification"
+  pid=791    proc=Google Chrome                title="Integrations – Home Assistant"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+[microphone] 0 in use
+[webcam] 0 in use
+
+=== 2026-10-16T11:08:44+03:00 ===
+[windows] 5 visible
+  pid=9832   proc=Code                         title="<chat redacted>… — <project redacted>"
+  pid=9832   proc=Code                         title="<chat redacted>… — In-a-Call-Notification"
+  pid=791    proc=Google Chrome                title="Integrations – Home Assistant"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+[microphone] 0 in use
+[webcam] 0 in use
+
+=== 2026-10-16T11:08:46+03:00 ===
+[windows] 5 visible
+  pid=9832   proc=Code                         title="<chat redacted>… — <project redacted>"
+  pid=9832   proc=Code                         title="<chat redacted>… — In-a-Call-Notification"
+  pid=791    proc=Google Chrome                title="Integrations – Home Assistant"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+[microphone] 0 in use
+[webcam] 0 in use
+
+=== 2026-10-16T11:08:48+03:00 ===
+[windows] 5 visible
+  pid=9832   proc=Code                         title="<chat redacted>… — <project redacted>"
+  pid=9832   proc=Code                         title="<chat redacted>… — In-a-Call-Notification"
+  pid=791    proc=Google Chrome                title="Integrations – Home Assistant"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+[microphone] 0 in use
+[webcam] 0 in use
+
+=== 2026-10-16T11:08:50+03:00 ===
+[windows] 5 visible
+  pid=9832   proc=Code                         title="<chat redacted>… — <project redacted>"
+  pid=9832   proc=Code                         title="<chat redacted>… — In-a-Call-Notification"
+  pid=791    proc=Google Chrome                title="Integrations – Home Assistant"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+[microphone] 0 in use
+[webcam] 0 in use
+
+=== 2026-10-16T11:08:52+03:00 ===
+[windows] 5 visible
+  pid=9832   proc=Code                         title="<chat redacted>… — <project redacted>"
+  pid=9832   proc=Code                         title="<chat redacted>… — In-a-Call-Notification"
+  pid=791    proc=Google Chrome                title="Integrations – Home Assistant"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+[microphone] 0 in use
+[webcam] 0 in use
+
+=== 2026-10-16T11:08:54+03:00 ===
+[windows] 5 visible
+  pid=9832   proc=Code                         title="<chat redacted>… — <project redacted>"
+  pid=9832   proc=Code                         title="<chat redacted>… — In-a-Call-Notification"
+  pid=791    proc=Google Chrome                title="Integrations – Home Assistant"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+[microphone] 0 in use
+[webcam] 0 in use
+
+=== 2026-10-16T11:08:56+03:00 ===
+[windows] 5 visible
+  pid=9832   proc=Code                         title="<chat redacted>… — <project redacted>"
+  pid=9832   proc=Code                         title="<chat redacted>… — In-a-Call-Notification"
+  pid=791    proc=Google Chrome                title="Integrations – Home Assistant"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+[microphone] 0 in use
+[webcam] 0 in use
+
+=== 2026-10-16T11:08:59+03:00 ===
+[windows] 5 visible
+  pid=9832   proc=Code                         title="<chat redacted>… — <project redacted>"
+  pid=9832   proc=Code                         title="<chat redacted>… — In-a-Call-Notification"
+  pid=791    proc=Google Chrome                title="Integrations – Home Assistant"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+[microphone] 0 in use
+[webcam] 0 in use
+
+=== 2026-10-16T11:09:01+03:00 ===
+[windows] 5 visible
+  pid=9832   proc=Code                         title="<chat redacted>… — <project redacted>"
+  pid=9832   proc=Code                         title="<chat redacted>… — In-a-Call-Notification"
+  pid=791    proc=Google Chrome                title="Integrations – Home Assistant"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+[microphone] 0 in use
+[webcam] 0 in use
+
+=== 2026-10-16T11:09:03+03:00 ===
+[windows] 5 visible
+  pid=9832   proc=Code                         title="<chat redacted>… — <project redacted>"
+  pid=9832   proc=Code                         title="<chat redacted>… — In-a-Call-Notification"
+  pid=791    proc=Google Chrome                title="Integrations – Home Assistant"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+[microphone] 0 in use
+[webcam] 0 in use
+
+=== 2026-10-16T11:09:05+03:00 ===
+[windows] 5 visible
+  pid=9832   proc=Code                         title="<chat redacted>… — <project redacted>"
+  pid=9832   proc=Code                         title="<chat redacted>… — In-a-Call-Notification"
+  pid=791    proc=Google Chrome                title="Integrations – Home Assistant"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+[microphone] 0 in use
+[webcam] 0 in use
+

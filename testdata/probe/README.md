@@ -2,7 +2,7 @@
 
 Raw OS-signal dumps produced by `cmd/probe`. These are the **fixtures the
 entire detection layer is tested against** — detection rules in
-`internal/rules/rules.yaml` must be written from what is actually in these
+`internal/rules/rules.yaml` (Windows) must be written from what is actually in these
 files, never from guesswork about window title formats.
 
 ## How to capture

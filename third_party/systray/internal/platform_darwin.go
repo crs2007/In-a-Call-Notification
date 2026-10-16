@@ -198,6 +198,41 @@ type darwinTray struct {
 	nsItems        map[uint32]darwin.ID // item.ID() -> NSMenuItem handle (incl. submenus)
 	menuMu         sync.Mutex
 	pendingUpdates chan menuItemSnapshot // buffered channel for main-thread dispatch
+
+	// buttonMu guards iconData and pendingButton: SetIcon and SetTooltip may
+	// be called from any goroutine, but the button may only be touched on
+	// the main thread.
+	buttonMu      sync.Mutex
+	pendingButton buttonUpdate
+}
+
+// buttonUpdate is the latest icon and/or tooltip waiting for the main
+// thread. Updates coalesce: only the newest value of each matters.
+type buttonUpdate struct {
+	icon       []byte
+	template   bool
+	hasIcon    bool
+	tooltip    string
+	hasTooltip bool
+}
+
+func (u *buttonUpdate) merge(n buttonUpdate) {
+	if n.hasIcon {
+		u.icon, u.template, u.hasIcon = n.icon, n.template, true
+	}
+	if n.hasTooltip {
+		u.tooltip, u.hasTooltip = n.tooltip, true
+	}
+}
+
+// isMainThread reports [NSThread isMainThread]. The BOOL comes back in the
+// low byte of the return register; the rest is unspecified.
+func isMainThread() bool {
+	cls := darwin.GetClass("NSThread")
+	if cls == 0 {
+		return false
+	}
+	return uintptr(cls.Send(darwin.RegisterSelector("isMainThread")))&0xff != 0
 }
 
 // goSystrayTargetClass is the custom ObjC class registered once for click handling.
@@ -387,17 +422,11 @@ func (t *darwinTray) SetIcon(png []byte) error {
 		return errors.New("darwin: tray not created")
 	}
 
+	t.buttonMu.Lock()
 	t.iconData = png
+	t.buttonMu.Unlock()
 
-	nsImage := createNSImage(png, false)
-	if nsImage.IsNil() {
-		return errors.New("darwin: failed to create NSImage from PNG data")
-	}
-
-	// [button setImage:nsImage]
-	t.btn.SendPtr(darwinSels.setImage, nsImage.Ptr())
-
-	return nil
+	return t.updateButton(buttonUpdate{icon: png, hasIcon: true})
 }
 
 // SetTemplateIcon sets a macOS template image. Template images are monochrome
@@ -408,15 +437,63 @@ func (t *darwinTray) SetTemplateIcon(png []byte) error {
 		return errors.New("darwin: tray not created")
 	}
 
+	t.buttonMu.Lock()
 	t.iconData = png
+	t.buttonMu.Unlock()
 
-	nsImage := createNSImage(png, true)
-	if nsImage.IsNil() {
-		return errors.New("darwin: failed to create template NSImage")
+	return t.updateButton(buttonUpdate{icon: png, template: true, hasIcon: true})
+}
+
+// updateButton applies u to the status item button. AppKit requires that on
+// the main thread: called there (start-up, Show), it applies at once;
+// called from any other goroutine (the app's refresh loop), it records u
+// and asks the main thread to drain it. waitUntilDone:NO, like Destroy, so
+// a caller can never hang on an event loop that has already stopped.
+func (t *darwinTray) updateButton(u buttonUpdate) error {
+	if isMainThread() {
+		return t.applyButtonUpdate(u)
+	}
+	if t.target.IsNil() {
+		return errors.New("darwin: tray not created")
 	}
 
-	// [button setImage:nsImage]
-	t.btn.SendPtr(darwinSels.setImage, nsImage.Ptr())
+	t.buttonMu.Lock()
+	t.pendingButton.merge(u)
+	t.buttonMu.Unlock()
+
+	drainSel := darwin.RegisterSelector("drainUpdates:")
+	darwin.MsgSend3Ptr(t.target, darwinSels.performSelectorOnMainThread,
+		uintptr(drainSel), 0, 0) // waitUntilDone:NO
+	return nil
+}
+
+// applyButtonUpdate sets the button's image and/or tooltip, releasing the
+// objects it allocated once the button holds its own reference (setImage:
+// retains, setToolTip: copies). MUST be called on the main thread.
+func (t *darwinTray) applyButtonUpdate(u buttonUpdate) error {
+	if t.btn.IsNil() {
+		return nil // hidden or destroyed; Show restores the icon from iconData
+	}
+
+	if u.hasIcon {
+		nsImage := createNSImage(u.icon, u.template)
+		if nsImage.IsNil() {
+			return errors.New("darwin: failed to create NSImage from PNG data")
+		}
+		// [button setImage:nsImage]
+		t.btn.SendPtr(darwinSels.setImage, nsImage.Ptr())
+		nsImage.Send(darwinSels.release)
+	}
+
+	if u.hasTooltip {
+		nsStr := darwin.NewNSString(u.tooltip)
+		if nsStr.IsNil() {
+			return errors.New("darwin: failed to create NSString for tooltip")
+		}
+		// [button setToolTip:nsString]
+		t.btn.SendPtr(darwinSels.setToolTip, nsStr.Ptr())
+		nsStr.Send(darwinSels.release)
+	}
 
 	return nil
 }
@@ -460,15 +537,7 @@ func (t *darwinTray) SetTooltip(text string) error {
 		return errors.New("darwin: tray not created")
 	}
 
-	nsStr := darwin.NewNSString(text)
-	if nsStr.IsNil() {
-		return errors.New("darwin: failed to create NSString for tooltip")
-	}
-
-	// [button setToolTip:nsString]
-	t.btn.SendPtr(darwinSels.setToolTip, nsStr.Ptr())
-
-	return nil
+	return t.updateButton(buttonUpdate{tooltip: text, hasTooltip: true})
 }
 
 // SetMenu builds an NSMenu from our Menu struct and attaches it to the status item.
@@ -655,6 +724,16 @@ func (t *darwinTray) updateItem(item menuItemSnapshot) error {
 // changes. MUST be called on the main thread (via drainUpdates: ObjC callback).
 // A snapshot with a zero ID signals Destroy.
 func (t *darwinTray) applyPendingUpdates() {
+	t.buttonMu.Lock()
+	button := t.pendingButton
+	t.pendingButton = buttonUpdate{}
+	t.buttonMu.Unlock()
+	if button.hasIcon || button.hasTooltip {
+		if err := t.applyButtonUpdate(button); err != nil {
+			slog.Debug("darwin: tray button update failed", "err", err)
+		}
+	}
+
 	for {
 		select {
 		case item := <-t.pendingUpdates:
@@ -679,9 +758,11 @@ func (t *darwinTray) applyItemUpdate(item menuItemSnapshot) {
 		return
 	}
 
+	// setTitle: and setImage: keep their own reference, so release ours.
 	nsTitle := darwin.NewNSString(item.label)
 	if !nsTitle.IsNil() {
 		nsItem.SendPtr(darwinSels.setTitle, nsTitle.Ptr())
+		nsTitle.Send(darwinSels.release)
 	}
 
 	if item.itemType == MenuItemCheckbox {
@@ -698,6 +779,7 @@ func (t *darwinTray) applyItemUpdate(item menuItemSnapshot) {
 		nsImage := createNSImage(item.icon, false)
 		if !nsImage.IsNil() {
 			nsItem.SendPtr(darwinSels.setImage, nsImage.Ptr())
+			nsImage.Send(darwinSels.release)
 		}
 	}
 }
@@ -761,8 +843,11 @@ func (t *darwinTray) Show() error {
 	t.btn = t.statusItem.Send(darwinSels.button)
 
 	// Restore icon if we had one.
-	if len(t.iconData) > 0 {
-		if err := t.SetIcon(t.iconData); err != nil {
+	t.buttonMu.Lock()
+	icon := t.iconData
+	t.buttonMu.Unlock()
+	if len(icon) > 0 {
+		if err := t.SetIcon(icon); err != nil {
 			slog.Warn("darwin: failed to restore icon after Show", "err", err)
 		}
 	}

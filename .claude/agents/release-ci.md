@@ -14,20 +14,25 @@ in under 3 minutes.**
 
 - `windows-latest`: `go vet`, `go test -race`, build with and without the
   `tray` tag. This is the gate.
-- `ubuntu-latest` cross-compile check (~20s): `GOOS=darwin GOARCH=arm64 go build`.
-  This is the only thing keeping the macOS stubs from rotting. Cheap, keep it.
+- `macos-latest` (`.github/workflows/macos-checks.yml`, shared by `ci.yml`'s
+  `test-macos` and `release.yml`'s `verify-macos`): vet, builds, `go test
+  -race`, the `CGO_ENABLED=0` tests the shipped build depends on, a
+  darwin/amd64 cross-compile, and a packaging dry run of the `.app`. Added
+  with the macOS port, now that platform/darwin has real code to test.
 - Integration tests against a mosquitto service container run **on main only**,
   never on PRs.
 - Use `go-version-file: go.mod` so CI tracks the toolchain automatically.
 
-**Deliberately omitted — do not add without being asked:** macOS runners
-(nothing testable there yet), `golangci-lint` (`go vet` catches the real bugs
+**Deliberately omitted — do not add without being asked:** `golangci-lint` (`go vet` catches the real bugs
 at this size), coverage gates, Go version matrices.
 
 ## Release
 
 GoReleaser → `windows/amd64` + `windows/arm64` **zips** containing the exe,
-`configs/example.yaml` and the README. **No MSI installer in v0.1** — it costs a
+`configs/example.yaml` and the README. The macOS asset,
+`callmqtt_<version>_darwin_universal.zip` (the `.app`, built by
+`scripts/package-macos.sh` on `macos-latest`), is handed to GoReleaser as an
+extra file so one `checksums.txt` covers all three. **No MSI installer in v0.1** — it costs a
 day and saves a user thirty seconds.
 
 `release.yml` runs on **every push to `main`**: a `version` job computes the

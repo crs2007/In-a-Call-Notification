@@ -7,15 +7,22 @@
 [![Home Assistant](https://img.shields.io/badge/Home_Assistant-MQTT_Discovery-41BDF5?logo=homeassistant&logoColor=white)](#home-assistant-integration)
 [![MQTT](https://img.shields.io/badge/MQTT-v5-660066?logo=mqtt&logoColor=white)](https://www.home-assistant.io/integrations/mqtt/)
 [![Windows](https://img.shields.io/badge/Windows-10%20%2F%2011-0078D4)](#installation)
+[![macOS](https://img.shields.io/badge/macOS-13%2B%20(alpha)-000000?logo=apple&logoColor=white)](#installation)
 [![Go](https://img.shields.io/github/go-mod/go-version/crs2007/In-a-Call-Notification?logo=go&logoColor=white)](go.mod)
 
 Detect when you're in a Zoom, Microsoft Teams or Slack call — and publish that
 state to your local MQTT broker, so Home Assistant can turn on a "do not
 disturb" light for exactly as long as the call lasts.
 
-Microsoft Teams detection has been confirmed against a real live call (see
-[docs/TASKS.md](docs/TASKS.md), T38); Zoom and Slack are covered by recorded
-fixtures but not yet live-confirmed the same way.
+Runs on Windows 10/11 and macOS 13+.
+
+On Windows, Microsoft Teams detection has been confirmed against a real live
+call (see [docs/TASKS.md](docs/TASKS.md), T38); Zoom and Slack are covered by
+recorded fixtures but not yet live-confirmed the same way. **macOS support is
+alpha:** the app, menu-bar icon, MQTT, start-at-login and Zoom detection (fixture-backed,
+not yet live-confirmed through Home Assistant) are in place, but Teams and Slack
+have no macOS rules yet — they need recordings of real calls on a Mac — so the
+macOS build does not report Teams or Slack calls. The [FAQ](#faq--troubleshooting) explains how you can help.
 
 ## Table of Contents
 
@@ -64,6 +71,30 @@ not implemented; see
 [SECURITY.md](SECURITY.md#threat-model--known-limitations) for the full
 threat model.
 
+**What leaves your PC.** Only the MQTT messages described in
+[What Home Assistant sees](#what-home-assistant-sees), sent to the broker you
+configured. Nothing goes to any other server.
+
+**macOS permissions.** The macOS build asks for one permission:
+
+- **Screen Recording**, used only to read the *titles* of open windows
+  (macOS withholds window titles from apps that lack it). Nothing is
+  recorded, captured or stored, and the agent never takes a screenshot. If you
+  decline, the agent keeps running and relies on process names and per-app
+  microphone evidence alone, which is less accurate. The first time the app
+  is opened from Finder it explains this once and then shows the macOS
+  prompt; after that, the menu-bar item **Allow window titles (Screen
+  Recording)…** opens the right settings pane. macOS applies a grant only
+  after the app is quit and reopened.
+- **No Microphone permission is needed.** macOS reports which process is
+  capturing audio without the agent opening the microphone, so it cannot hear
+  anything.
+- **No Accessibility permission** is used.
+
+Per-app microphone attribution needs macOS 14.2 or newer. On macOS 13.x and
+14.0–14.1 the agent can only tell that *some* app is using the microphone,
+not which one. Camera use is only ever known per device, not per app.
+
 ## What Home Assistant sees
 
 The agent publishes one retained JSON message to
@@ -105,7 +136,7 @@ is: a broker, the MQTT integration, and one automation.
 
 ### What you need
 
-1. **An MQTT broker** reachable from both the Windows PC and Home Assistant.
+1. **An MQTT broker** reachable from both the PC (Windows or Mac) and Home Assistant.
    The easiest is the official **Mosquitto broker** add-on: *Settings →
    Add-ons → Add-on Store → Mosquitto broker → Install → Start*. See
    [Broker configuration](https://www.home-assistant.io/integrations/mqtt/#broker-configuration)
@@ -216,8 +247,8 @@ use `trigger:` / `platform: state` / `service:` instead of `triggers:` /
 
 ### Checking it works
 
-- Run `.\callmqtt.exe --simulate` on the PC — it fakes a call every 30
-  seconds, so the entity and the automation can be tested without joining a
+- Run `callmqtt --simulate` on the PC (`.\callmqtt.exe --simulate` on Windows)
+  — it fakes a call every 30 seconds, so the entity and the automation can be tested without joining a
   meeting.
 - In Home Assistant, open the MQTT integration → *Configure* → *Listen to a
   topic* and subscribe to `desktop-presence/#` to see the raw JSON payloads,
@@ -227,19 +258,23 @@ use `trigger:` / `platform: state` / `service:` instead of `triggers:` /
 
 ## Installation
 
-Windows 10/11 only. Download the latest release from the
+Windows 10/11 and macOS 13+ (Intel and Apple Silicon). Download the latest
+release from the
 [releases page](https://github.com/crs2007/In-a-Call-Notification/releases/latest).
-Releases ship as two archives:
+Releases ship as these archives, plus a `checksums.txt`:
 
 | Archive | For |
 |---|---|
-| `callmqtt_<version>_windows_amd64.zip` | Almost every PC: Intel or AMD processors |
+| `callmqtt_<version>_windows_amd64.zip` | Almost every Windows PC: Intel or AMD processors |
 | `callmqtt_<version>_windows_arm64.zip` | Windows on ARM (Snapdragon-based laptops, Surface Pro X) |
+| `callmqtt_<version>_darwin_universal.zip` | macOS 13+, Intel and Apple Silicon in one app (alpha, see below) |
 
-Not sure? **Settings → System → About → System type** says which. Extract the
-archive anywhere; it contains `callmqtt.exe`, `configs/example.yaml`, this
-README and the LICENSE. To check the download against `checksums.txt` from the
-same release:
+### Windows
+
+Not sure which Windows archive you need? **Settings → System → About → System
+type** says. Extract the archive anywhere; it contains `callmqtt.exe`,
+`configs/example.yaml`, this README and the LICENSE. To check the download
+against `checksums.txt` from the same release:
 
 ```powershell
 Get-FileHash .\callmqtt_<version>_windows_amd64.zip -Algorithm SHA256
@@ -250,19 +285,86 @@ Windows SmartScreen "Windows protected your PC" prompt: click **More info**,
 then **Run anyway**. Verifying the checksum first is what makes that a safe
 click.
 
-To build from source instead (Go 1.27+):
+### macOS
+
+**Alpha.** The first macOS releases are published as GitHub pre-releases:
+the app runs and publishes, and detects Zoom (from the `zoom.us` process plus
+per-app microphone use, with or without Screen Recording; the "Zoom Meeting"
+window title adds confidence when it is granted). Teams and Slack have no macOS
+rules yet (they need recordings of real calls on a Mac), so they are not
+reported. A Zoom window that is minimised or hidden while its microphone is live
+may be missed. Zoom is fixture-backed, not yet live-confirmed through Home
+Assistant. Install it now if you want to help — see the FAQ entry on `--probe`.
+
+1. Download `callmqtt_<version>_darwin_universal.zip`, then check it against
+   `checksums.txt` from the same release:
+
+   ```bash
+   shasum -a 256 ~/Downloads/callmqtt_<version>_darwin_universal.zip
+   grep darwin_universal ~/Downloads/checksums.txt
+   ```
+
+2. Unzip it (double-click) and drag **In a Call Notification.app** to
+   `/Applications`. The zip also holds `configs/example.yaml`, this README and
+   the LICENSE.
+
+3. The app is **not Developer ID signed or notarized** (it is ad-hoc signed
+   only), so Gatekeeper blocks the first launch. Either:
+
+   - open **System Settings → Privacy & Security**, scroll to the message about
+     "In a Call Notification" and click **Open Anyway** (macOS 15 and later
+     removed the older Control-click → Open shortcut); or
+   - once you have verified the checksum, clear the quarantine flag:
+
+     ```bash
+     xattr -dr com.apple.quarantine "/Applications/In a Call Notification.app"
+     ```
+
+4. Open the app once. With no config yet it writes a starter one to
+   `~/Library/Application Support/callmqtt/config.yaml`, shows a message
+   saying so, and exits. Then follow [Quick Start](#quick-start).
+
+The app lives in the menu bar (no Dock icon). It asks for the **Screen
+Recording** permission so it can read window titles; see
+[Privacy](#privacy) for exactly what that does and does not allow. Because the
+app is unsigned, macOS may ask for that permission again after an update.
+
+To run the command-line options from a terminal, call the executable inside the
+app:
+
+```bash
+"/Applications/In a Call Notification.app/Contents/MacOS/callmqtt" init
+```
+
+### Build from source
+
+Go 1.27+. On Windows:
 
 ```powershell
 go build -tags tray ./cmd/callmqtt    # the tray app that ships in releases
 go build ./cmd/callmqtt               # headless console build, useful for debugging
 ```
 
+On macOS (no cgo needed):
+
+```bash
+go build -tags tray -o callmqtt ./cmd/callmqtt   # the menu-bar app
+go build -o callmqtt-headless ./cmd/callmqtt     # headless build, useful for debugging
+
+# Build the same universal .app + zip that releases ship (Xcode command line
+# tools required; output in dist/macos/):
+scripts/package-macos.sh 0.0.0-dev
+```
+
 ## Quick Start
 
-1. Start `callmqtt.exe` once — double-clicking it is fine. With no config
-   yet, it writes a starter one to `%APPDATA%\callmqtt\config.yaml`, shows a
+1. Start the app once. On Windows, double-click `callmqtt.exe`; on macOS,
+   open **In a Call Notification** from `/Applications`. With no config yet,
+   it writes a starter one — `%APPDATA%\callmqtt\config.yaml` on Windows,
+   `~/Library/Application Support/callmqtt/config.yaml` on macOS — shows a
    message saying so, and exits. (From a terminal, `.\callmqtt.exe init`
-   does the same and prints the next steps.)
+   does the same and prints the next steps; on macOS run
+   `"/Applications/In a Call Notification.app/Contents/MacOS/callmqtt" init`.)
 
 2. Edit that file. The minimum you must change is the broker and the network
    you want to publish from:
@@ -278,12 +380,40 @@ go build ./cmd/callmqtt               # headless console build, useful for debug
        cidrs: ["192.168.1.0/24"] # publish only while on this subnet
    ```
 
-3. Start the agent. A tray icon appears; the menu shows what it detects and
-   whether it is publishing. Tick **Start at login** to keep it running.
+   **The broker password on macOS.** An environment variable set in your
+   shell profile does not reach an app started from Finder or at login, so on
+   macOS keep the password in the Keychain and reference it:
+
+   ```yaml
+   mqtt:
+     username: homeassistant
+     password: "keychain:callmqtt"   # macOS only
+   ```
+
+   Create the Keychain item once, with the same name as `mqtt.username` as the
+   account (the command prompts for the password, so it never lands in your
+   shell history):
+
+   ```bash
+   security add-generic-password -U -s callmqtt -a homeassistant -w
+   ```
+
+   `keychain:` references work on macOS only. On Windows use
+   `${CALLMQTT_MQTT_PASSWORD}` as shown above.
+
+3. Start the agent. A tray icon appears (in the menu bar on macOS); the menu
+   shows what it detects and whether it is publishing. Tick **Start at login**
+   to keep it running, or run `callmqtt startup enable` (on macOS this installs
+   a per-user LaunchAgent, `~/Library/LaunchAgents/io.github.crs2007.callmqtt.plist`).
+   On macOS the tray checkbox takes effect at your next login, so it never
+   starts a second copy next to the one you are using; `startup enable` from
+   a terminal also starts it straight away.
 
    ```powershell
    .\callmqtt.exe
    ```
+
+   On macOS, open the app from `/Applications`.
 
 4. In Home Assistant, `binary_sensor.callmqtt_<device_id>_call` appears under
    the MQTT integration automatically. Broker setup and a ready-made
@@ -291,20 +421,22 @@ go build ./cmd/callmqtt               # headless console build, useful for debug
    [Home Assistant Integration](#home-assistant-integration).
 
 5. To test the automation without joining a real call, run
-   `.\callmqtt.exe --simulate` — it fakes a call every 30 seconds.
+   `.\callmqtt.exe --simulate` (macOS: `callmqtt --simulate`, using the path to
+   the executable inside the app) — it fakes a call every 30 seconds.
 
 ## Configuration
 
-Config lives at `%APPDATA%\callmqtt\config.yaml` (override with `--config`).
-`configs/example.yaml` in the release archive documents every key; the
+Config lives at `%APPDATA%\callmqtt\config.yaml` on Windows and
+`~/Library/Application Support/callmqtt/config.yaml` on macOS (override with
+`--config`). `configs/example.yaml` in the release archive documents every key; the
 important ones and their defaults:
 
 | Key | Default | What it controls |
 | --- | --- | --- |
 | `app.device_id` | `auto` (from hostname) | Appears in the MQTT topics and the Home Assistant entity id. With `auto`, a hostname containing no ASCII letters or digits (for example Hebrew, Cyrillic or CJK) yields `unknown-host`. If several such machines share one broker, set `app.device_id` explicitly on each so their topics and entities don't collide. |
 | `mqtt.host` / `mqtt.port` | — / `1883` | Broker address. `host` is required: a host name or IP only (IPv6 literals allowed), no scheme or port. |
-| `mqtt.username` / `mqtt.password` | — | Broker credentials. `password` may be `${ENV_VAR}`. |
-| `mqtt.client_id` | `callmqtt-<device_id>-<6 hex>` | MQTT client id. The 6-hex suffix is a random per-install id stored in `%APPDATA%\callmqtt\install_id`, so machines with duplicate hostnames, or two sessions, don't take over each other's broker session. Topics and the Home Assistant entity use the plain `device_id`, without the suffix. The client id changes once when you upgrade; the old persistent session is left orphaned on the broker, which is harmless. |
+| `mqtt.username` / `mqtt.password` | — | Broker credentials. `password` may be `${ENV_VAR}`, or on macOS only `keychain:callmqtt` (the Keychain item with service `callmqtt` and account = `mqtt.username`; see [Quick Start](#quick-start)). |
+| `mqtt.client_id` | `callmqtt-<device_id>-<6 hex>` | MQTT client id. The 6-hex suffix is a random per-install id stored in `install_id` next to the config (`%APPDATA%\callmqtt\install_id` on Windows, `~/Library/Application Support/callmqtt/install_id` on macOS), so machines with duplicate hostnames, or two sessions, don't take over each other's broker session. Topics and the Home Assistant entity use the plain `device_id`, without the suffix. The client id changes once when you upgrade; the old persistent session is left orphaned on the broker, which is harmless. |
 | `mqtt.qos` / `mqtt.retain` | `1` / `true` | Publish options for state messages. |
 | `mqtt.tls.enabled` | `false` | Enable TLS to the broker (`insecure_skip_verify` also available). |
 | `mqtt.discovery.enabled` / `.prefix` | `true` / `homeassistant` | Auto-create the Home Assistant `binary_sensor`; the prefix must match the MQTT integration's discovery prefix. See [Home Assistant Integration](#home-assistant-integration). |
@@ -317,7 +449,7 @@ important ones and their defaults:
 | `poll.detect_seconds` / `.network_seconds` | `2` / `10` | How often signals and the current network are sampled. |
 | `poll.heartbeat_seconds` | `60` | State re-publish interval; Home Assistant expires the entity after 1.5× this. |
 | `rules_file` | *(built-in)* | Path to an alternative `rules.yaml` of detection rules. |
-| `logging.level` / `logging.file` | `info` / `%APPDATA%\callmqtt\callmqtt.log` | Log verbosity and destination. |
+| `logging.level` / `logging.file` | `info` / `callmqtt.log` next to the config (`%APPDATA%\callmqtt\callmqtt.log` on Windows, `~/Library/Application Support/callmqtt/callmqtt.log` on macOS) | Log verbosity and destination. |
 
 ### Command line
 
@@ -325,7 +457,7 @@ important ones and their defaults:
 | --- | --- |
 | `callmqtt` | Run the agent (tray icon in the release build). |
 | `callmqtt init` | Write a starter config and print where it went. |
-| `callmqtt startup enable\|disable\|status` | Manage start-at-login. A custom `--config` is kept in the login entry; if the install folder is moved, `status` and the tray checkbox show it as not enabled until you enable it again. |
+| `callmqtt startup enable\|disable\|status` | Manage start-at-login (a registry Run entry on Windows, a per-user LaunchAgent on macOS). A custom `--config` is kept in the login entry; if the install folder or the `.app` is moved, `status` and the tray checkbox show it as not enabled until you enable it again. |
 | `--config <path>` | Use a different config file. |
 | `--validate-config` | Check the config and exit. |
 | `--print-config` | Print the effective config, secrets redacted, and exit. |
@@ -342,13 +474,15 @@ take effect on the next start.
 ## Contributing
 
 **Adding support for a new app means editing
-[internal/rules/rules.yaml](internal/rules/rules.yaml), not writing Go.**
+[internal/rules/rules.yaml](internal/rules/rules.yaml) (Windows) or
+`internal/rules/rules_darwin.yaml` (macOS), not writing Go.**
 Detection rules are process names, window-title patterns and signal weights;
-the detector engine is generic.
+the detector engine is generic. A rule needs a recorded `--probe` fixture to
+back it.
 
 Development setup is plain Go, and mirrors CI:
 
-```powershell
+```bash
 go vet ./...
 go build ./...                 # headless build
 go build -tags tray ./...      # tray build, as shipped
@@ -357,8 +491,9 @@ go test -race ./...
 
 Every push to `main` is a release: the Release workflow computes the next
 semver tag (patch bump by default; `[minor]` / `[major]` in the commit subject
-for a larger bump, `[skip release]` to publish nothing), pushes the tag, and
-GoReleaser builds and publishes the archives. Open an issue first for anything beyond a rule tweak so the approach
+for a larger bump, `[skip release]` to publish nothing), pushes the tag, builds
+the macOS app on a macOS runner, and GoReleaser publishes the Windows archives
+and the macOS archive together with one `checksums.txt`. Open an issue first for anything beyond a rule tweak so the approach
 can be agreed before you write code.
 
 ## FAQ / Troubleshooting
@@ -377,10 +512,11 @@ where; any other startup failure is shown in a message box. If you truly see
 nothing, SmartScreen may have blocked the launch — see
 [Installation](#installation) — or check `%APPDATA%\callmqtt\callmqtt.log`.
 
-**`--once` / `--validate-config` print nothing.**
+**`--once` / `--validate-config` print nothing (Windows).**
 The release binary is a Windows GUI app (no console window), so it cannot
 write to the terminal. `init` and startup errors show a message box instead;
 for the inspection flags, use the headless build: `go build ./cmd/callmqtt`.
+(The macOS executable inside the app prints to the terminal normally.)
 
 **The light stays on after my laptop went to sleep or died.**
 Expected for up to 1.5 × `poll.heartbeat_seconds` (90 s by default), after
@@ -397,9 +533,38 @@ the `unknown-host` device id.
 
 **The log warns that my MQTT password is written in the config.**
 Set `mqtt.password: ${CALLMQTT_MQTT_PASSWORD}` and define that environment
-variable for your user instead of storing the secret in plain text.
+variable for your user instead of storing the secret in plain text. On macOS
+use `keychain:callmqtt` instead (see [Quick Start](#quick-start)); an
+environment variable does not reach an app started from Finder or at login.
 
-**Zoom or Slack calls are not detected.**
+**macOS: the light didn't turn on during a call.**
+Expected for Teams and Slack: they have no macOS rules yet, because rules must
+come from recordings of real calls on a Mac, so the alpha build reports only
+Zoom calls. To help, join a real Teams or Slack call (or a Zoom call that is
+missed) and run
+
+```bash
+"/Applications/In a Call Notification.app/Contents/MacOS/callmqtt" --probe
+```
+
+then open the `probe-<timestamp>.txt` it writes next to the config, redact
+anything private (it contains window titles and process names), and attach it
+to an issue. If your problem is something else, check in order: the
+`allowed_networks` entry above; that **Screen Recording** is granted to the app
+(**System Settings → Privacy & Security → Screen & System Audio Recording**,
+called **Screen Recording** before macOS 15; quit and reopen the app after
+granting it) — without it
+window titles are missing and detection relies on process and microphone
+evidence only; and that you are on macOS 14.2 or newer, since older versions
+cannot say *which* app is using the microphone. Remember that an unsigned
+update may ask for Screen Recording again.
+
+**macOS: "In a Call Notification can't be opened" / "cannot verify the developer".**
+The app is not notarized. See the Gatekeeper steps in
+[Installation](#installation) (**Open Anyway**, or `xattr -dr
+com.apple.quarantine`).
+
+**Zoom or Slack calls are not detected (Windows).**
 Those detectors are validated against recorded fixtures but have not yet been
 confirmed on a live call. While you are in a real call, run
 `callmqtt --probe` and open the `probe-<timestamp>.txt` file it writes next to

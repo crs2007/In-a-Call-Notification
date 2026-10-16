@@ -52,15 +52,23 @@ type flags struct {
 
 func main() {
 	if err := run(); err != nil {
-		// A failed write means nobody could see it — the GUI build launched
-		// by a double-click has no stderr at all — so it goes in a dialog
-		// instead. When stderr works (a console, a pipe, a redirect) the
-		// text is already in front of whoever ran us and no dialog pops.
-		if _, werr := fmt.Fprintln(os.Stderr, appTitle+":", err); werr != nil {
+		// A failed write means nobody could see it — the Windows GUI build
+		// launched by a double-click has no stderr at all — so it goes in a
+		// dialog instead. On macOS the write to a Finder- or login-launched
+		// app's /dev/null succeeds just as invisibly, so there the test is
+		// whether a terminal is attached (see consoleAttached). Otherwise
+		// the text is already in front of whoever ran us and no dialog pops.
+		if _, werr := fmt.Fprintln(os.Stderr, appTitle+":", err); needDialog(werr, consoleAttached()) {
 			reportError(err)
 		}
 		os.Exit(1)
 	}
+}
+
+// needDialog reports whether a message just printed must also be shown in a
+// dialog: when printing it failed, or when no console is attached to see it.
+func needDialog(writeErr error, console bool) bool {
+	return writeErr != nil || !console
 }
 
 func run() error {
@@ -144,7 +152,7 @@ func run() error {
 	defer closeLog()
 
 	if cfg.PasswordIsLiteral() {
-		log.Warn("mqtt password is written directly in the config file; prefer ${ENV_VAR}")
+		log.Warn("mqtt password is written directly in the config file; " + literalPasswordAdvice)
 	}
 	for _, w := range cfg.Warnings() {
 		log.Warn("config: " + w)
@@ -177,6 +185,7 @@ func run() error {
 // are rebuilt by the supervisor on every config reload, so the closures here
 // are the only place that needs to know how to build them.
 func runAgent(ctx context.Context, cfg *config.Config, log *slog.Logger, f flags) error {
+	agentRunning = true
 	sup := supervisor.New(supervisor.Options{
 		Logger:  log,
 		Version: version,
@@ -196,6 +205,8 @@ func runAgent(ctx context.Context, cfg *config.Config, log *slog.Logger, f flags
 	log.Info("In a Call Notification started",
 		"version", version, "device_id", cfg.App.DeviceID,
 		"broker", fmt.Sprintf("%s:%d", cfg.MQTT.Host, cfg.MQTT.Port))
+
+	offerScreenRecording(log, f.configPath)
 
 	uiErr := runUI(ctx, sup, log, f.configPath, cfg.Logging.File)
 
@@ -294,6 +305,12 @@ Flags:
 // when the default config path is in use. Set once in run().
 var startupConfigPath string
 
+// agentRunning is set once runAgent starts, before the tray exists, so the
+// startup adapter can tell the tray's "Start at login" checkbox in a running
+// agent apart from the `callmqtt startup` CLI. Only macOS acts on it (see
+// startup_darwin.go).
+var agentRunning bool
+
 // startupCommand implements `callmqtt startup enable|disable|status`. It
 // talks to the same build-tag-selected adapter the tray uses, so the CLI and
 // the tray checkbox can never disagree about how autostart is wired up.
@@ -380,15 +397,26 @@ func writeStarterConfig(path string) error {
 // initConfig implements `callmqtt init`: it writes the starter config and
 // tells the user the two things they now have to decide — where their
 // broker is, and which networks they are willing to publish from. The
-// message is printed, or — if there is no stdout to print to, as in the GUI
-// build — shown in a dialog, since otherwise `init` looks like it did
+// message is printed and — if nobody can see that, as in the GUI build (see
+// needDialog) — shown in a dialog, since otherwise `init` looks like it did
 // nothing.
 func initConfig(path string) error {
 	if err := writeStarterConfig(path); err != nil {
 		return err
 	}
 
-	message := fmt.Sprintf(`Wrote %s
+	message := initMessage(path, config.AutoDeviceID())
+	if _, err := fmt.Print(message); needDialog(err, consoleAttached()) {
+		reportInfo(message)
+	}
+	return nil
+}
+
+// initMessage is what `callmqtt init` tells the user. Only the password
+// paragraph differs per OS (passwordAdvice), since how a secret reaches the
+// agent depends on how the OS starts it.
+func initMessage(path, deviceID string) string {
+	return fmt.Sprintf(`Wrote %s
 
 This machine will appear as device id %q, so its topics are:
   desktop-presence/%s/call
@@ -399,16 +427,8 @@ Before starting, edit that file and set:
   mqtt.username      if your broker requires one
   allowed_networks   the subnets you are willing to publish from
 
-The password is read from the CALLMQTT_MQTT_PASSWORD environment variable
-(config.yaml only references it as ${CALLMQTT_MQTT_PASSWORD}). Set it with:
-  setx CALLMQTT_MQTT_PASSWORD "yourpassword"
-then open a new terminal, since setx does not affect the current one.
-Then check your work with:  callmqtt --validate-config
-`, path, config.AutoDeviceID(), config.AutoDeviceID(), config.AutoDeviceID())
-	if _, err := fmt.Print(message); err != nil {
-		reportInfo(message)
-	}
-	return nil
+%sThen check your work with:  callmqtt --validate-config
+`, path, deviceID, deviceID, deviceID, passwordAdvice)
 }
 
 // discardPublisher lets --once exercise the whole engine without a broker.
@@ -427,7 +447,7 @@ func buildDetectors(cfg *config.Config, f flags) ([]model.Detector, error) {
 	}
 
 	enabled := func(app string) bool { return cfg.Detectors[app].Enabled }
-	return detectors.New(rulesCfg, cfg.Detection.ActiveThreshold, cfg.Detection.InactiveThreshold, enabled, detectors.WindowsSnapshot(), time.Now), nil
+	return detectors.New(rulesCfg, cfg.Detection.ActiveThreshold, cfg.Detection.InactiveThreshold, enabled, detectors.OSSnapshot(), time.Now), nil
 }
 
 // loadRules picks the shipped rule set, or cfg.RulesFile if the user set one,

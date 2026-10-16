@@ -46,6 +46,29 @@ type Startup interface {
 // file, since there is otherwise no way to change those four fields at all.
 type Dialog func(current config.Settings) (config.Settings, bool, error)
 
+// Permission is an OS permission the agent works better with, such as
+// macOS Screen Recording, without which window titles read as empty. While
+// it is missing the tray offers a menu item that requests it; once granted
+// the item stays as a disabled status line, so the menu never shifts under
+// the user's pointer. Left nil, no item is shown.
+type Permission struct {
+	// Missing and Granted are the item's label in each state. Missing should
+	// read as an action ("Allow window titles…").
+	Missing, Granted string
+	// Check reports whether the permission is granted. It may be slow (a
+	// TCC lookup costs milliseconds), so the tray calls it at most once per
+	// permissionCheckEvery rather than on every refresh.
+	Check func() bool
+	// Request asks for the permission: shows the OS prompt, opens the
+	// settings pane, or both. It runs on its own goroutine.
+	Request func()
+}
+
+// permissionCheckEvery bounds how often refresh calls Permission.Check.
+// A grant is rare and usually needs a relaunch to take effect anyway, so
+// noticing it within half a minute is plenty.
+const permissionCheckEvery = 30 * time.Second
+
 // supervisorAPI is exactly what app needs from a *supervisor.Supervisor.
 // Depending on the interface rather than the concrete type lets tests hand
 // app a fake instead of a live engine and broker connection.
@@ -67,6 +90,7 @@ type Options struct {
 	PollInterval time.Duration // default 2s
 	Dialog       Dialog
 	Startup      Startup
+	Permission   *Permission
 }
 
 // Run builds the tray icon and menu and blocks pumping the OS message loop
@@ -119,6 +143,11 @@ type app struct {
 	allowNetItem *systray.MenuItem
 	loginItem    *systray.MenuItem
 	pauseItem    *systray.MenuItem
+	permItem     *systray.MenuItem
+
+	// permCheckedAt is when refresh last called Permission.Check; only
+	// refreshLoop's goroutine touches it, like lastIcon.
+	permCheckedAt time.Time
 
 	// refreshNow lets other goroutines request a refresh without calling
 	// a.refresh() themselves, so refreshLoop's goroutine stays the only one
@@ -183,6 +212,9 @@ func (a *app) buildMenu() {
 		a.loginItem = m.AddCheckbox("Start at login", enabled, func() { a.toggleStartup() })
 	}
 	a.pauseItem = m.Add("Pause detection", func() { a.togglePause() })
+	if p := a.opts.Permission; p != nil {
+		a.permItem = m.Add(p.Missing, func() { go p.Request() })
+	}
 	m.AddSeparator()
 
 	m.Add("Open config file", func() { openFile(a.opts.ConfigPath) })
@@ -239,11 +271,36 @@ func (a *app) refresh() {
 		a.pauseItem.SetLabel("Pause detection")
 	}
 
+	a.refreshPermission(time.Now())
+
 	icon := iconFor(status, brokerConnected)
 	if icon != a.lastIcon {
 		a.tray.SetIcon(iconPNG(icon))
 		a.lastIcon = icon
 	}
+}
+
+// refreshPermission re-checks the optional permission at most once per
+// permissionCheckEvery and updates its menu item to match.
+func (a *app) refreshPermission(now time.Time) {
+	p := a.opts.Permission
+	if p == nil || a.permItem == nil {
+		return
+	}
+	if !a.permCheckedAt.IsZero() && now.Sub(a.permCheckedAt) < permissionCheckEvery {
+		return
+	}
+	a.permCheckedAt = now
+	granted := p.Check()
+	a.permItem.SetLabel(permissionLabel(p, granted))
+	a.permItem.SetDisabled(granted)
+}
+
+func permissionLabel(p *Permission, granted bool) string {
+	if granted {
+		return p.Granted
+	}
+	return p.Missing
 }
 
 func stateLabel(s engine.Status) string {

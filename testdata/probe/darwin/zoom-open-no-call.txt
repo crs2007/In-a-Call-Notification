@@ -1,0 +1,200 @@
+# In a Call Notification probe output.
+# Contains window titles (meeting names). Review and redact before pasting.
+
+=== 2026-10-16T11:13:25+03:00 ===
+[windows] 9 visible
+  pid=23846  proc=App Store                    title="App\u00a0Store"
+  pid=9832   proc=Code                         title="<chat redacted>… — <project redacted>"
+  pid=9832   proc=Code                         title="<chat redacted>… — In-a-Call-Notification"
+  pid=58700  proc=Finder                       title="Downloads"
+  pid=58700  proc=Finder                       title="Recents"
+  pid=791    proc=Google Chrome                title="Download Zoom for Mac | Zoom"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — capture.sh — 120×30"
+  pid=24480  proc=zoom.us                      title="Login"
+[microphone] 0 in use
+[webcam] 0 in use
+
+=== 2026-10-16T11:13:28+03:00 ===
+[windows] 9 visible
+  pid=23846  proc=App Store                    title="App\u00a0Store"
+  pid=9832   proc=Code                         title="<chat redacted>… — <project redacted>"
+  pid=9832   proc=Code                         title="<chat redacted>… — In-a-Call-Notification"
+  pid=58700  proc=Finder                       title="Downloads"
+  pid=58700  proc=Finder                       title="Recents"
+  pid=791    proc=Google Chrome                title="Download Zoom for Mac | Zoom"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+  pid=24480  proc=zoom.us                      title="Login"
+[microphone] 0 in use
+[webcam] 0 in use
+
+=== 2026-10-16T11:13:30+03:00 ===
+[windows] 9 visible
+  pid=23846  proc=App Store                    title="App\u00a0Store"
+  pid=9832   proc=Code                         title="<chat redacted>… — <project redacted>"
+  pid=9832   proc=Code                         title="<chat redacted>… — In-a-Call-Notification"
+  pid=58700  proc=Finder                       title="Downloads"
+  pid=58700  proc=Finder                       title="Recents"
+  pid=791    proc=Google Chrome                title="Download Zoom for Mac | Zoom"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+  pid=24480  proc=zoom.us                      title="Login"
+[microphone] 0 in use
+[webcam] 0 in use
+
+=== 2026-10-16T11:13:32+03:00 ===
+[windows] 9 visible
+  pid=23846  proc=App Store                    title="App\u00a0Store"
+  pid=9832   proc=Code                         title="<chat redacted>… — <project redacted>"
+  pid=9832   proc=Code                         title="<chat redacted>… — In-a-Call-Notification"
+  pid=58700  proc=Finder                       title="Downloads"
+  pid=58700  proc=Finder                       title="Recents"
+  pid=791    proc=Google Chrome                title="Download Zoom for Mac | Zoom"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+  pid=24480  proc=zoom.us                      title="Login"
+[microphone] 0 in use
+[webcam] 0 in use
+
+=== 2026-10-16T11:13:34+03:00 ===
+[windows] 10 visible
+  pid=23846  proc=App Store                    title="App\u00a0Store"
+  pid=9832   proc=Code                         title="<chat redacted>… — <project redacted>"
+  pid=9832   proc=Code                         title="<chat redacted>… — In-a-Call-Notification"
+  pid=58700  proc=Finder                       title="Downloads"
+  pid=58700  proc=Finder                       title="Recents"
+  pid=791    proc=Google Chrome                title="Download Zoom for Mac | Zoom"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+  pid=34228  proc=storeuid                     title=""
+  pid=24480  proc=zoom.us                      title="Login"
+[microphone] 0 in use
+[webcam] 0 in use
+
+=== 2026-10-16T11:13:36+03:00 ===
+[windows] 10 visible
+  pid=23846  proc=App Store                    title="App\u00a0Store"
+  pid=9832   proc=Code                         title="<chat redacted>… — <project redacted>"
+  pid=9832   proc=Code                         title="<chat redacted>… — In-a-Call-Notification"
+  pid=58700  proc=Finder                       title="Downloads"
+  pid=58700  proc=Finder                       title="Recents"
+  pid=791    proc=Google Chrome                title="Download Zoom for Mac | Zoom"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+  pid=34228  proc=storeuid                     title=""
+  pid=24480  proc=zoom.us                      title="Login"
+[microphone] 0 in use
+[webcam] 0 in use
+
+=== 2026-10-16T11:13:38+03:00 ===
+[windows] 9 visible
+  pid=23846  proc=App Store                    title="App\u00a0Store"
+  pid=9832   proc=Code                         title="<chat redacted>… — <project redacted>"
+  pid=9832   proc=Code                         title="<chat redacted>… — In-a-Call-Notification"
+  pid=58700  proc=Finder                       title="Downloads"
+  pid=58700  proc=Finder                       title="Recents"
+  pid=791    proc=Google Chrome                title="Download Zoom for Mac | Zoom"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+  pid=24480  proc=zoom.us                      title="Login"
+[microphone] 0 in use
+[webcam] 0 in use
+
+=== 2026-10-16T11:13:40+03:00 ===
+[windows] 9 visible
+  pid=23846  proc=App Store                    title="App\u00a0Store"
+  pid=9832   proc=Code                         title="<chat redacted>… — <project redacted>"
+  pid=9832   proc=Code                         title="<chat redacted>… — In-a-Call-Notification"
+  pid=58700  proc=Finder                       title="Downloads"
+  pid=58700  proc=Finder                       title="Recents"
+  pid=791    proc=Google Chrome                title="Download Zoom for Mac | Zoom"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+  pid=24480  proc=zoom.us                      title="Login"
+[microphone] 0 in use
+[webcam] 0 in use
+
+=== 2026-10-16T11:13:42+03:00 ===
+[windows] 9 visible
+  pid=23846  proc=App Store                    title="App\u00a0Store"
+  pid=9832   proc=Code                         title="<chat redacted>… — <project redacted>"
+  pid=9832   proc=Code                         title="<chat redacted>… — In-a-Call-Notification"
+  pid=58700  proc=Finder                       title="Downloads"
+  pid=58700  proc=Finder                       title="Recents"
+  pid=791    proc=Google Chrome                title="Download Zoom for Mac | Zoom"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+  pid=24480  proc=zoom.us                      title="Login"
+[microphone] 0 in use
+[webcam] 0 in use
+
+=== 2026-10-16T11:13:44+03:00 ===
+[windows] 8 visible
+  pid=23846  proc=App Store                    title="App\u00a0Store"
+  pid=9832   proc=Code                         title="<chat redacted>… — <project redacted>"
+  pid=58700  proc=Finder                       title="Downloads"
+  pid=58700  proc=Finder                       title="Recents"
+  pid=791    proc=Google Chrome                title="Download Zoom for Mac | Zoom"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+  pid=24480  proc=zoom.us                      title="Login"
+[microphone] 0 in use
+[webcam] 0 in use
+
+=== 2026-10-16T11:13:46+03:00 ===
+[windows] 8 visible
+  pid=23846  proc=App Store                    title="App\u00a0Store"
+  pid=58700  proc=Finder                       title="Downloads"
+  pid=58700  proc=Finder                       title="Recents"
+  pid=791    proc=Google Chrome                title="www.google.com wants to"
+  pid=791    proc=Google Chrome                title="zoom free for mac - Google Search"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+  pid=24480  proc=zoom.us                      title="Login"
+[microphone] 0 in use
+[webcam] 0 in use
+
+=== 2026-10-16T11:13:48+03:00 ===
+[windows] 6 visible
+  pid=23846  proc=App Store                    title="App\u00a0Store"
+  pid=58700  proc=Finder                       title="Downloads"
+  pid=58700  proc=Finder                       title="Recents"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+  pid=24480  proc=zoom.us                      title="Login"
+[microphone] 0 in use
+[webcam] 0 in use
+
+=== 2026-10-16T11:13:50+03:00 ===
+[windows] 6 visible
+  pid=23846  proc=App Store                    title="App\u00a0Store"
+  pid=58700  proc=Finder                       title="Downloads"
+  pid=58700  proc=Finder                       title="Recents"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+  pid=24480  proc=zoom.us                      title="Login"
+[microphone] 0 in use
+[webcam] 0 in use
+
+=== 2026-10-16T11:13:52+03:00 ===
+[windows] 6 visible
+  pid=23846  proc=App Store                    title="App\u00a0Store"
+  pid=58700  proc=Finder                       title="Downloads"
+  pid=58700  proc=Finder                       title="Recents"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+  pid=24480  proc=zoom.us                      title="Login"
+[microphone] 0 in use
+[webcam] 0 in use
+
+=== 2026-10-16T11:13:54+03:00 ===
+[windows] 5 visible
+  pid=23846  proc=App Store                    title="App\u00a0Store"
+  pid=58700  proc=Finder                       title="Downloads"
+  pid=23092  proc=Spotify                      title="\u200e\u202b<artist - track redacted>\u202c\u200e"
+  pid=21297  proc=Terminal                     title="In-a-Call-Notification — callmqtt ◂ capture.sh — 120×30"
+  pid=24480  proc=zoom.us                      title="Login"
+[microphone] 0 in use
+[webcam] 0 in use
+

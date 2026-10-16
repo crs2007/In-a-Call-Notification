@@ -1,6 +1,8 @@
 # In a Call Notification configuration.
 #
-# Copy to %APPDATA%\callmqtt\config.yaml (Windows) and edit.
+# Copy to %APPDATA%\callmqtt\config.yaml (Windows) or
+# ~/Library/Application Support/callmqtt/config.yaml (macOS) and edit, or let
+# `callmqtt init` write it there for you.
 # Check it with:  callmqtt --validate-config
 
 app:
@@ -14,6 +16,9 @@ mqtt:
   username: callmqtt
   # Prefer an environment variable over a literal secret. In a Call Notification warns if
   # this is written directly into the file.
+  # On macOS, apps started from Finder or at login do not see environment
+  # variables; use the keychain instead: password: "keychain:callmqtt", then
+  # run  security add-generic-password -U -s callmqtt -a <username> -w
   password: ${CALLMQTT_MQTT_PASSWORD}
   # tls:
   #   enabled: true
@@ -75,7 +80,8 @@ poll:
 
 logging:
   level: info
-  # Defaults to %APPDATA%\callmqtt\callmqtt.log. Rotated automatically once it
+  # Defaults to callmqtt.log next to the default config (%APPDATA%\callmqtt
+  # on Windows, ~/Library/Application Support/callmqtt on macOS). Rotated automatically once it
   # passes 5 MB: the old file becomes callmqtt.log.1 (overwriting any previous
   # one), and a fresh file is started. Only one generation of history is kept.
   # file: callmqtt.log

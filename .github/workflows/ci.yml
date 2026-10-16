@@ -45,23 +45,14 @@ jobs:
           GOOS: windows
           GOARCH: arm64
 
-  # Cheap (~20s) sanity check that the darwin stubs in platform/windows/ and
-  # cmd/callmqtt still compile, since there's no macOS runner exercising them.
-  cross-compile-darwin:
-    name: cross-compile (darwin/arm64)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-
-      - name: build darwin/arm64 (build check only)
-        run: go build ./...
-        env:
-          GOOS: darwin
-          GOARCH: arm64
+  # macOS now has real signal code (platform/darwin/) and a shipped asset, so
+  # it gets a real runner instead of a cross-compile: vet, builds, race tests,
+  # the CGO_ENABLED=0 tests, a darwin/amd64 compile check, and a full
+  # universal-.app packaging dry run. Defined once in macos-checks.yml and
+  # shared with the release gate (release.yml's verify-macos job).
+  test-macos:
+    name: test (macos-latest)
+    uses: ./.github/workflows/macos-checks.yml
 
   # Regression guard for the leaked-broker-password incident (TODO.md 2.2):
   # example.yaml must only ever reference secrets via ${VAR}, never write

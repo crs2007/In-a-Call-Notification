@@ -9,6 +9,10 @@ name: Release
 #
 # The tag is pushed with GITHUB_TOKEN, which deliberately does not fire a
 # second run of this workflow — the same run carries on to publish.
+#
+# Flow: verify (Windows) + verify-macos -> version (pushes the tag) ->
+# package-macos (macos-latest, builds the .app zip) -> goreleaser (Windows
+# zips + the macOS zip, one checksums.txt, one publish).
 on:
   push:
     branches: [main]
@@ -74,10 +78,23 @@ jobs:
           GOOS: windows
           GOARCH: arm64
 
+  # Same gate on macOS (shared with ci.yml), including a packaging dry run, so
+  # a red macOS build or a broken .app script never consumes a version either.
+  verify-macos:
+    name: verify (macOS vet, test, universal .app)
+    if: >-
+      github.ref_type == 'tag' ||
+      !(contains(github.event.head_commit.message, '[skip release]') ||
+        contains(github.event.head_commit.message, '[no release]'))
+    uses: ./.github/workflows/macos-checks.yml
+
   version:
     name: compute release tag
-    needs: verify
-    if: ${{ !cancelled() && (needs.verify.result == 'success' || needs.verify.result == 'skipped') }}
+    needs: [verify, verify-macos]
+    if: >-
+      ${{ !cancelled() &&
+      (needs.verify.result == 'success' || needs.verify.result == 'skipped') &&
+      (needs.verify-macos.result == 'success' || needs.verify-macos.result == 'skipped') }}
     runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.next.outputs.tag }}
@@ -170,9 +187,56 @@ jobs:
           git push origin "refs/tags/$next"
           echo "tag=$next" >> "$GITHUB_OUTPUT"
 
+  # Builds the macOS asset (callmqtt_<version>_darwin_universal.zip) BEFORE
+  # goreleaser runs and passes it over as an artifact. Why not build it in
+  # goreleaser or upload it afterwards:
+  #   - the .app needs macOS-only tools (lipo, codesign, ditto, plutil) and
+  #     the goreleaser job is on windows-latest;
+  #   - goreleaser folds the zip into checksums.txt and the release upload
+  #     (checksum.extra_files / release.extra_files), so there is one publish
+  #     step, checksums.txt covers every asset, and no already-published
+  #     release is ever edited;
+  #   - the job hangs off `version`, so a tagged HEAD with no release (the
+  #     recovery path) rebuilds the macOS asset the same way as a fresh tag.
+  # scripts/package-macos.sh is the same script the macOS CI job dry-runs.
+  #
+  # Signing is OFF unless the MACOS_SIGN_P12 secret (and the four others
+  # listed in the script) exist; then the app is Developer-ID signed and
+  # notarized. Without them the app is ad-hoc signed only.
+  package-macos:
+    name: package macOS app
+    needs: version
+    if: needs.version.outputs.tag != ''
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.version.outputs.tag }}
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build, bundle and zip the universal app
+        run: scripts/package-macos.sh "$RELEASE_TAG" "$RUNNER_TEMP/macos-dist"
+        env:
+          RELEASE_TAG: ${{ needs.version.outputs.tag }}
+          MACOS_SIGN_P12: ${{ secrets.MACOS_SIGN_P12 }}
+          MACOS_SIGN_PASSWORD: ${{ secrets.MACOS_SIGN_PASSWORD }}
+          MACOS_NOTARY_KEY: ${{ secrets.MACOS_NOTARY_KEY }}
+          MACOS_NOTARY_KEY_ID: ${{ secrets.MACOS_NOTARY_KEY_ID }}
+          MACOS_NOTARY_ISSUER_ID: ${{ secrets.MACOS_NOTARY_ISSUER_ID }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-assets
+          path: ${{ runner.temp }}/macos-dist/callmqtt_*_darwin_universal.zip
+          if-no-files-found: error
+          retention-days: 7
+
   goreleaser:
     name: goreleaser
-    needs: version
+    needs: [version, package-macos]
     if: needs.version.outputs.tag != ''
     runs-on: windows-latest
     env:
@@ -190,6 +254,21 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
+
+      # The macOS zip from package-macos. goreleaser lists it in checksums.txt
+      # and uploads it with the Windows zips (see .goreleaser.yaml). It is
+      # untracked, and goreleaser refuses a dirty tree, so exclude it locally.
+      - uses: actions/download-artifact@v4
+        with:
+          name: macos-assets
+          path: macos-assets
+
+      - name: Keep the macOS asset out of goreleaser's dirty-tree check
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "/macos-assets/" >> .git/info/exclude
+          ls -l macos-assets
 
       - name: Build release artifacts for version preflight
         uses: goreleaser/goreleaser-action@v6

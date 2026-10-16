@@ -109,9 +109,12 @@ func find(t *testing.T, results []model.DetectionResult, app string) model.Detec
 
 const testThreshold = 0.70
 
+// liveConfig is the shipped Windows rule set: every fixture in
+// testdata/probe/*.txt is a Windows capture. DefaultFor rather than Default
+// so these tests exercise the same rules on every OS they run on.
 func liveConfig(t *testing.T) *Config {
 	t.Helper()
-	cfg, err := Default()
+	cfg, err := DefaultFor("windows")
 	if err != nil {
 		t.Fatalf("load default rules: %v", err)
 	}
@@ -122,16 +125,34 @@ func liveConfig(t *testing.T) *Config {
 // file drifting apart, which //go:embed rules.yaml can't do by construction
 // but is worth asserting explicitly since both are read in this package.
 func TestDefault_MatchesShippedFile(t *testing.T) {
-	fromEmbed, err := Default()
-	if err != nil {
-		t.Fatalf("Default(): %v", err)
+	for goos, file := range map[string]string{"windows": "rules.yaml", "darwin": "rules_darwin.yaml"} {
+		fromEmbed, err := DefaultFor(goos)
+		if err != nil {
+			t.Fatalf("DefaultFor(%q): %v", goos, err)
+		}
+		fromFile, err := LoadFile(filepath.Join(file))
+		if err != nil {
+			t.Fatalf("LoadFile(%s): %v", file, err)
+		}
+		if len(fromEmbed.Rules) != len(fromFile.Rules) {
+			t.Fatalf("%s: got %d embedded rules, want %d (from file)", goos, len(fromEmbed.Rules), len(fromFile.Rules))
+		}
 	}
-	fromFile, err := LoadFile(filepath.Join("rules.yaml"))
+}
+
+// TestDefaultFor_LinuxGetsWindowsRules pins the pre-macOS behaviour for
+// every OS that has no rule set of its own.
+func TestDefaultFor_LinuxGetsWindowsRules(t *testing.T) {
+	linux, err := DefaultFor("linux")
 	if err != nil {
-		t.Fatalf("LoadFile(rules.yaml): %v", err)
+		t.Fatalf("DefaultFor(linux): %v", err)
 	}
-	if len(fromEmbed.Rules) != len(fromFile.Rules) {
-		t.Fatalf("got %d embedded rules, want %d (from file)", len(fromEmbed.Rules), len(fromFile.Rules))
+	windows, err := DefaultFor("windows")
+	if err != nil {
+		t.Fatalf("DefaultFor(windows): %v", err)
+	}
+	if len(linux.Rules) != len(windows.Rules) {
+		t.Fatalf("linux got %d rules, want the %d Windows rules", len(linux.Rules), len(windows.Rules))
 	}
 }
 
@@ -415,6 +436,26 @@ func TestReasons_NeverContainWindowTitles(t *testing.T) {
 					}
 				}
 			}
+		}
+	}
+}
+
+// TestDarwinRulesDeclareEveryWindowsApp keeps config.yaml portable: the
+// detectors.<app> keys config validation accepts come from the rule set of
+// the OS it runs on, so the macOS set must name every app the Windows one
+// does, even before it has fixture-backed patterns of its own.
+func TestDarwinRulesDeclareEveryWindowsApp(t *testing.T) {
+	darwin, err := DefaultFor("darwin")
+	if err != nil {
+		t.Fatalf("DefaultFor(darwin): %v", err)
+	}
+	have := map[string]bool{}
+	for _, r := range darwin.Rules {
+		have[r.App] = true
+	}
+	for _, r := range liveConfig(t).Rules {
+		if !have[r.App] {
+			t.Errorf("darwin rules have no %q entry", r.App)
 		}
 	}
 }
