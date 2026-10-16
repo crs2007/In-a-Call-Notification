@@ -58,6 +58,11 @@ type fakePublisher struct {
 	// can call it directly and assert on what the engine actually wires up —
 	// the 7.1 repro.
 	stateSource func() (mqtt.Payload, bool)
+
+	// ctxDoneAtClose records whether the connection ctx was already
+	// cancelled when Close was called: the real publisher can't publish
+	// "offline" over a connection that has been torn down.
+	ctxDoneAtClose bool
 }
 
 func newFakePublisher(ctx context.Context, events *[]string) *fakePublisher {
@@ -70,6 +75,7 @@ func newFakePublisher(ctx context.Context, events *[]string) *fakePublisher {
 func (f *fakePublisher) PublishState(context.Context, mqtt.Payload) error { return nil }
 func (f *fakePublisher) SetStateSource(fn func() (mqtt.Payload, bool))    { f.stateSource = fn }
 func (f *fakePublisher) Close(ctx context.Context) error {
+	f.ctxDoneAtClose = f.ctxDone()
 	if f.closeDelay > 0 {
 		select {
 		case <-time.After(f.closeDelay):
@@ -564,5 +570,45 @@ func TestStatusBeforeStartIsUnknown(t *testing.T) {
 	sup := New(Options{Logger: testLogger()})
 	if got := sup.Status().State; got != model.StateUnknown {
 		t.Fatalf("Status() before Start = %v, want unknown", got)
+	}
+}
+
+// TestCloseKeepsConnectionUntilPublisherClosed is the "quit never publishes
+// offline" repro: Close cancelled the Supervisor's root ctx — the parent of
+// the publisher's connection ctx — before calling pub.Close, so the real
+// client's offline publish ran against a torn-down connection and timed out,
+// and the clean disconnect suppressed the Will too.
+func TestCloseKeepsConnectionUntilPublisherClosed(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var pub *fakePublisher
+	sup := New(Options{
+		Logger:       testLogger(),
+		Version:      "test",
+		Checker:      fakeChecker{},
+		NewDetectors: fakeDetectorsFactory(),
+		NewPublisher: func(ctx context.Context, _ *config.Config, _ *slog.Logger, _ string) (Publisher, error) {
+			pub = newFakePublisher(ctx, nil)
+			return pub, nil
+		},
+	})
+	if err := sup.Start(ctx, testConfig(t, "teams")); err != nil {
+		t.Fatalf("Start: %v", err)
+	}
+	if err := sup.Close(ctx); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+
+	select {
+	case <-pub.closed:
+	default:
+		t.Fatal("publisher was never closed")
+	}
+	if pub.ctxDoneAtClose {
+		t.Fatal("publisher's connection ctx was cancelled before its Close ran; offline can't be published")
+	}
+	if !pub.ctxDone() {
+		t.Fatal("publisher's connection ctx still live after Close; the connection is leaked")
 	}
 }
