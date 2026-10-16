@@ -194,8 +194,9 @@ job (`.github/workflows/macos-checks.yml`, shared with the release gate),
 `scripts/make-app.sh` / `scripts/package-macos.sh` producing
 `callmqtt_<version>_darwin_universal.zip`, and a `package-macos` job in
 `release.yml`. T36's `cross-compile-darwin` job was replaced by that real
-macOS job. **Still open:** macOS detection rules (they need real `--probe`
-captures of Teams, Zoom and Slack calls on a Mac), live confirmation of
+macOS job. Zoom macOS detection rules landed (fixture-backed, not yet
+live-confirmed through Home Assistant). **Still open:** macOS detection rules for
+Teams and Slack (they need real `--probe` captures of calls on a Mac), live confirmation of
 per-app microphone attribution for those apps, and a decision on Developer ID
 signing and notarization (wired in the release workflow, off until the
 `MACOS_*` secrets exist).

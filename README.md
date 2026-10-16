@@ -19,10 +19,10 @@ Runs on Windows 10/11 and macOS 13+.
 On Windows, Microsoft Teams detection has been confirmed against a real live
 call (see [docs/TASKS.md](docs/TASKS.md), T38); Zoom and Slack are covered by
 recorded fixtures but not yet live-confirmed the same way. **macOS support is
-alpha:** the app, menu-bar icon, MQTT and start-at-login are in place, but the
-macOS detection rules are not populated yet — they need recordings of real
-calls on a Mac — so until they land the macOS build will not report a call.
-The [FAQ](#faq--troubleshooting) explains how you can help.
+alpha:** the app, menu-bar icon, MQTT, start-at-login and Zoom detection (fixture-backed,
+not yet live-confirmed through Home Assistant) are in place, but Teams and Slack
+have no macOS rules yet — they need recordings of real calls on a Mac — so the
+macOS build does not report Teams or Slack calls. The [FAQ](#faq--troubleshooting) explains how you can help.
 
 ## Table of Contents
 
@@ -288,10 +288,13 @@ click.
 ### macOS
 
 **Alpha.** The first macOS releases are published as GitHub pre-releases:
-the app runs and publishes, but the macOS detection rules are not populated
-yet (they need recordings of real calls on a Mac), so it will not report a call
-until they are. Install it now if you want to help — see the FAQ entry on
-`--probe`.
+the app runs and publishes, and detects Zoom (from the `zoom.us` process plus
+per-app microphone use, with or without Screen Recording; the "Zoom Meeting"
+window title adds confidence when it is granted). Teams and Slack have no macOS
+rules yet (they need recordings of real calls on a Mac), so they are not
+reported. A Zoom window that is minimised or hidden while its microphone is live
+may be missed. Zoom is fixture-backed, not yet live-confirmed through Home
+Assistant. Install it now if you want to help — see the FAQ entry on `--probe`.
 
 1. Download `callmqtt_<version>_darwin_universal.zip`, then check it against
    `checksums.txt` from the same release:
@@ -535,9 +538,10 @@ use `keychain:callmqtt` instead (see [Quick Start](#quick-start)); an
 environment variable does not reach an app started from Finder or at login.
 
 **macOS: the light didn't turn on during a call.**
-Expected for now: the macOS detection rules are not populated yet, because they
-must come from recordings of real Teams, Zoom and Slack calls on a Mac, so the
-alpha build reports no calls. To help, join a real call and run
+Expected for Teams and Slack: they have no macOS rules yet, because rules must
+come from recordings of real calls on a Mac, so the alpha build reports only
+Zoom calls. To help, join a real Teams or Slack call (or a Zoom call that is
+missed) and run
 
 ```bash
 "/Applications/In a Call Notification.app/Contents/MacOS/callmqtt" --probe

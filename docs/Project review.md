@@ -3,8 +3,9 @@
 >
 > *   **Target platform "macOS (Intel/Apple Silicon)":** delivered as an alpha,
 >     macOS 13+, one universal app (`callmqtt_<version>_darwin_universal.zip`).
->     Detection rules for macOS are **not populated yet** — they need real call
->     captures (`callmqtt --probe`) — so the alpha reports no calls.
+>     Zoom detection rules for macOS have landed (fixture-backed); Teams and
+>     Slack rules are **not populated yet** — they need real call captures
+>     (`callmqtt --probe`) — so the alpha does not report Teams or Slack calls.
 > *   **Permissions risk:** resolved differently from the plan. The agent uses
 >     **Screen Recording** (window titles only) and needs **no** Accessibility
 >     or Microphone permission; per-app microphone attribution needs macOS

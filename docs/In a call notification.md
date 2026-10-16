@@ -11,8 +11,9 @@ Open-source project plan: local call-presence → MQTT
 > of what shipped: macOS support is an **alpha** (macOS 13+, one universal app,
 > menu-bar icon, MQTT, start-at-login via a LaunchAgent), it uses Screen
 > Recording for window titles and Core Audio for per-app microphone use (not
-> Accessibility, CoreWLAN or the sources named below), and its detection rules
-> are not populated yet because they need real call captures. For the real,
+> Accessibility, CoreWLAN or the sources named below), and it detects Zoom,
+> but Teams and Slack rules are not populated yet because they need real call
+> captures. For the real,
 > current behaviour, see
 > [README.md](../README.md) (Privacy and Configuration sections) and
 > [SECURITY.md](../SECURITY.md) (Threat model & known limitations). Treat
